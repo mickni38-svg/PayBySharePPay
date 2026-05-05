@@ -1,0 +1,30 @@
+<Solution>
+  <Folder Name="/Docs/">
+    <File Path="docs/00-README.md" />
+    <File Path="docs/01-kravspecifikation.md" />
+    <File Path="docs/02-arkitektur-og-lag.md" />
+    <File Path="docs/03-ui-designregler.md" />
+    <File Path="docs/04-koderegler.md" />
+    <File Path="docs/05-step-01-solution-og-projekter.md" />
+    <File Path="docs/06-step-02-domænemodel-og-dbcontext.md" />
+    <File Path="docs/07-step-03-repositories.md" />
+    <File Path="docs/08-step-04-services.md" />
+    <File Path="docs/09-step-05-api.md" />
+    <File Path="docs/10-step-06-angular-setup.md" />
+    <File Path="docs/11-step-07-layout-navigation.md" />
+    <File Path="docs/12-step-08-forside.md" />
+    <File Path="docs/13-step-09-find-deltagere.md" />
+    <File Path="docs/14-step-10-ordreoverblik.md" />
+    <File Path="docs/15-step-11-integration.md" />
+    <File Path="docs/16-step-12-tests.md" />
+    <File Path="docs/17-step-13-dokumentation-og-oprydning.md" />
+    <File Path="docs/18-use-cases-og-acceptance.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Api.PayBySharePay/Api.PayBySharePay.csproj" />
+    <Project Path="src/DataStorage.PayBySharePay/DataStorage.PayBySharePay.csproj" />
+    <Project Path="src/Service.PayBySharePay/Service.PayBySharePay.csproj" />
+    <Project Path="src/Tests.PayBySharePay/Tests.PayBySharePay.csproj" />
+    <Project Path="src/Tools.PayBySharePay/Tools.PayBySharePay.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,51 @@
+## Visual Studio / .NET
+
+# Build output
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# NuGet packages
+*.nupkg
+**/packages/
+!**/packages/build/
+.nuget/
+
+# Rider / JetBrains
+.idea/
+*.sln.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local settings / secrets
+appsettings.Development.json
+appsettings.Local.json
+**/secrets.json
+
+# EF Core tools
+*.mdf
+*.ldf
+
+# Angular / Node
+src/Frontend.PayBySharePay/node_modules/
+src/Frontend.PayBySharePay/dist/
+src/Frontend.PayBySharePay/.angular/
+src/Frontend.PayBySharePay/coverage/
+
+# Test results
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+# Publish output
+publish/
+**/publish/
