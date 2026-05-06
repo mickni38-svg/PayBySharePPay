@@ -3,6 +3,7 @@ namespace Service.PayBySharePay.DTOs;
 public class OrderDto
 {
     public int Id { get; set; }
+    public int CreatedByParticipantId { get; set; }
     public string Title { get; set; } = string.Empty;
     public string? Category { get; set; }
     public string? Message { get; set; }

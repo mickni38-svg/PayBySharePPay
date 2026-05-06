@@ -17,6 +17,7 @@ public static class DataStorageServiceExtensions
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<IMessageRepository, MessageRepository>();
+        services.AddScoped<IMerchantOrderDraftRepository, MerchantOrderDraftRepository>();
 
         return services;
     }

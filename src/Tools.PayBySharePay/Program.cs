@@ -57,22 +57,34 @@ static async Task SeedAsync(PayBySharePayDbContext db)
         new()
         {
             Type = ParticipantType.Merchant,
-            Name = "Acme ApS",
-            Email = "kontakt@acme.dk",
-            CompanyName = "Acme ApS",
+            Name = "Sticks & Sushi",
+            Email = "kontakt@sticksandsushi.dk",
+            CompanyName = "Sticks & Sushi",
             CvrNumber = "11111111",
-            ContactEmail = "kontakt@acme.dk",
-            PaymentReference = "ACME-PAY"
+            ContactEmail = "kontakt@sticksandsushi.dk",
+            CompanyAddress = "Nansensgade 47, 1366 København",
+            PaymentReference = "SUSHI-PAY"
         },
         new()
         {
             Type = ParticipantType.Merchant,
-            Name = "Bolden A/S",
-            Email = "info@bolden.dk",
-            CompanyName = "Bolden A/S",
+            Name = "Gasoline Grill",
+            Email = "info@gasolinegrill.com",
+            CompanyName = "Gasoline Grill",
             CvrNumber = "22222222",
-            ContactEmail = "info@bolden.dk",
-            PaymentReference = "BOLDEN-PAY"
+            ContactEmail = "info@gasolinegrill.com",
+            CompanyAddress = "Landgreven 10, 1301 København",
+            PaymentReference = "GASOLINE-PAY"
+        },
+        new()
+        {
+            Type = ParticipantType.Merchant,
+            Name = "Acme ApS",
+            Email = "kontakt@acme.dk",
+            CompanyName = "Acme ApS",
+            CvrNumber = "33333333",
+            ContactEmail = "kontakt@acme.dk",
+            PaymentReference = "ACME-PAY"
         },
         new()
         {
@@ -80,19 +92,9 @@ static async Task SeedAsync(PayBySharePayDbContext db)
             Name = "Kaffebar ApS",
             Email = "hej@kaffebar.dk",
             CompanyName = "Kaffebar ApS",
-            CvrNumber = "33333333",
+            CvrNumber = "44444444",
             ContactEmail = "hej@kaffebar.dk",
             PaymentReference = "KAFFE-PAY"
-        },
-        new()
-        {
-            Type = ParticipantType.Merchant,
-            Name = "Digital Løsning IVS",
-            Email = "support@digital.dk",
-            CompanyName = "Digital Løsning IVS",
-            CvrNumber = "44444444",
-            ContactEmail = "support@digital.dk",
-            PaymentReference = "DIGITAL-PAY"
         }
     };
 

@@ -18,9 +18,9 @@ public class ParticipantsController : ControllerBase
 
     [HttpGet("search")]
     [ProducesResponseType(typeof(IEnumerable<ParticipantDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> Search([FromQuery] string query)
+    public async Task<IActionResult> Search([FromQuery] string? query, [FromQuery] int? initiatorId = null)
     {
-        var results = await _participantService.SearchParticipantsAsync(query);
+        var results = await _participantService.SearchParticipantsAsync(query ?? string.Empty, initiatorId);
         return Ok(results);
     }
 

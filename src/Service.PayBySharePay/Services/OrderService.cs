@@ -21,15 +21,26 @@ public class OrderService : IOrderService
         if (string.IsNullOrWhiteSpace(dto.Title) && string.IsNullOrWhiteSpace(dto.Category))
             throw new ArgumentException("En ordre skal have en titel eller kategori.");
 
+        var creator = await _participantRepository.GetByIdAsync(dto.CreatedByParticipantId)
+            ?? throw new KeyNotFoundException($"Bruger med id {dto.CreatedByParticipantId} findes ikke.");
+
         var order = new Order
         {
+            CreatedByParticipantId = dto.CreatedByParticipantId,
             Title = dto.Title.Trim(),
             Category = dto.Category,
             Message = dto.Message,
-            Status = "Open"
+            Status = "Collecting"
         };
 
-        foreach (var participantId in dto.ParticipantIds)
+        // Opretter selv tilføjes automatisk som deltager
+        order.OrderParticipants.Add(new OrderParticipant
+        {
+            ParticipantId = dto.CreatedByParticipantId,
+            Status = "Accepted"
+        });
+
+        foreach (var participantId in dto.ParticipantIds.Where(id => id != dto.CreatedByParticipantId))
         {
             var participant = await _participantRepository.GetByIdAsync(participantId)
                 ?? throw new KeyNotFoundException($"Deltager med id {participantId} findes ikke.");
@@ -37,7 +48,7 @@ public class OrderService : IOrderService
             order.OrderParticipants.Add(new OrderParticipant
             {
                 ParticipantId = participantId,
-                Status = "Pending"
+                Status = "Invited"
             });
         }
 
@@ -90,10 +101,39 @@ public class OrderService : IOrderService
     private static OrderDto MapToDto(Order o) => new()
     {
         Id = o.Id,
+        CreatedByParticipantId = o.CreatedByParticipantId,
         Title = o.Title,
         Category = o.Category,
         Message = o.Message,
         Status = o.Status,
         CreatedAt = o.CreatedAt
+    };
+
+    public async Task<IEnumerable<OrderSummaryDto>> GetAllOrdersAsync()
+    {
+        var orders = await _orderRepository.GetAllWithDetailsAsync();
+        return orders.Select(MapToSummary);
+    }
+
+    public async Task<IEnumerable<OrderSummaryDto>> GetOrdersByParticipantAsync(int participantId)
+    {
+        var orders = await _orderRepository.GetByParticipantIdAsync(participantId);
+        return orders.Select(MapToSummary);
+    }
+
+    private static OrderSummaryDto MapToSummary(Order o) => new()
+    {
+        Id = o.Id,
+        Title = o.Title,
+        Category = o.Category,
+        Status = o.Status,
+        CreatedAt = o.CreatedAt,
+        Participants = o.OrderParticipants.Select(op => new OrderParticipantDto
+        {
+            ParticipantId = op.ParticipantId,
+            Name = op.Participant.Name,
+            Type = op.Participant.Type.ToString(),
+            Status = op.Status
+        }).ToList()
     };
 }

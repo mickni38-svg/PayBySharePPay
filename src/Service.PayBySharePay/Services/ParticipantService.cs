@@ -18,9 +18,9 @@ public class ParticipantService : IParticipantService
         _friendRelationRepository = friendRelationRepository;
     }
 
-    public async Task<IEnumerable<ParticipantDto>> SearchParticipantsAsync(string query)
+    public async Task<IEnumerable<ParticipantDto>> SearchParticipantsAsync(string query, int? excludeFriendsOf = null)
     {
-        var participants = await _participantRepository.SearchAsync(query);
+        var participants = await _participantRepository.SearchAsync(query, excludeFriendsOf);
         return participants.Select(MapToDto);
     }
 

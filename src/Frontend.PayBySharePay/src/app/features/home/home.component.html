@@ -1,0 +1,85 @@
+﻿<!-- Forside – matcher design med gradient-border navigationskoer og login-sektion -->
+<div class="home">
+
+  <!-- ① Navigationskoer i 2x2 grid med gradient-kantlinje -->
+  <section class="home__cards">
+    @for (card of actionCards; track card.route) {
+      <a class="card" [routerLink]="card.route" [style.--border-color]="card.borderColor">
+        <div class="card__icon-wrap" [style.background]="card.iconBg">
+
+          <!-- SVG-ikoner efter type – mere professionelt end emoji -->
+          @switch (card.icon) {
+            @case ('chart') {
+              <svg viewBox="0 0 24 24" fill="none" stroke="#f0a500" stroke-width="2" stroke-linecap="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 12 L12 7"/>
+                <path d="M12 12 L16 14"/>
+              </svg>
+            }
+            @case ('plus') {
+              <svg viewBox="0 0 24 24" fill="none" stroke="#2ecc71" stroke-width="2" stroke-linecap="round">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            }
+            @case ('users') {
+              <svg viewBox="0 0 24 24" fill="none" stroke="#00c8ff" stroke-width="2" stroke-linecap="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            }
+            @case ('chat') {
+              <svg viewBox="0 0 24 24" fill="none" stroke="#9b59b6" stroke-width="2" stroke-linecap="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+            }
+          }
+        </div>
+        <!-- Kortets label under ikonet -->
+        <span class="card__label">{{ card.label }}</span>
+      </a>
+    }
+  </section>
+
+  <!-- ② Login-sektion med brugernavn og knapper -->
+  <section class="home__login">
+    <div class="login__name-field">{{ auth.currentUserName() ?? 'Ikke logget ind' }}</div>
+
+    @if (auth.isLoggedIn()) {
+      <button class="login__btn login__btn--active" routerLink="/orders">Gå til Overblik</button>
+      <div class="login__links">
+        <a class="login__link login__link--green" routerLink="/find-participants">Find venner</a>
+        <a class="login__link login__link--orange" (click)="auth.logout()" style="cursor:pointer">Log ud</a>
+      </div>
+    } @else {
+
+      <!-- DEV: Vælg bruger fra dropdown -->
+      <div class="login__dev-label">⚙ Dev login — vælg bruger</div>
+      <select class="login__select" [(ngModel)]="selectedEmail">
+        <option value="" disabled>Vælg en person…</option>
+        @for (p of persons(); track p.id) {
+          <option [value]="p.handle">{{ p.displayName }} ({{ p.handle }})</option>
+        }
+      </select>
+
+      @if (loginError()) {
+        <p class="login__error">{{ loginError() }}</p>
+      }
+
+      <button
+        class="login__btn"
+        (click)="devLogin()"
+        [disabled]="!selectedEmail || loginLoading()"
+      >
+        {{ loginLoading() ? 'Logger ind…' : 'Log ind' }}
+      </button>
+
+      <div class="login__links">
+        <a class="login__link login__link--green" routerLink="/login">Log ind med e-mail</a>
+      </div>
+    }
+  </section>
+
+</div>
