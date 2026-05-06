@@ -1,0 +1,90 @@
+<div class="find">
+
+  <!-- Titel -->
+  <header class="find__header">
+    <h1 class="find__title">Find personer & steder</h1>
+  </header>
+
+  <!-- Søgefelt -->
+  <div class="find__search">
+    <div class="find__search-wrap">
+      <svg class="find__search-icon" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input
+        class="find__input"
+        type="search"
+        placeholder="Søg navn eller spisested..."
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="onSearch()"
+      />
+    </div>
+  </div>
+
+  <!-- Liste -->
+  <div class="find__list">
+    @if (isLoading()) {
+      <p class="find__state">Henter…</p>
+    } @else if (errorMessage()) {
+      <p class="find__state find__state--error">{{ errorMessage() }}</p>
+    } @else if (filtered().length === 0) {
+      <p class="find__state">Ingen resultater fundet.</p>
+    } @else {
+      @for (e of filtered(); track e.id) {
+        <div
+          class="row"
+          [class.row--selected]="e.selected"
+          [class.row--merchant]="e.type === 'Merchant'"
+          (click)="toggleSelect(e)"
+        >
+
+          <!-- Avatar -->
+          <div class="row__avatar" [style.background]="e.avatarColor">
+            @if (e.type === 'Merchant') {
+              <span class="row__avatar-icon">🍴</span>
+            } @else {
+              <span class="row__initials">{{ e.initials }}</span>
+            }
+          </div>
+
+          <!-- Info -->
+          <div class="row__info">
+            <div class="row__name-row">
+              <span class="row__name">{{ e.displayName }}</span>
+              @if (e.type === 'Merchant') {
+                <span class="row__badge">Merchant</span>
+              }
+            </div>
+            @if (e.subtitle) {
+              <span class="row__sub">{{ e.subtitle }}</span>
+            } @else if (e.handle && e.type === 'Person') {
+              <span class="row__sub">{{ e.handle }}</span>
+            }
+          </div>
+
+          <!-- Check-cirkel -->
+          <div class="row__check" [class.row__check--on]="e.selected">
+            @if (e.selected) {
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            }
+          </div>
+
+        </div>
+      }
+    }
+  </div>
+
+  <!-- Tilføj-knap (synlig når noget er valgt) -->
+  @if (selectedCount() > 0) {
+    <div class="find__footer">
+      <button class="find__cta" (click)="addSelected()">
+        Tilføj {{ selectedCount() }} {{ selectedCount() === 1 ? 'til din liste' : 'til din liste' }}
+      </button>
+    </div>
+  }
+
+</div>

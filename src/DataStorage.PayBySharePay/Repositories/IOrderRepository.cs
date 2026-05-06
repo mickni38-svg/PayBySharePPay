@@ -5,6 +5,8 @@ namespace DataStorage.PayBySharePay.Repositories;
 public interface IOrderRepository
 {
     Task<Order?> GetByIdWithDetailsAsync(int id);
+    Task<IEnumerable<Order>> GetAllWithDetailsAsync();
+    Task<IEnumerable<Order>> GetByParticipantIdAsync(int participantId);
     Task<IEnumerable<Order>> GetAllAsync();
     Task<Order> AddAsync(Order order);
     Task SaveChangesAsync();

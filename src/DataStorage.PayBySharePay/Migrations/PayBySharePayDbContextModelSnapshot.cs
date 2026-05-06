@@ -48,6 +48,96 @@ namespace DataStorage.PayBySharePay.Migrations
                     b.ToTable("FriendRelations");
                 });
 
+            modelBuilder.Entity("DataStorage.PayBySharePay.Entities.MerchantOrderDraft", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ExpiresAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("MerchantDraftReference")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("MerchantParticipantId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PaymentMode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("SubtotalAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MerchantParticipantId");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("MerchantOrderDrafts");
+                });
+
+            modelBuilder.Entity("DataStorage.PayBySharePay.Entities.MerchantOrderLine", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("LineId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("LineTotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("MerchantOrderDraftId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MerchantOrderDraftId");
+
+                    b.ToTable("MerchantOrderLines");
+                });
+
             modelBuilder.Entity("DataStorage.PayBySharePay.Entities.Message", b =>
                 {
                     b.Property<int>("Id")
@@ -92,6 +182,9 @@ namespace DataStorage.PayBySharePay.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("CreatedByParticipantId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Message")
                         .HasColumnType("nvarchar(max)");
 
@@ -104,6 +197,8 @@ namespace DataStorage.PayBySharePay.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedByParticipantId");
 
                     b.ToTable("Orders");
                 });
@@ -244,6 +339,36 @@ namespace DataStorage.PayBySharePay.Migrations
                     b.Navigation("Receiver");
                 });
 
+            modelBuilder.Entity("DataStorage.PayBySharePay.Entities.MerchantOrderDraft", b =>
+                {
+                    b.HasOne("DataStorage.PayBySharePay.Entities.Participant", "MerchantParticipant")
+                        .WithMany()
+                        .HasForeignKey("MerchantParticipantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DataStorage.PayBySharePay.Entities.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MerchantParticipant");
+
+                    b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("DataStorage.PayBySharePay.Entities.MerchantOrderLine", b =>
+                {
+                    b.HasOne("DataStorage.PayBySharePay.Entities.MerchantOrderDraft", "MerchantOrderDraft")
+                        .WithMany("Lines")
+                        .HasForeignKey("MerchantOrderDraftId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MerchantOrderDraft");
+                });
+
             modelBuilder.Entity("DataStorage.PayBySharePay.Entities.Message", b =>
                 {
                     b.HasOne("DataStorage.PayBySharePay.Entities.Order", "Order")
@@ -261,6 +386,17 @@ namespace DataStorage.PayBySharePay.Migrations
                     b.Navigation("Order");
 
                     b.Navigation("Participant");
+                });
+
+            modelBuilder.Entity("DataStorage.PayBySharePay.Entities.Order", b =>
+                {
+                    b.HasOne("DataStorage.PayBySharePay.Entities.Participant", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedByParticipantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CreatedBy");
                 });
 
             modelBuilder.Entity("DataStorage.PayBySharePay.Entities.OrderParticipant", b =>
@@ -299,6 +435,11 @@ namespace DataStorage.PayBySharePay.Migrations
                     b.Navigation("Order");
 
                     b.Navigation("Participant");
+                });
+
+            modelBuilder.Entity("DataStorage.PayBySharePay.Entities.MerchantOrderDraft", b =>
+                {
+                    b.Navigation("Lines");
                 });
 
             modelBuilder.Entity("DataStorage.PayBySharePay.Entities.Order", b =>

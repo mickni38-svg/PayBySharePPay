@@ -1,24 +1,26 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
+import { AuthService } from '../services/auth.service';
 
 export const apiInterceptor: HttpInterceptorFn = (req, next) => {
-  // Clone request and add common headers
-  const clonedRequest = req.clone({
-    setHeaders: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    }
-  });
+  const auth = inject(AuthService);
+  const token = auth.getToken();
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  };
+
+  if (token && !req.url.includes('/api/auth/login')) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const clonedRequest = req.clone({ setHeaders: headers });
 
   return next(clonedRequest).pipe(
     catchError((error) => {
-      // Handle errors globally
       console.error('API Error:', error);
-
-      // You can add error handling logic here
-      // e.g., show toast notification, redirect to error page, etc.
-
       return throwError(() => error);
     })
   );

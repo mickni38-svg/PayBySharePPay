@@ -7,6 +7,10 @@ export const routes: Routes = [
     pathMatch: 'full'
   },
   {
+    path: 'login',
+    loadComponent: () => import('./features/login/login.component').then(m => m.LoginComponent)
+  },
+  {
     path: 'home',
     loadComponent: () => import('./features/home/home.component').then(m => m.HomeComponent)
   },
@@ -17,6 +21,10 @@ export const routes: Routes = [
   {
     path: 'orders',
     loadComponent: () => import('./features/orders/orders.component').then(m => m.OrdersComponent)
+  },
+  {
+    path: 'orders/create',
+    loadComponent: () => import('./features/create-order/create-order.component').then(m => m.CreateOrderComponent)
   },
   {
     path: 'orders/:id',

@@ -13,13 +13,27 @@ public class ParticipantRepository : IParticipantRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<Participant>> SearchAsync(string query)
+    public async Task<IEnumerable<Participant>> SearchAsync(string query, int? excludeFriendsOf = null)
     {
-        return await _context.Participants
-            .Where(p => p.Name.Contains(query) ||
-                        (p.CompanyName != null && p.CompanyName.Contains(query)) ||
-                        (p.Email != null && p.Email.Contains(query)))
-            .ToListAsync();
+        var q = _context.Participants.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            q = q.Where(p => p.Name.Contains(query) ||
+                              (p.CompanyName != null && p.CompanyName.Contains(query)) ||
+                              (p.Email != null && p.Email.Contains(query)));
+        }
+
+        if (excludeFriendsOf.HasValue)
+        {
+            var friendIds = _context.FriendRelations
+                .Where(f => f.InitiatorId == excludeFriendsOf.Value || f.ReceiverId == excludeFriendsOf.Value)
+                .Select(f => f.InitiatorId == excludeFriendsOf.Value ? f.ReceiverId : f.InitiatorId);
+
+            q = q.Where(p => p.Id != excludeFriendsOf.Value && !friendIds.Contains(p.Id));
+        }
+
+        return await q.ToListAsync();
     }
 
     public async Task<Participant?> GetByIdAsync(int id)

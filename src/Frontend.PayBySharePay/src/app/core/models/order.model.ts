@@ -10,10 +10,11 @@ export interface Order {
 }
 
 export enum OrderStatus {
-  Created = 0,
-  Pending = 1,
-  Completed = 2,
-  Cancelled = 3
+  Collecting = 'Collecting',
+  WaitingForPayment = 'WaitingForPayment',
+  Ready = 'Ready',
+  Completed = 'Completed',
+  Cancelled = 'Cancelled'
 }
 
 export interface OrderParticipant {
@@ -27,15 +28,16 @@ export interface OrderParticipant {
 }
 
 export enum OrderParticipantStatus {
-  Pending = 0,
-  Accepted = 1,
-  Declined = 2,
-  Paid = 3
+  Invited = 'Invited',
+  Accepted = 'Accepted',
+  Declined = 'Declined',
+  Paid = 'Paid'
 }
 
 // API response DTOs – matcher Service.PayBySharePay.DTOs
 export interface OrderApiDto {
   id: number;
+  createdByParticipantId: number;
   title: string;
   category?: string;
   message?: string;
@@ -58,8 +60,8 @@ export interface OrderOverviewApiDto {
 export interface OrderParticipantApiDto {
   participantId: number;
   name: string;
-  type: string; // "Person" | "Merchant"
-  status: string; // "Pending" | "Accepted" | "Declined" | "Paid"
+  type: string;
+  status: string;
 }
 
 export interface PaymentApiDto {
@@ -84,14 +86,24 @@ export function mapOrderParticipantStatus(status: string): OrderParticipantStatu
     case 'Accepted': return OrderParticipantStatus.Accepted;
     case 'Declined': return OrderParticipantStatus.Declined;
     case 'Paid':     return OrderParticipantStatus.Paid;
-    default:         return OrderParticipantStatus.Pending;
+    default:         return OrderParticipantStatus.Invited;
   }
 }
 
 export interface CreateOrderRequest {
+  createdByParticipantId: number;
   title: string;
   category?: string;
   message?: string;
   participantIds: number[];
+}
+
+export interface OrderSummaryApiDto {
+  id: number;
+  title: string;
+  category?: string;
+  status: string;
+  createdAt: string;
+  participants: OrderParticipantApiDto[];
 }
 

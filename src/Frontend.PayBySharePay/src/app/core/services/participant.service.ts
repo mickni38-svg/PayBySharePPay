@@ -19,9 +19,12 @@ export class ParticipantService {
 
   constructor(private http: HttpClient) {}
 
-  // GET /api/participants/search?query=...
-  searchParticipants(query: string): Observable<Participant[]> {
-    const params = new HttpParams().set('query', query);
+  // GET /api/participants/search?query=...&initiatorId=...
+  searchParticipants(query: string, initiatorId?: number): Observable<Participant[]> {
+    let params = new HttpParams().set('query', query);
+    if (initiatorId !== undefined) {
+      params = params.set('initiatorId', initiatorId);
+    }
     return this.http
       .get<ParticipantApiDto[]>(`${this.apiUrl}/search`, { params })
       .pipe(map(dtos => dtos.map(mapParticipant)));

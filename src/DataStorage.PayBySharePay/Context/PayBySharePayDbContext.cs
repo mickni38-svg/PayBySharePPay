@@ -13,9 +13,19 @@ public class PayBySharePayDbContext : DbContext
     public DbSet<OrderParticipant> OrderParticipants => Set<OrderParticipant>();
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<Message> Messages => Set<Message>();
+    public DbSet<MerchantOrderDraft> MerchantOrderDrafts => Set<MerchantOrderDraft>();
+    public DbSet<MerchantOrderLine> MerchantOrderLines => Set<MerchantOrderLine>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Order>(entity =>
+        {
+            entity.HasOne(o => o.CreatedBy)
+                .WithMany()
+                .HasForeignKey(o => o.CreatedByParticipantId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
         modelBuilder.Entity<FriendRelation>(entity =>
         {
             entity.HasOne(f => f.Initiator)
@@ -68,6 +78,33 @@ public class PayBySharePayDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(m => m.ParticipantId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<MerchantOrderDraft>(entity =>
+        {
+            entity.Property(d => d.SubtotalAmount).HasPrecision(18, 2);
+            entity.Property(d => d.TotalAmount).HasPrecision(18, 2);
+
+            entity.HasOne(d => d.Order)
+                .WithMany()
+                .HasForeignKey(d => d.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.MerchantParticipant)
+                .WithMany()
+                .HasForeignKey(d => d.MerchantParticipantId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<MerchantOrderLine>(entity =>
+        {
+            entity.Property(l => l.UnitPrice).HasPrecision(18, 2);
+            entity.Property(l => l.LineTotal).HasPrecision(18, 2);
+
+            entity.HasOne(l => l.MerchantOrderDraft)
+                .WithMany(d => d.Lines)
+                .HasForeignKey(l => l.MerchantOrderDraftId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

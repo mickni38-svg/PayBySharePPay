@@ -22,6 +22,26 @@ public class OrderRepository : IOrderRepository
             .FirstOrDefaultAsync(o => o.Id == id);
     }
 
+    public async Task<IEnumerable<Order>> GetAllWithDetailsAsync()
+    {
+        return await _context.Orders
+            .Include(o => o.OrderParticipants).ThenInclude(op => op.Participant)
+            .Include(o => o.Payments)
+            .OrderByDescending(o => o.CreatedAt)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Order>> GetByParticipantIdAsync(int participantId)
+    {
+        return await _context.Orders
+            .Include(o => o.OrderParticipants).ThenInclude(op => op.Participant)
+            .Include(o => o.Payments)
+            .Where(o => o.CreatedByParticipantId == participantId ||
+                        o.OrderParticipants.Any(op => op.ParticipantId == participantId))
+            .OrderByDescending(o => o.CreatedAt)
+            .ToListAsync();
+    }
+
     public async Task<IEnumerable<Order>> GetAllAsync()
     {
         return await _context.Orders.ToListAsync();

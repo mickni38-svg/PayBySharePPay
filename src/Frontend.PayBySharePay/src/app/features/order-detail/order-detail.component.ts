@@ -1,8 +1,9 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Order, OrderParticipant, OrderParticipantStatus, OrderStatus } from '../../core/models/order.model';
+import { Order, OrderParticipant, OrderParticipantStatus, OrderStatus, OrderOverviewApiDto, mapOrderParticipantStatus } from '../../core/models/order.model';
 import { ParticipantType } from '../../core/models/participant.model';
+import { OrderService } from '../../core/services/order.service';
 
 interface CategoryOption {
   icon: string;
@@ -25,27 +26,12 @@ function toInitials(name: string): string {
   return name.split(' ').slice(0, 2).map(p => p[0]).join('').toUpperCase();
 }
 
-const MOCK_ORDER: Order = {
-  id: 1,
-  title: 'pizza aften',
-  category: 'food',
-  message: 'juhuu',
-  createdDate: new Date(),
-  createdByParticipantId: 1,
-  status: OrderStatus.Pending,
-  orderParticipants: [
-    { id: 1, orderId: 1, participantId: 1, participantName: 'Mads Grønlund',  participantType: ParticipantType.Person,   status: OrderParticipantStatus.Pending },
-    { id: 2, orderId: 1, participantId: 2, participantName: 'Adda Algren',    participantType: ParticipantType.Person,   status: OrderParticipantStatus.Pending },
-    { id: 3, orderId: 1, participantId: 3, participantName: 'Clara Thomsen',  participantType: ParticipantType.Person,   status: OrderParticipantStatus.Pending },
-    { id: 4, orderId: 1, participantId: 4, participantName: 'Pizza House',    participantType: ParticipantType.Merchant, status: OrderParticipantStatus.Accepted, amount: 280 },
-  ]
-};
-
 const CATEGORIES: CategoryOption[] = [
-  { key: 'food',     icon: '🎵', label: 'pizza aften' },
-  { key: 'sushi',    icon: '🍴', label: 'sticks and sushi' },
-  { key: 'drinks',   icon: '🍺', label: 'drinks' },
-  { key: 'other',    icon: '📦', label: 'andet' },
+  { key: 'sushi',   icon: '🍣', label: 'Sushi' },
+  { key: 'pizza',   icon: '🍕', label: 'Pizza' },
+  { key: 'burger',  icon: '🍔', label: 'Burger' },
+  { key: 'drinks',  icon: '🍺', label: 'Drinks' },
+  { key: 'other',   icon: '📦', label: 'Andet' },
 ];
 
 @Component({
@@ -54,6 +40,18 @@ const CATEGORIES: CategoryOption[] = [
   imports: [CommonModule],
   template: `
     <div class="detail">
+
+      <!-- Header -->
+      <header class="detail__header">
+        <button class="detail__back" (click)="goBack()">‹</button>
+        <h1 class="detail__title">{{ order()?.title || 'Ordre' }}</h1>
+      </header>
+
+      @if (isLoading()) {
+        <p class="detail__state">Henter ordre…</p>
+      } @else if (errorMessage()) {
+        <p class="detail__state detail__state--error">{{ errorMessage() }}</p>
+      } @else {
 
       <!-- Kategori-tabs -->
       <div class="detail__cats">
@@ -65,9 +63,6 @@ const CATEGORIES: CategoryOption[] = [
           >
             <span>{{ cat.icon }}</span>
             <span>{{ cat.label }}</span>
-            @if (order()?.category === cat.key) {
-              <span class="cat-chip__del" (click)="$event.stopPropagation()">🗑</span>
-            }
           </button>
         }
       </div>
@@ -108,6 +103,8 @@ const CATEGORIES: CategoryOption[] = [
         <button class="detail__pay-btn" (click)="payOrder()">Betal ordre</button>
       </div>
 
+      } <!-- end @else -->
+
     </div>
   `,
   styles: [`
@@ -118,7 +115,47 @@ const CATEGORIES: CategoryOption[] = [
       background: #0a0e1a;
       color: #fff;
       padding-bottom: 140px;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
     }
+
+    .detail__header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 16px 8px;
+    }
+
+    .detail__back {
+      background: transparent;
+      border: none;
+      color: #60a5fa;
+      font-size: 28px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0 6px 0 0;
+      min-width: 32px;
+      min-height: 44px;
+    }
+
+    .detail__title {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .detail__state {
+      padding: 40px 20px;
+      text-align: center;
+      color: #555;
+      font-size: 15px;
+      margin: 0;
+    }
+
+    .detail__state--error { color: #ff453a; }
+
 
     /* Kategori-chips */
     .detail__cats {
@@ -278,15 +315,16 @@ const CATEGORIES: CategoryOption[] = [
 
     .detail__pay-btn {
       width: 100%;
-      background: #1a2a5e;
+      background: linear-gradient(135deg, #0d2a4a 0%, #1a3a6e 100%);
       color: #fff;
-      border: none;
-      border-radius: 12px;
+      border: 1px solid rgba(0,120,200,0.4);
+      border-radius: 14px;
       padding: 16px;
-      font-size: 16px;
-      font-weight: 600;
+      font-size: 17px;
+      font-weight: 700;
       cursor: pointer;
-      min-height: 52px;
+      min-height: 54px;
+      letter-spacing: 0.3px;
       transition: opacity 0.2s;
     }
 
@@ -301,14 +339,45 @@ export class OrderDetailComponent implements OnInit {
 
   categories = CATEGORIES;
   order = signal<Order | null>(null);
+  isLoading = signal(true);
+  errorMessage = signal<string | null>(null);
 
-  constructor(private route: ActivatedRoute, private router: Router) {}
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private orderService: OrderService
+  ) {}
 
   ngOnInit(): void {
-    // Brug MOCK_ORDER – udskift med: this.orderService.getOrderById(id).subscribe(...)
-    const id = Number(this.route.snapshot.paramMap.get('id') ?? 1);
-    void id;
-    this.order.set({ ...MOCK_ORDER });
+    const id = Number(this.route.snapshot.paramMap.get('id'));
+    if (!id) { this.router.navigate(['/orders']); return; }
+
+    this.orderService.getOrderOverview(id).subscribe({
+      next: (dto: OrderOverviewApiDto) => {
+        this.order.set({
+          id: dto.orderId,
+          title: dto.title,
+          category: dto.category,
+          message: dto.message,
+          createdDate: new Date(dto.createdAt),
+          createdByParticipantId: 0,
+          status: dto.status as OrderStatus,
+          orderParticipants: dto.participants.map((p, i) => ({
+            id: i + 1,
+            orderId: dto.orderId,
+            participantId: p.participantId,
+            participantName: p.name,
+            participantType: p.type === 'Merchant' ? ParticipantType.Merchant : ParticipantType.Person,
+            status: mapOrderParticipantStatus(p.status)
+          }))
+        });
+        this.isLoading.set(false);
+      },
+      error: () => {
+        this.errorMessage.set('Kunne ikke hente ordre.');
+        this.isLoading.set(false);
+      }
+    });
   }
 
   selectCategory(key: string): void {
@@ -320,30 +389,33 @@ export class OrderDetailComponent implements OnInit {
 
   statusLabel(status: OrderParticipantStatus): string {
     switch (status) {
-      case OrderParticipantStatus.Pending:  return 'afventer';
+      case OrderParticipantStatus.Invited:  return 'inviteret';
       case OrderParticipantStatus.Accepted: return 'accepteret';
       case OrderParticipantStatus.Declined: return 'afvist';
       case OrderParticipantStatus.Paid:     return 'betalt';
+      default: return status;
     }
   }
 
   statusClass(status: OrderParticipantStatus): string {
     switch (status) {
-      case OrderParticipantStatus.Pending:  return 'status-pending';
+      case OrderParticipantStatus.Invited:  return 'status-pending';
       case OrderParticipantStatus.Accepted: return 'status-accepted';
       case OrderParticipantStatus.Declined: return 'status-declined';
       case OrderParticipantStatus.Paid:     return 'status-paid';
+      default: return '';
     }
   }
 
   openParticipant(p: OrderParticipant): void {
-    // TODO: åbn deltager-detalje / betalingsdialog
     console.log('Åbn deltager', p);
   }
 
   payOrder(): void {
-    // TODO: kald PaymentService.registerPayment(...)
-    alert('Betaling registreres – implementeres i step 11');
+    alert('Betaling registreres – implementeres i næste step');
+  }
+
+  goBack(): void {
+    this.router.navigate(['/orders']);
   }
 }
-

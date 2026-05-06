@@ -1,10 +1,12 @@
 using Api.PayBySharePay.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Service.PayBySharePay.DTOs;
 using Service.PayBySharePay.Interfaces;
 
 namespace Api.PayBySharePay.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class OrdersController : ControllerBase
@@ -16,6 +18,21 @@ public class OrdersController : ControllerBase
         _orderService = orderService;
     }
 
+    /// <summary>Henter alle ordrer, eller filtrerer på participantId</summary>
+    [HttpGet]
+    [ProducesResponseType(typeof(IEnumerable<OrderSummaryDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAll([FromQuery] int? participantId = null)
+    {
+        if (participantId.HasValue)
+        {
+            var filtered = await _orderService.GetOrdersByParticipantAsync(participantId.Value);
+            return Ok(filtered);
+        }
+
+        var results = await _orderService.GetAllOrdersAsync();
+        return Ok(results);
+    }
+
     [HttpPost]
     [ProducesResponseType(typeof(OrderDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -23,6 +40,7 @@ public class OrdersController : ControllerBase
     {
         var dto = new CreateOrderDto
         {
+            CreatedByParticipantId = request.CreatedByParticipantId,
             Title = request.Title,
             Category = request.Category,
             Message = request.Message,
