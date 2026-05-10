@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.paybysharepay.com'
+  apiUrl: 'https://paybysharepay-api-win.azurewebsites.net'
 };
