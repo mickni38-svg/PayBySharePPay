@@ -30,9 +30,8 @@ public class ParticipantRepository : IParticipantRepository
                 .Where(f => f.InitiatorId == excludeFriendsOf.Value || f.ReceiverId == excludeFriendsOf.Value)
                 .Select(f => f.InitiatorId == excludeFriendsOf.Value ? f.ReceiverId : f.InitiatorId);
 
-            // Ekskludér kun Person-typer der allerede er venner – Merchants vises altid
-            q = q.Where(p => p.Type == ParticipantType.Merchant ||
-                              (p.Id != excludeFriendsOf.Value && !friendIds.Contains(p.Id)));
+            // Ekskludér alle typer (Person og Merchant) der allerede er tilføjet som ven
+            q = q.Where(p => p.Id != excludeFriendsOf.Value && !friendIds.Contains(p.Id));
         }
 
         return await q.ToListAsync();

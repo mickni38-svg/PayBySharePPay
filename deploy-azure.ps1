@@ -9,7 +9,7 @@ $root = $PSScriptRoot
 
 Write-Host "Trin 1/5 - Bygger Angular (production)..." -ForegroundColor Cyan
 Set-Location "$root\src\Frontend.PayBySharePay"
-npm ci
+npm ci --silent
 npx ng build --configuration production
 if ($LASTEXITCODE -ne 0) { Write-Host "Angular build fejlede!" -ForegroundColor Red; exit 1 }
 
@@ -17,15 +17,12 @@ Write-Host "Trin 2/5 - Deployer Angular til Azure Static Web Apps..." -Foregroun
 npx @azure/static-web-apps-cli deploy ./dist/frontend.paybysharepay `
     --deployment-token "acad8ed89e853e5624beb518c6d37aab861ed6958fe2affb30d085fb21820b5c07-15d77b89-25e6-4195-a4b1-7ef61f20a7c900305250750d2703" `
     --env production
-
 if ($LASTEXITCODE -ne 0) { Write-Host "Frontend deploy fejlede!" -ForegroundColor Red; exit 1 }
 
 Write-Host "Trin 3/5 - Bygger og publisher .NET 9 API..." -ForegroundColor Cyan
 Set-Location "$root"
 dotnet publish src\Api.PayBySharePay\Api.PayBySharePay.csproj `
     --configuration Release `
-    --runtime linux-x64 `
-    --self-contained false `
     --output "./publish-output"
 if ($LASTEXITCODE -ne 0) { Write-Host ".NET build fejlede!" -ForegroundColor Red; exit 1 }
 
