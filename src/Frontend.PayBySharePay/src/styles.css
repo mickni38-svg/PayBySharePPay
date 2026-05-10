@@ -1,143 +1,221 @@
-/* Global styles - Mobile first for iPhone 14 */
+/* ============================================
+   PayBySharePay – Global Design Tokens
+   Dark-mode fintech theme
+   ============================================ */
 :root {
-  --primary-color: #007AFF;
-  --secondary-color: #5AC8FA;
-  --success-color: #34C759;
-  --warning-color: #FF9500;
-  --danger-color: #FF3B30;
-  --background-color: #F2F2F7;
-  --card-background: #FFFFFF;
-  --text-primary: #000000;
-  --text-secondary: #8E8E93;
-  --border-color: #C6C6C8;
-  --spacing-xs: 8px;
-  --spacing-sm: 12px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 32px;
-  --border-radius: 12px;
-  --border-radius-lg: 16px;
+  /* Baggrunde */
+  --color-bg:               #070B14;
+  --color-surface:          #101827;
+  --color-surface-elevated: #151E2E;
+  --color-input-bg:         #121B2A;
+  --color-border:           #263247;
+
+  /* Primær accent – grøn */
+  --color-primary:          #22C55E;
+  --color-primary-dark:     #15803D;
+  --color-primary-bg:       rgba(34,197,94,0.12);
+
+  /* Sekundære accenter */
+  --color-cyan:             #06B6D4;
+  --color-purple:           #7C3AED;
+  --color-orange:           #F59E0B;
+  --color-danger:           #EF4444;
+
+  /* Tekst */
+  --color-text-primary:     #FFFFFF;
+  --color-text-secondary:   #94A3B8;
+  --color-text-muted:       #64748B;
+
+  /* Border radius */
+  --radius-sm:  8px;
+  --radius-md:  14px;
+  --radius-lg:  20px;
+  --radius-xl:  24px;
+
+  /* Spacing */
+  --space-page:    20px;
+  --space-card:    16px;
+  --space-section: 20px;
+  --space-item:    12px;
+
+  /* Font */
+  --font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+/* -- Reset -- */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 html, body {
   height: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font-family);
   font-size: 16px;
   line-height: 1.5;
-  color: var(--text-primary);
-  background-color: var(--background-color);
-}
-
-body {
-  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
 }
 
-/* Mobile first - iPhone 14 optimization (390px width) */
-@media (max-width: 767px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-/* Touch-friendly elements */
+/* Touch targets */
 button, a, input, select, textarea {
   min-height: 44px;
   touch-action: manipulation;
 }
 
-/* Common utility classes */
-.container {
-  max-width: 390px;
-  margin: 0 auto;
-  padding: var(--spacing-md);
+/* -- Utility: Layout -- */
+.page-shell {
+  background: var(--color-bg);
+  min-height: 100dvh;
+  color: var(--color-text-primary);
+  font-family: var(--font-family);
+  padding-bottom: 80px;
 }
 
-.card {
-  background: var(--card-background);
-  border-radius: var(--border-radius);
-  padding: var(--spacing-md);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+/* -- Utility: Card -- */
+.app-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-card);
 }
 
+/* -- Utility: Buttons -- */
 .btn-primary {
-  background-color: var(--primary-color);
-  color: white;
+  width: 100%;
+  background: var(--color-primary);
+  color: #000;
   border: none;
-  border-radius: var(--border-radius);
-  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  padding: 15px;
   font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-
-.btn-primary:active {
-  opacity: 0.8;
-}
-
-.badge {
-  display: inline-block;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.badge-person {
-  background-color: var(--secondary-color);
-  color: white;
-}
-
-.badge-merchant {
-  background-color: var(--warning-color);
-  color: white;
-}
-
-.status-chip {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.status-pending {
-  background-color: var(--warning-color);
-  color: white;
-}
-
-.status-paid {
-  background-color: var(--success-color);
-  color: white;
-}
-
-.status-accepted {
-  background-color: var(--primary-color);
-  color: white;
-}
-
-/* Page layout â€“ bruges inden i router-outlet sider */
-.page {
-  padding: var(--spacing-md);
-}
-
-.page-header {
-  padding: var(--spacing-md) var(--spacing-md) var(--spacing-sm);
-  background: var(--card-background);
-  border-bottom: 1px solid var(--border-color);
-}
-
-.page-header__title {
-  font-size: 22px;
   font-weight: 700;
-  color: var(--text-primary);
+  cursor: pointer;
+  min-height: 52px;
+  transition: opacity 0.15s, transform 0.1s;
+  letter-spacing: 0.2px;
+}
+.btn-primary:active { opacity: 0.85; transform: scale(0.98); }
+.btn-primary:disabled {
+  background: var(--color-surface-elevated);
+  color: var(--color-text-muted);
+  cursor: default;
+  transform: none; opacity: 1;
 }
 
+.btn-ghost {
+  background: transparent;
+  color: var(--color-primary);
+  border: 1.5px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  padding: 13px 20px;
+  font-size: 15px; font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-ghost:active { background: var(--color-primary-bg); }
+
+/* -- Utility: Status badges -- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.badge--pending  { color: #F59E0B; background: rgba(245,158,11,0.12); }
+.badge--accepted { color: #22C55E; background: rgba(34,197,94,0.12); }
+.badge--paid     { color: #06B6D4; background: rgba(6,182,212,0.12); }
+.badge--declined { color: #EF4444; background: rgba(239,68,68,0.12); }
+.badge--orange   { color: #F59E0B; background: rgba(245,158,11,0.12); }
+
+/* -- Utility: Avatar -- */
+.avatar {
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; color: rgba(255,255,255,0.9);
+  flex-shrink: 0;
+}
+.avatar--sm { width: 32px; height: 32px; font-size: 11px; }
+.avatar--md { width: 44px; height: 44px; font-size: 15px; }
+.avatar--lg { width: 56px; height: 56px; font-size: 18px; }
+
+/* -- Utility: Form inputs -- */
+.form-input {
+  width: 100%;
+  background: var(--color-input-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 13px 16px;
+  color: var(--color-text-primary);
+  font-size: 15px;
+  font-family: var(--font-family);
+  outline: none;
+  min-height: 50px;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
+}
+.form-input:focus { border-color: var(--color-primary); }
+.form-input::placeholder { color: var(--color-text-muted); }
+
+.form-label {
+  display: block;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 8px;
+}
+
+.form-section { margin-bottom: var(--space-section); }
+
+/* -- Utility: Section header -- */
+.section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 12px;
+}
+
+/* -- Utility: Tabs -- */
+.tabs {
+  display: flex; gap: 8px;
+  padding: 0 var(--space-page) 16px;
+}
+.tab {
+  flex: 1; padding: 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.15s;
+  min-height: 40px;
+}
+.tab--active {
+  border-color: var(--color-primary);
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+}
+
+/* -- Legacy compat (bruges stadig af ældre sider) -- */
+.page { padding: 16px; }
+.page-header {
+  padding: 16px 16px 12px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+.page-header__title { font-size: 22px; font-weight: 700; }
+.status-chip { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.status-pending  { color: #F59E0B; background: rgba(245,158,11,0.12); }
+.status-accepted { color: #22C55E; background: rgba(34,197,94,0.12); }
+.status-ordered  { color: #22C55E; background: rgba(34,197,94,0.12); }
+.status-paid     { color: #06B6D4; background: rgba(6,182,212,0.12); }
+.status-declined { color: #EF4444; background: rgba(239,68,68,0.12); }

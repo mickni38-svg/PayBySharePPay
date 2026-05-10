@@ -37,6 +37,7 @@ function avatarColor(name: string): string {
 export class FindParticipantsComponent implements OnInit {
   searchTerm = '';
   entries = signal<DirectoryEntryVM[]>([]);
+  activeTab = signal<'persons' | 'merchants'>('persons');
   isLoading = signal(false);
   errorMessage = signal<string | null>(null);
 
@@ -50,9 +51,20 @@ export class FindParticipantsComponent implements OnInit {
     );
   });
 
+  filteredByTab = computed(() => {
+    const tab = this.activeTab();
+    return this.filtered().filter(e =>
+      tab === 'merchants' ? e.type === 'Merchant' : e.type === 'Person'
+    );
+  });
+
   selectedCount = computed(() =>
     this.entries().filter(e => e.selected).length
   );
+
+  setTab(tab: 'persons' | 'merchants'): void {
+    this.activeTab.set(tab);
+  }
 
   constructor(
     private directoryService: DirectoryService,
