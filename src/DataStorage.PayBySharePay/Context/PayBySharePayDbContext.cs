@@ -24,6 +24,12 @@ public class PayBySharePayDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(o => o.CreatedByParticipantId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(o => o.MerchantParticipant)
+                .WithMany()
+                .HasForeignKey(o => o.MerchantParticipantId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
         });
 
         modelBuilder.Entity<FriendRelation>(entity =>

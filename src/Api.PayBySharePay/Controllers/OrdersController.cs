@@ -44,6 +44,7 @@ public class OrdersController : ControllerBase
             Title = request.Title,
             Category = request.Category,
             Message = request.Message,
+            MerchantParticipantId = request.MerchantParticipantId,
             ParticipantIds = request.ParticipantIds
         };
 

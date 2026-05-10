@@ -1,0 +1,133 @@
+<div class="create">
+
+  <header class="create__header">
+    <button class="create__back" (click)="goBack()">‹</button>
+    <h1 class="create__title">Ny gruppebetaling</h1>
+  </header>
+
+  <!-- Titel -->
+  <div class="create__section">
+    <label class="create__label">Titel</label>
+    <input
+      class="create__input"
+      type="text"
+      placeholder="fx pizza aften"
+      [ngModel]="title()"
+      (ngModelChange)="title.set($event)"
+      maxlength="80"
+    />
+  </div>
+
+  <!-- Kategori -->
+  <div class="create__section">
+    <label class="create__label">Kategori</label>
+    <div class="create__emojis">
+      @for (cat of categories; track cat.key) {
+        <button
+          class="emoji-btn"
+          [class.emoji-btn--active]="selectedCategory() === cat.key"
+          [title]="cat.label"
+          (click)="toggleCategory(cat.key)"
+        >{{ cat.icon }}</button>
+      }
+    </div>
+    @if (selectedCategory()) {
+      <p class="create__cat-label">{{ categoryLabel() }}</p>
+    }
+  </div>
+
+  <!-- Besked -->
+  <div class="create__section">
+    <label class="create__label">Besked (valgfri)</label>
+    <textarea
+      class="create__textarea"
+      placeholder="Skriv en kort besked til deltagerne…"
+      [(ngModel)]="message"
+      maxlength="200"
+      rows="3"
+    ></textarea>
+  </div>
+
+  <!-- Merchant / Spisested -->
+  <div class="create__section">
+    <label class="create__label">Vælg spisested</label>
+    @if (merchants().length === 0) {
+      <p class="create__state">Ingen spisestedder i din venneliste</p>
+    } @else {
+      <div class="create__list">
+        @for (m of merchants(); track m.id) {
+          <div class="row" [class.row--selected]="selectedMerchant()?.id === m.id" (click)="toggleMerchant(m)">
+            <div class="row__avatar" [style.background]="m.avatarColor">{{ m.initials }}</div>
+            <div class="row__info">
+              <span class="row__name">{{ m.displayName }}</span>
+              @if (m.handle) { <span class="row__sub">{{ m.handle }}</span> }
+              <span class="row__badge">Spisested</span>
+            </div>
+            <div class="row__check" [class.row__check--on]="selectedMerchant()?.id === m.id">
+              @if (selectedMerchant()?.id === m.id) {
+                <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Deltagere -->
+  <div class="create__section">
+    <label class="create__label">Tilføj deltagere</label>
+    <div class="create__search-wrap">
+      <input
+        class="create__input"
+        type="search"
+        placeholder="Søg navn…"
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="onSearch()"
+      />
+    </div>
+
+    @if (isLoading()) {
+      <p class="create__state">Henter…</p>
+    } @else if (filtered().length > 0) {
+      <div class="create__list">
+        @for (p of filtered(); track p.id) {
+          <div class="row" [class.row--selected]="p.selected" (click)="togglePerson(p)">
+            <div class="row__avatar" [style.background]="p.avatarColor">{{ p.initials }}</div>
+            <div class="row__info">
+              <span class="row__name">{{ p.displayName }}</span>
+              @if (p.handle) { <span class="row__sub">{{ p.handle }}</span> }
+            </div>
+            <div class="row__check" [class.row__check--on]="p.selected">
+              @if (p.selected) {
+                <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  @if (errorMessage()) {
+    <p class="create__error">{{ errorMessage() }}</p>
+  }
+
+  <!-- Opret-knap -->
+  <div class="create__footer">
+    <button
+      class="create__submit"
+      [disabled]="!canSubmit() || isSubmitting()"
+      (click)="submit()"
+    >
+      @if (isSubmitting()) { Opretter… } @else { Opret gruppebetaling }
+    </button>
+  </div>
+
+</div>

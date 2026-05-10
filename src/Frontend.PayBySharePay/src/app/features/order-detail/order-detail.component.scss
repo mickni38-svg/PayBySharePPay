@@ -1,0 +1,158 @@
+.detail {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  background: #0a0e1a;
+  color: #fff;
+  padding-bottom: 140px;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+}
+
+.detail__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 16px 8px;
+}
+
+.detail__back {
+  background: transparent;
+  border: none;
+  color: #60a5fa;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 6px 0 0;
+  min-width: 32px;
+  min-height: 44px;
+}
+
+.detail__title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detail__state { padding: 40px 20px; text-align: center; color: #555; font-size: 15px; margin: 0; }
+.detail__state--error { color: #ff453a; }
+
+.detail__cat-bar { display: flex; align-items: center; gap: 8px; padding: 8px 16px 4px; }
+.detail__cat-icon { font-size: 22px; }
+.detail__cat-label { font-size: 14px; color: #9ca3af; font-weight: 500; }
+
+.detail__section { margin: 8px 16px; background: #111827; border-radius: 12px; padding: 12px 14px; }
+.detail__label { font-size: 12px; color: #6b7280; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+.detail__message { font-size: 15px; color: #e5e7eb; }
+
+.detail__participants { margin-top: 8px; }
+
+.participant-block { border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+.participant {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  cursor: pointer;
+  min-height: 60px;
+  transition: background 0.15s;
+}
+
+.participant:active { background: rgba(255,255,255,0.03); }
+
+.participant__avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.participant__info { flex: 1; display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+.participant__name { font-size: 15px; font-weight: 600; color: #fff; }
+.participant__sub { font-size: 13px; color: #6b7280; }
+
+.participant__right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+.status-chip { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+.status-ordered { color: #34d399; background: rgba(52,211,153,0.12); }
+.status-pending { color: #9ca3af; background: rgba(156,163,175,0.12); }
+
+.participant__arrow {
+  color: #6b7280;
+  font-size: 20px;
+  line-height: 1;
+  transition: transform 0.2s;
+  display: inline-block;
+}
+
+.participant__arrow--open { transform: rotate(90deg); }
+
+.order-lines {
+  display: none;
+  background: #0d1424;
+  padding: 10px 16px 14px 74px;
+}
+
+.order-lines--open { display: block; }
+
+.order-lines__empty { font-size: 13px; color: #4b5563; margin: 0; padding: 4px 0; }
+
+.order-line {
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  gap: 8px;
+  padding: 5px 0;
+  font-size: 14px;
+  color: #d1d5db;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.order-line:last-child { border-bottom: none; }
+.order-line__qty { color: #6b7280; font-size: 13px; }
+.order-line__price { color: #fff; font-weight: 500; text-align: right; }
+
+.order-line--total {
+  margin-top: 4px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 8px;
+  font-weight: 700;
+  color: #fff;
+  font-size: 14px;
+}
+
+.detail__footer {
+  position: fixed;
+  bottom: 68px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 390px;
+  padding: 12px 16px;
+  background: linear-gradient(to top, #0a0e1a 80%, transparent);
+}
+
+.detail__pay-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #0d2a4a 0%, #1a3a6e 100%);
+  color: #fff;
+  border: 1px solid rgba(0,120,200,0.4);
+  border-radius: 14px;
+  padding: 16px;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 54px;
+  letter-spacing: 0.3px;
+  transition: opacity 0.2s;
+}
+
+.detail__pay-btn:active { opacity: 0.8; }

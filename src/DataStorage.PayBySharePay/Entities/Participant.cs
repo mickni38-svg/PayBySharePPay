@@ -19,6 +19,7 @@ public class Participant
     public string? PaymentReference { get; set; }
     public string? PayoutAccountInfo { get; set; }
     public string? PaymentProvider { get; set; }
+    public string? GroupOrderUrl { get; set; }
 
     public ICollection<FriendRelation> FriendsInitiated { get; set; } = new List<FriendRelation>();
     public ICollection<FriendRelation> FriendsReceived { get; set; } = new List<FriendRelation>();

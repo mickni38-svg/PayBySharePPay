@@ -1,0 +1,35 @@
+<div class="login">
+  <div class="login__card">
+
+    <header class="login__header">
+      <div class="login__logo">💳</div>
+      <h1 class="login__title">ShareBySharePay</h1>
+      <p class="login__sub">Log ind med din e-mail</p>
+    </header>
+
+    <form class="login__form" (ngSubmit)="submit()">
+      <input
+        class="login__input"
+        type="email"
+        placeholder="din@email.dk"
+        [(ngModel)]="email"
+        name="email"
+        autocomplete="email"
+        required
+      />
+
+      @if (error()) {
+        <p class="login__error">{{ error() }}</p>
+      }
+
+      <button
+        class="login__btn"
+        type="submit"
+        [disabled]="loading() || !email"
+      >
+        @if (loading()) { Logger ind… } @else { Log ind }
+      </button>
+    </form>
+
+  </div>
+</div>

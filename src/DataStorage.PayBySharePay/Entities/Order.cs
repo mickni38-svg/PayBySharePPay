@@ -9,6 +9,9 @@ public class Order
     public string? Category { get; set; }
     public string? Message { get; set; }
     public string Status { get; set; } = "Collecting";
+    public int? MerchantParticipantId { get; set; }
+    public Participant? MerchantParticipant { get; set; }
+    public string? JoinToken { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public ICollection<OrderParticipant> OrderParticipants { get; set; } = new List<OrderParticipant>();

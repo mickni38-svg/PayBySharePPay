@@ -7,4 +7,5 @@ export interface DirectoryEntry {
   handle?: string;
   subtitle?: string;
   logoUrl?: string;
+  groupOrderUrl?: string;
 }

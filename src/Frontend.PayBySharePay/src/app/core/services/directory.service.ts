@@ -20,4 +20,9 @@ export class DirectoryService {
     }
     return this.http.get<DirectoryEntry[]>(`${this.apiUrl}/search`, { params });
   }
+
+  // GET /api/directory/{participantId}/friends
+  getFriends(participantId: number): Observable<DirectoryEntry[]> {
+    return this.http.get<DirectoryEntry[]>(`${this.apiUrl}/${participantId}/friends`);
+  }
 }

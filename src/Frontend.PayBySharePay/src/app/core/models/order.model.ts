@@ -95,6 +95,7 @@ export interface CreateOrderRequest {
   title: string;
   category?: string;
   message?: string;
+  merchantParticipantId?: number;
   participantIds: number[];
 }
 

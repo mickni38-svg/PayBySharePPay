@@ -23,4 +23,13 @@ public class DirectoryController : ControllerBase
         var results = await _directoryService.SearchAsync(query ?? string.Empty, excludeFriendsOf);
         return Ok(results);
     }
+
+    /// <summary>Henter venner for en given deltager</summary>
+    [HttpGet("{participantId}/friends")]
+    [ProducesResponseType(typeof(IEnumerable<DirectoryEntryDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetFriends(int participantId)
+    {
+        var results = await _directoryService.GetFriendsAsync(participantId);
+        return Ok(results);
+    }
 }
