@@ -18,7 +18,9 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(
                   "http://localhost:4200", "https://localhost:4200",
                   "http://localhost:4201", "https://localhost:4201",
-                  "https://icy-water-0750d2703.7.azurestaticapps.net"
+                  "https://icy-water-0750d2703.7.azurestaticapps.net",
+                  "https://paybysharepay.dk",
+                  "https://www.paybysharepay.dk"
               )
               .AllowAnyHeader()
               .AllowAnyMethod();
