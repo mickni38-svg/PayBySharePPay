@@ -1,0 +1,77 @@
+<div class="detail">
+
+  <header class="detail__header">
+    <button class="detail__back" (click)="goBack()">‹</button>
+    <h1 class="detail__title">{{ order()?.title || 'Ordre' }}</h1>
+  </header>
+
+  @if (isLoading()) {
+    <p class="detail__state">Henter ordre…</p>
+  } @else if (errorMessage()) {
+    <p class="detail__state detail__state--error">{{ errorMessage() }}</p>
+  } @else {
+
+    @if (activeCategoryIcon()) {
+      <div class="detail__cat-bar">
+        <span class="detail__cat-icon">{{ activeCategoryIcon() }}</span>
+        <span class="detail__cat-label">{{ activeCategoryLabel() }}</span>
+      </div>
+    }
+
+    @if (order()?.message) {
+      <div class="detail__section">
+        <div class="detail__label">Besked</div>
+        <div class="detail__message">{{ order()?.message }}</div>
+      </div>
+    }
+
+    <div class="detail__participants">
+      @for (p of participants(); track p.participantId) {
+        <div class="participant-block">
+          <div class="participant" (click)="toggleExpand(p.participantId)">
+            <div class="participant__avatar" [style.background]="p.avatarColor">
+              {{ p.initials }}
+            </div>
+            <div class="participant__info">
+              <span class="participant__name">{{ p.participantName }}</span>
+              <span class="participant__sub">&#64;{{ p.participantName.split(' ')[0].toLowerCase() }}</span>
+            </div>
+            <div class="participant__right">
+              @if (p.orderLines.length > 0) {
+                <span class="status-chip status-ordered">bestilt</span>
+              } @else {
+                <span class="status-chip status-pending">afventer</span>
+              }
+              <span class="participant__arrow" [class.participant__arrow--open]="isExpanded(p.participantId)">›</span>
+            </div>
+          </div>
+
+          <div class="order-lines" [class.order-lines--open]="isExpanded(p.participantId)">
+            @if (p.orderLines.length === 0) {
+              <p class="order-lines__empty">Ingen bestilling endnu</p>
+            } @else {
+              @for (line of p.orderLines; track line.name) {
+                <div class="order-line">
+                  <span class="order-line__qty">{{ line.quantity }}×</span>
+                  <span class="order-line__name">{{ line.name }}</span>
+                  <span class="order-line__price">{{ line.quantity * line.unitPrice }} kr</span>
+                </div>
+              }
+              <div class="order-line order-line--total">
+                <span></span>
+                <span>Total</span>
+                <span>{{ lineTotal(p.orderLines) }} kr</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="detail__footer">
+      <button class="detail__pay-btn" (click)="payOrder()">Betal ordre</button>
+    </div>
+
+  }
+
+</div>

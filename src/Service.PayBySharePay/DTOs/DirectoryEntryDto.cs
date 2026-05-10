@@ -8,4 +8,5 @@ public class DirectoryEntryDto
     public string? Handle { get; set; }
     public string? Subtitle { get; set; }
     public string? LogoUrl { get; set; }
+    public string? GroupOrderUrl { get; set; }
 }

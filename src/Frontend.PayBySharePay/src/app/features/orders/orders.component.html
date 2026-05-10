@@ -1,0 +1,88 @@
+<div class="orders">
+
+  <header class="orders__header">
+    <h1 class="orders__title">Overblik</h1>
+  </header>
+
+  @if (isLoading()) {
+    <p class="orders__state">Henter ordrer…</p>
+  } @else if (errorMessage()) {
+    <p class="orders__state orders__state--error">{{ errorMessage() }}</p>
+  } @else if (orders().length === 0) {
+    <div class="orders__empty">
+      <p>Ingen gruppebetalinger endnu.</p>
+      <button class="orders__empty-btn" (click)="goCreate()">Opret den første</button>
+    </div>
+  } @else {
+
+    <!-- Ordre-tabs -->
+    <div class="orders__scroll-row">
+      @for (o of orders(); track o.id) {
+        <button class="scroll-chip" [class.scroll-chip--active]="activeId() === o.id" (click)="setActive(o.id)">
+          <span class="scroll-chip__icon">{{ categoryIcon(o.category) }}</span>
+          <span>{{ o.title }}</span>
+        </button>
+      }
+    </div>
+
+    <!-- Aktiv ordre med accordion-deltagere -->
+    @if (activeOrderVm()) {
+      <div class="order-panel">
+        @for (p of activeOrderVm()!.participants; track p.participantId) {
+          <div class="participant-block">
+
+            <!-- Klikbar header -->
+            <div class="participant" (click)="toggleParticipant(p.participantId)">
+              <div class="participant__avatar" [style.background]="avatarColor(p.name)">
+                {{ initials(p.name) }}
+              </div>
+              <div class="participant__info">
+                <span class="participant__name">{{ p.name }}</span>
+                <span class="participant__sub">{{ statusLabel(p.status) }}</span>
+              </div>
+              <div class="participant__right">
+                <span class="status-chip" [ngClass]="statusClass(p.status)">{{ statusLabel(p.status) }}</span>
+                <span class="participant__arrow" [class.participant__arrow--open]="p.expanded">›</span>
+              </div>
+            </div>
+
+            <!-- Accordion indhold -->
+            <div class="order-lines" [class.order-lines--open]="p.expanded">
+              @if (p.orderLines.length === 0) {
+                <p class="order-lines__empty">Ingen bestilling endnu</p>
+              } @else {
+                @for (line of p.orderLines; track line.name) {
+                  <div class="order-line">
+                    <span class="order-line__qty">{{ line.quantity }}×</span>
+                    <span class="order-line__name">{{ line.name }}</span>
+                    <span class="order-line__price">{{ line.quantity * line.unitPrice }} kr</span>
+                  </div>
+                }
+                <div class="order-line order-line--total">
+                  <span></span>
+                  <span>Total</span>
+                  <span>{{ lineTotal(p.orderLines) }} kr</span>
+                </div>
+              }
+            </div>
+
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Betal ordre — kun aktiv når alle har betalt -->
+    <div class="orders__footer">
+      <button
+        class="orders__pay-btn"
+        [class.orders__pay-btn--disabled]="!allPaid()"
+        [disabled]="!allPaid()"
+        (click)="finalPay()"
+      >
+        @if (allPaid()) { Betal ordre til spisestedet } @else { Afventer alle deltagere… }
+      </button>
+    </div>
+
+  }
+
+</div>

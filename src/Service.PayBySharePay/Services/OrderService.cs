@@ -24,13 +24,24 @@ public class OrderService : IOrderService
         var creator = await _participantRepository.GetByIdAsync(dto.CreatedByParticipantId)
             ?? throw new KeyNotFoundException($"Bruger med id {dto.CreatedByParticipantId} findes ikke.");
 
+        Participant? merchant = null;
+        if (dto.MerchantParticipantId.HasValue)
+        {
+            merchant = await _participantRepository.GetByIdAsync(dto.MerchantParticipantId.Value)
+                ?? throw new KeyNotFoundException($"Merchant med id {dto.MerchantParticipantId} findes ikke.");
+        }
+
+        var joinToken = Guid.NewGuid().ToString("N");
+
         var order = new Order
         {
             CreatedByParticipantId = dto.CreatedByParticipantId,
             Title = dto.Title.Trim(),
             Category = dto.Category,
             Message = dto.Message,
-            Status = "Collecting"
+            Status = "Collecting",
+            MerchantParticipantId = dto.MerchantParticipantId,
+            JoinToken = joinToken
         };
 
         // Opretter selv tilføjes automatisk som deltager
@@ -42,7 +53,7 @@ public class OrderService : IOrderService
 
         foreach (var participantId in dto.ParticipantIds.Where(id => id != dto.CreatedByParticipantId))
         {
-            var participant = await _participantRepository.GetByIdAsync(participantId)
+            _ = await _participantRepository.GetByIdAsync(participantId)
                 ?? throw new KeyNotFoundException($"Deltager med id {participantId} findes ikke.");
 
             order.OrderParticipants.Add(new OrderParticipant
@@ -54,6 +65,27 @@ public class OrderService : IOrderService
 
         await _orderRepository.AddAsync(order);
         await _orderRepository.SaveChangesAsync();
+
+        // Send notifikation (besked) til alle deltagere hvis merchant er valgt
+        if (merchant?.GroupOrderUrl != null)
+        {
+            var orderUrl = $"{merchant.GroupOrderUrl}?sbysGroup={order.Id}&sbysJoin={joinToken}";
+            var allParticipantIds = dto.ParticipantIds
+                .Union(new[] { dto.CreatedByParticipantId })
+                .Distinct();
+
+            foreach (var participantId in allParticipantIds)
+            {
+                order.Messages.Add(new Message
+                {
+                    OrderId = order.Id,
+                    ParticipantId = dto.CreatedByParticipantId,
+                    Content = $"Bestil din mad hos {merchant.CompanyName ?? merchant.Name}: {orderUrl}"
+                });
+            }
+
+            await _orderRepository.SaveChangesAsync();
+        }
 
         return MapToDto(order);
     }

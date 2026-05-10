@@ -20,6 +20,14 @@ public class FriendRelationRepository : IFriendRelationRepository
                            (f.InitiatorId == receiverId && f.ReceiverId == initiatorId));
     }
 
+    public async Task<IEnumerable<Participant>> GetFriendsOfAsync(int participantId)
+    {
+        return await _context.FriendRelations
+            .Where(f => f.InitiatorId == participantId || f.ReceiverId == participantId)
+            .Select(f => f.InitiatorId == participantId ? f.Receiver : f.Initiator)
+            .ToListAsync();
+    }
+
     public async Task<FriendRelation> AddAsync(FriendRelation relation)
     {
         _context.FriendRelations.Add(relation);
