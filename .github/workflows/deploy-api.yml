@@ -1,0 +1,36 @@
+name: Deploy API til Azure App Service
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/Api.PayBySharePay/**'
+      - 'src/DataStorage.PayBySharePay/**'
+      - 'src/Service.PayBySharePay/**'
+      - 'src/Tools.PayBySharePay/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout kode
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.x'
+
+      - name: Byg og publicer API
+        run: |
+          dotnet publish src/Api.PayBySharePay/Api.PayBySharePay.csproj \
+            --configuration Release \
+            --output ./publish
+
+      - name: Deploy til Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: paybysharepay-api
+          publish-profile: ${{ secrets.AZURE_API_PUBLISH_PROFILE }}
+          package: ./publish
