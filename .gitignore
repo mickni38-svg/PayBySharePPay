@@ -4,6 +4,15 @@
 [Bb]in/
 [Oo]bj/
 
+# Deploy output
+publish-output/
+publish-output.zip
+publish-linux/
+publish-linux.zip
+publish-win/
+publish-win.zip
+publish-profile.xml
+
 # Visual Studio files
 .vs/
 *.user
