@@ -1,0 +1,105 @@
+<div class="register">
+  <!-- Header -->
+  <div class="register__header">
+    <button class="register__back" routerLink="/login">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <div class="register__logo">
+      <span class="register__logo-icon">💳</span>
+      <span class="register__logo-text">PayBySharePay</span>
+    </div>
+  </div>
+
+  <h1 class="register__title">Opret konto</h1>
+  <p class="register__sub">Vælg hvilken type konto du vil oprette</p>
+
+  <!-- Tab toggle -->
+  <div class="register__tabs">
+    <button class="register__tab" [class.register__tab--active]="tab() === 'person'" (click)="setTab('person')">
+      👤 Bruger
+    </button>
+    <button class="register__tab" [class.register__tab--active]="tab() === 'merchant'" (click)="setTab('merchant')">
+      🍽️ Spisested
+    </button>
+  </div>
+
+  <form class="register__form" (ngSubmit)="submit()">
+
+    <!-- === PERSON FORM === -->
+    @if (tab() === 'person') {
+      <div class="form-group">
+        <label class="form-label">Fulde navn *</label>
+        <input class="form-input" type="text" [(ngModel)]="personName" name="personName"
+               placeholder="Peter Hansen" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">E-mail *</label>
+        <input class="form-input" type="email" [(ngModel)]="personEmail" name="personEmail"
+               placeholder="peter@mail.dk" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Telefon <span class="form-label--opt">(valgfri)</span></label>
+        <input class="form-input" type="tel" [(ngModel)]="personPhone" name="personPhone"
+               placeholder="+45 12 34 56 78" />
+      </div>
+    }
+
+    <!-- === MERCHANT FORM === -->
+    @if (tab() === 'merchant') {
+      <div class="form-group">
+        <label class="form-label">Spisestedets navn *</label>
+        <input class="form-input" type="text" [(ngModel)]="merchantName" name="merchantName"
+               placeholder="Marios Pizzeria" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">CVR-nummer <span class="form-label--opt">(valgfri)</span></label>
+        <input class="form-input" type="text" [(ngModel)]="merchantCvr" name="merchantCvr"
+               placeholder="12345678" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Firmanavn *</label>
+        <input class="form-input" type="text" [(ngModel)]="merchantCompany" name="merchantCompany"
+               placeholder="Mario ApS" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Adresse <span class="form-label--opt">(valgfri)</span></label>
+        <input class="form-input" type="text" [(ngModel)]="merchantAddress" name="merchantAddress"
+               placeholder="Vestergade 12, 8000 Aarhus" />
+      </div>
+
+      <div class="register__section-title">Kontaktperson</div>
+
+      <div class="form-group">
+        <label class="form-label">Navn <span class="form-label--opt">(valgfri)</span></label>
+        <input class="form-input" type="text" [(ngModel)]="merchantContact" name="merchantContact"
+               placeholder="Mario Rossi" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">E-mail <span class="form-label--opt">(valgfri)</span></label>
+        <input class="form-input" type="email" [(ngModel)]="merchantEmail" name="merchantEmail"
+               placeholder="kontakt@mario.dk" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Telefon <span class="form-label--opt">(valgfri)</span></label>
+        <input class="form-input" type="tel" [(ngModel)]="merchantPhone" name="merchantPhone"
+               placeholder="+45 12 34 56 78" />
+      </div>
+    }
+
+    @if (error()) {
+      <p class="register__error">{{ error() }}</p>
+    }
+
+    <button class="btn-primary register__submit" type="submit"
+            [disabled]="loading() || (tab() === 'person' && (!personName || !personEmail)) || (tab() === 'merchant' && (!merchantName || !merchantCompany))">
+      {{ loading() ? 'Opretter konto…' : 'Opret konto' }}
+    </button>
+
+    <p class="register__login-link">
+      Har du allerede en konto?
+      <a routerLink="/login">Log ind her</a>
+    </p>
+  </form>
+</div>

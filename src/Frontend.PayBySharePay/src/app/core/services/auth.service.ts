@@ -15,6 +15,22 @@ export interface LoginResponse {
   expiresAt: string;
 }
 
+export interface RegisterPersonRequest {
+  name: string;
+  email: string;
+  phone?: string;
+}
+
+export interface RegisterMerchantRequest {
+  name: string;
+  companyName: string;
+  cvrNumber?: string;
+  contactPerson?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  companyAddress?: string;
+}
+
 const TOKEN_KEY = 'sbys_token';
 const USER_KEY = 'sbys_user';
 
@@ -34,14 +50,26 @@ export class AuthService {
   login(email: string): Observable<LoginResponse> {
     return this.http
       .post<LoginResponse>(`${environment.apiUrl}/api/auth/login`, { email })
-      .pipe(
-        tap(res => {
-          localStorage.setItem(TOKEN_KEY, res.token);
-          localStorage.setItem(USER_KEY, JSON.stringify({ participantId: res.participantId, name: res.name }));
-          this._token.set(res.token);
-          this._user.set({ participantId: res.participantId, name: res.name });
-        })
-      );
+      .pipe(tap(res => this._storeSession(res)));
+  }
+
+  register(req: RegisterPersonRequest): Observable<LoginResponse> {
+    return this.http
+      .post<LoginResponse>(`${environment.apiUrl}/api/auth/register`, req)
+      .pipe(tap(res => this._storeSession(res)));
+  }
+
+  registerMerchant(req: RegisterMerchantRequest): Observable<LoginResponse> {
+    return this.http
+      .post<LoginResponse>(`${environment.apiUrl}/api/auth/register-merchant`, req)
+      .pipe(tap(res => this._storeSession(res)));
+  }
+
+  private _storeSession(res: LoginResponse): void {
+    localStorage.setItem(TOKEN_KEY, res.token);
+    localStorage.setItem(USER_KEY, JSON.stringify({ participantId: res.participantId, name: res.name }));
+    this._token.set(res.token);
+    this._user.set({ participantId: res.participantId, name: res.name });
   }
 
   logout(): void {
