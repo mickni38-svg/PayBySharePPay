@@ -1,169 +1,193 @@
-﻿/* Forside – sort baggrund, gradient-border kort, login-sektion */
-:host { display: block; height: 100%; }
+/* Forside � m�rk dashboard */
+:host { display: block; }
 
 .home {
-  min-height: 100%;
-  background: #0d0d0d;
-  color: #ffffff;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  padding: 20px 16px 90px;
+  background: var(--color-bg);
+  min-height: 100dvh;
+  padding-bottom: 90px;
+  font-family: var(--font-family);
+  display: flex;
+  flex-direction: column;
 }
 
-/* ═══════════════════════════════
-   Navigationskoer – 2x2 grid
-   Gradient-kantlinje via CSS custom property --border-color
-═══════════════════════════════ */
+/* Header */
+.home__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px var(--space-page) 8px;
+}
+
+.home__logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.home__logo-icon { font-size: 22px; }
+
+.home__logo-text {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.3px;
+}
+
+/* Velkomst */
+.home__welcome {
+  padding: 12px var(--space-page) 20px;
+}
+
+.home__greeting {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 4px;
+}
+
+.home__sub {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* 2x2 Action cards */
 .home__cards {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  margin-bottom: 20px;
+  gap: 12px;
+  padding: 0 var(--space-page) var(--space-section);
 }
 
-/* Hvert kort har en gradient-border lavet med background-clip teknik */
-.card {
+.action-card {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 24px 12px;
-  border-radius: 18px;
+  gap: 10px;
+  padding: 18px 14px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-bottom: 2.5px solid var(--card-accent, var(--color-border));
+  border-radius: var(--radius-lg);
   text-decoration: none;
   cursor: pointer;
-  min-height: 130px;
-  /* Gradient-kantlinje: padding-box + border-box trick */
-  background:
-    linear-gradient(#0f1a0f, #0f1a0f) padding-box,
-    linear-gradient(135deg, var(--border-color, #444), transparent 80%) border-box;
-  border: 2px solid transparent;
   transition: transform 0.15s, opacity 0.15s;
+  min-height: 120px;
 }
 
-.card:active {
+.action-card:active {
   transform: scale(0.96);
   opacity: 0.85;
 }
 
-/* Ikon-cirkel med halvgennemsigtig baggrundsfarve */
-.card__icon-wrap {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
+.action-card__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
+  svg { width: 22px; height: 22px; }
 }
 
-.card__icon-wrap svg {
-  width: 26px;
-  height: 26px;
+.action-card__label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.2;
 }
 
-/* Kortets label */
-.card__label {
-  font-size: 15px;
-  font-weight: 600;
-  color: #ffffff;
-  letter-spacing: 0.1px;
+.action-card__sub {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  margin-top: -6px;
 }
 
-/* ═══════════════════════════════
-   Login-sektion
-═══════════════════════════════ */
-.home__login {
+/* Hurtig handling */
+.home__quick {
+  padding: 0 var(--space-page) var(--space-section);
+}
+
+.btn-ghost {
+  width: 100%;
+}
+
+/* Dev panel */
+.home__dev-panel {
+  margin: auto var(--space-page) 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-top-left-radius: var(--radius-md);
+  border-top-right-radius: var(--radius-md);
+  border-bottom: none;
+  padding: 12px 16px;
+  opacity: 0.45;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
-/* Bruger-navn felt */
-.login__name-field {
-  background: #1a1a2e;
-  border-radius: 14px;
-  padding: 15px 18px;
-  color: #cccccc;
-  font-size: 16px;
-  min-height: 50px;
-  display: flex;
-  align-items: center;
-}
+.home__dev-panel:hover { opacity: 1; }
 
-/* Log ind-knap – mork blaa med hvid tekst */
-.login__btn {
-  background: #1a2a5e;
-  color: #ffffff;
-  border: none;
-  border-radius: 14px;
-  padding: 16px;
-  font-size: 16px;
+.dev-panel__title {
+  font-size: 11px;
   font-weight: 700;
-  cursor: pointer;
-  min-height: 52px;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.dev-panel__info {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin: -4px 0 0;
+}
+
+.dev-panel__select { min-height: 46px; }
+
+.dev-panel__error {
+  font-size: 12px;
+  color: var(--color-danger);
+  margin: 0;
+}
+
+.dev-panel__btn {
   width: 100%;
-  letter-spacing: 0.2px;
+  background: var(--color-surface-elevated);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 46px;
   transition: background 0.15s;
 }
 
-.login__btn:active { background: #243580; }
+.dev-panel__btn:not(:disabled):active { background: #1f2d42; }
+.dev-panel__btn:disabled { opacity: 0.4; cursor: default; }
 
-/* Links – Opret (groen) og Log ud (orange) */
-.login__links {
+.dev-panel__btn--out {
+  color: var(--color-danger);
+  border-color: rgba(239,68,68,0.3);
+}
+
+.dev-panel__logged {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  padding: 0 4px;
+  gap: 12px;
 }
 
-.login__link {
-  font-size: 14px;
-  font-weight: 500;
-  text-decoration: none;
+.dev-panel__user {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  strong { color: var(--color-text-primary); }
 }
 
-.login__link--green { color: #2ecc71; }
-.login__link--orange { color: #e67e22; }
-.login__link:active { opacity: 0.7; }
-
-/* DEV login dropdown */
-.login__dev-label {
-  font-size: 11px;
-  color: #6b7280;
-  letter-spacing: 0.3px;
-  padding: 0 2px;
-}
-
-.login__select {
-  background: #1a1a2e;
-  border: 1px solid #333;
-  border-radius: 14px;
-  color: #e0e0e0;
-  font-size: 15px;
-  padding: 13px 16px;
-  width: 100%;
-  min-height: 50px;
-  appearance: none;
-  -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 14px center;
-  cursor: pointer;
-}
-
-.login__select:focus {
-  outline: none;
-  border-color: #7c5cbf;
-}
-
-.login__error {
-  color: #e57373;
+.dev-panel__link {
   font-size: 12px;
-  margin: 0;
-  padding: 0 2px;
+  color: var(--color-primary);
+  text-decoration: none;
+  text-align: center;
 }
-
-.login__btn--active {
-  background: #1a4a2e;
-  border: 1px solid rgba(46,204,113,0.3);
-}
-

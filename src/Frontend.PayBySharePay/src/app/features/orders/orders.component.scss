@@ -2,9 +2,9 @@
   display: flex;
   flex-direction: column;
   min-height: 100%;
-  background: #0a0e1a;
-  color: #fff;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-family);
   padding-bottom: 140px;
 }
 
@@ -33,18 +33,18 @@
 
 .scroll-chip {
   display: flex; align-items: center; gap: 6px; padding: 8px 14px;
-  border-radius: 24px; border: 1px solid rgba(255,255,255,0.15);
-  background: rgba(255,255,255,0.04); color: #ccc; font-size: 13px;
+  border-radius: 24px; border: 1px solid var(--color-border);
+  background: var(--color-surface); color: var(--color-text-secondary); font-size: 13px;
   font-weight: 500; white-space: nowrap; cursor: pointer; flex-shrink: 0; transition: all 0.15s;
 }
-.scroll-chip--active { border-color: #2ecc71; background: rgba(46,204,113,0.12); color: #fff; }
+.scroll-chip--active { border-color: var(--color-primary); background: var(--color-primary-bg); color: var(--color-text-primary); }
 
 .order-panel {
   margin: 0 12px;
-  border: 1.5px solid rgba(0,200,200,0.5);
-  border-radius: 18px;
-  background: #0d1220;
-  box-shadow: 0 0 18px rgba(0,200,200,0.12);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: 0 0 20px rgba(34,197,94,0.08);
   overflow: hidden;
 }
 
@@ -83,12 +83,18 @@
 .participant__arrow--open { transform: rotate(90deg); }
 
 .order-lines {
-  display: none;
-  background: #0a1020;
-  padding: 10px 16px 14px 68px;
-  border-top: 1px solid rgba(255,255,255,0.05);
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.28s ease;
+  background: var(--color-bg);
+  padding: 0 16px 0 68px;
+  border-top: none;
 }
-.order-lines--open { display: block; }
+.order-lines--open {
+  max-height: 600px;
+  padding: 10px 16px 14px 68px;
+  border-top: 1px solid var(--color-border);
+}
 .order-lines__empty { margin: 0; font-size: 13px; color: #4b5563; }
 
 .order-line {
@@ -115,18 +121,18 @@
 .orders__footer {
   position: fixed; bottom: 68px; left: 50%; transform: translateX(-50%);
   width: 100%; max-width: 390px; padding: 10px 16px 12px;
-  background: linear-gradient(to top, #0a0e1a 75%, transparent);
+  background: linear-gradient(to top, var(--color-bg) 75%, transparent);
 }
 
 .orders__pay-btn {
   width: 100%;
-  background: linear-gradient(135deg, #0d2a4a 0%, #1a3a6e 100%);
-  color: #fff; border: 1px solid rgba(0,120,200,0.4);
-  border-radius: 14px; padding: 16px; font-size: 17px; font-weight: 700;
+  background: var(--color-primary);
+  color: #000; border: none;
+  border-radius: var(--radius-md); padding: 16px; font-size: 17px; font-weight: 700;
   cursor: pointer; min-height: 54px; transition: opacity 0.2s;
 }
 .orders__pay-btn--disabled {
-  background: #1a1a2e; color: #4b5563;
-  border-color: transparent; cursor: default;
+  background: var(--color-surface-elevated); color: var(--color-text-muted);
+  border: none; cursor: default;
 }
 .orders__pay-btn:not(.orders__pay-btn--disabled):active { opacity: 0.8; }

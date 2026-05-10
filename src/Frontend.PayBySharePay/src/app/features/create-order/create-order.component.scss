@@ -2,9 +2,9 @@
   display: flex;
   flex-direction: column;
   min-height: 100%;
-  background: #0a0e1a;
-  color: #fff;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-family);
   padding-bottom: 100px;
 }
 
@@ -18,7 +18,7 @@
 .create__back {
   background: transparent;
   border: none;
-  color: #60a5fa;
+  color: var(--color-cyan);
   font-size: 28px;
   line-height: 1;
   cursor: pointer;
@@ -33,12 +33,12 @@
 
 .create__label {
   display: block;
-  font-size: 12px;
-  color: #6b7280;
+  font-size: 11px;
+  color: var(--color-text-muted);
   margin-bottom: 6px;
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
 }
 
 .create__input {

@@ -8,10 +8,11 @@ import { DirectoryEntry } from '../../core/models/directory.model';
 
 interface ActionCard {
   label: string;
+  subtitle: string;
   icon: string;
   route: string;
   iconBg: string;
-  borderColor: string;
+  accent: string;
 }
 
 @Component({
@@ -23,10 +24,10 @@ interface ActionCard {
 })
 export class HomeComponent implements OnInit {
   actionCards: ActionCard[] = [
-    { label: 'Overblik',  icon: 'chart',  route: '/orders',           iconBg: 'rgba(240,165,0,0.12)',  borderColor: '#f0a500' },
-    { label: 'Opret',     icon: 'plus',   route: '/orders/create',     iconBg: 'rgba(46,204,113,0.12)', borderColor: '#2ecc71' },
-    { label: 'Brugere',   icon: 'users',  route: '/find-participants', iconBg: 'rgba(0,200,255,0.12)',  borderColor: '#00c8ff' },
-    { label: 'Beskeder',  icon: 'chat',   route: '/messages',          iconBg: 'rgba(155,89,182,0.12)', borderColor: '#9b59b6' },
+    { label: 'Overblik',  subtitle: 'Se regninger',      route: '/orders',            accent: '#22C55E', iconBg: 'rgba(34,197,94,0.15)',   icon: 'chart' },
+    { label: 'Opret',     subtitle: 'Ny gruppebetaling', route: '/orders/create',      accent: '#7C3AED', iconBg: 'rgba(124,58,237,0.15)',  icon: 'plus'  },
+    { label: 'Brugere',   subtitle: 'Find personer',     route: '/find-participants',  accent: '#06B6D4', iconBg: 'rgba(6,182,212,0.15)',   icon: 'users' },
+    { label: 'Beskeder',  subtitle: 'Dine beskeder',     route: '/messages',           accent: '#F59E0B', iconBg: 'rgba(245,158,11,0.15)',  icon: 'chat'  },
   ];
 
   persons = signal<DirectoryEntry[]>([]);

@@ -1,8 +1,11 @@
 import { Component } from '@angular/core';
+import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-messages',
   standalone: true,
-  templateUrl: './messages.component.html'
+  imports: [EmptyStateComponent],
+  templateUrl: './messages.component.html',
+  styleUrl: './messages.component.scss'
 })
 export class MessagesComponent {}

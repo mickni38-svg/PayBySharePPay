@@ -1,291 +1,171 @@
-:host {
-  display: block;
-  height: 100%;
-}
+﻿:host { display: block; }
 
-/* ═══════════════════════════════
-   Container
-═══════════════════════════════ */
 .find {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  background: #0d0d0d;
-  color: #ffffff;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
-  -webkit-font-smoothing: antialiased;
+  background: var(--color-bg);
+  min-height: 100dvh;
+  padding-bottom: 90px;
+  font-family: var(--font-family);
+  color: var(--color-text-primary);
 }
 
-/* ═══════════════════════════════
-   Header
-═══════════════════════════════ */
 .find__header {
-  padding: 20px 20px 6px;
-  text-align: center;
-  flex-shrink: 0;
+  padding: 20px var(--space-page) 12px;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .find__title {
+  font-size: 22px;
+  font-weight: 700;
   margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #ffffff;
-  letter-spacing: 0.1px;
 }
 
-/* ═══════════════════════════════
-   Søgefelt
-═══════════════════════════════ */
-.find__search {
-  padding: 8px 14px 12px;
-  flex-shrink: 0;
-}
+.find__search { padding: 16px var(--space-page) 8px; }
 
-.find__search-wrap {
-  position: relative;
-}
-
-.find__search-icon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 16px;
-  height: 16px;
-  color: #555555;
-  pointer-events: none;
-}
+.find__search-wrap { position: relative; }
 
 .find__input {
   width: 100%;
-  box-sizing: border-box;
-  background: #1c1c1c;
-  border: 1px solid #2a2a2a;
-  border-radius: 10px;
-  padding: 11px 14px 11px 36px;
-  color: #ffffff;
+  background: var(--color-input-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  color: var(--color-text-primary);
   font-size: 15px;
   outline: none;
-  min-height: 44px;
+  min-height: 48px;
+  box-sizing: border-box;
   -webkit-appearance: none;
+  font-family: var(--font-family);
   transition: border-color 0.15s;
 }
 
-.find__input:focus {
-  border-color: #3a3a3a;
+.find__input:focus { border-color: var(--color-primary); }
+.find__input::placeholder { color: var(--color-text-muted); }
+
+/* Tabs */
+.find__tabs {
+  display: flex;
+  gap: 8px;
+  padding: 8px var(--space-page) 12px;
 }
 
-.find__input::placeholder {
-  color: #555555;
-}
-
-.find__input::-webkit-search-cancel-button {
-  -webkit-appearance: none;
-}
-
-/* ═══════════════════════════════
-   Liste
-═══════════════════════════════ */
-.find__list {
+.find__tab {
   flex: 1;
-  overflow-y: auto;
-  padding-bottom: 96px;
+  padding: 10px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  min-height: 40px;
 }
 
-.find__list::-webkit-scrollbar {
-  display: none;
+.find__tab--active {
+  border-color: var(--color-primary);
+  background: rgba(34,197,94,0.1);
+  color: var(--color-primary);
 }
 
-/* State-tekster (loading / tom / fejl) */
+/* State */
 .find__state {
-  margin: 0;
-  padding: 40px 20px;
+  padding: 24px var(--space-page);
+  color: var(--color-text-muted);
+  font-size: 14px;
   text-align: center;
-  color: #555555;
-  font-size: 15px;
+  margin: 0;
 }
+.find__state--error { color: var(--color-danger); }
 
-.find__state--error {
-  color: #ff453a;
-}
+/* Liste */
+.find__list { padding: 0 var(--space-page); }
 
-/* ═══════════════════════════════
-   Deltager-række
-═══════════════════════════════ */
 .row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 9px 16px;
-  min-height: 60px;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--color-border);
   cursor: pointer;
   transition: background 0.1s;
 }
 
-.row:active {
-  background: rgba(255, 255, 255, 0.03);
-}
+.row:last-child { border-bottom: none; }
+.row:active { opacity: 0.7; }
 
-/* ── Avatar ── */
 .row__avatar {
-  position: relative;
-  width: 44px;
-  height: 44px;
+  width: 44px; height: 44px;
   border-radius: 50%;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.row__initials {
-  font-size: 15px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.9);
-  letter-spacing: 0.3px;
-}
-
-/* Lille gul prik for Merchant – beholdes ikke længere, erstattet af badge */
-
-/* Merchant-række – let fremhævet border */
-.row--merchant {
-  cursor: default;
-}
-
-.row--merchant:active {
-  background: transparent;
-}
-
-/* ── Avatar ikon for merchant ── */
-.row__avatar-icon {
-  font-size: 18px;
-  line-height: 1;
-}
-
-/* ── Navn-række med badge ── */
-.row__name-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-/* ── Badge: Spisested ── */
-.row__badge {
-  display: inline-block;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-  color: #f5a623;
-  background: rgba(245, 166, 35, 0.12);
-  border: 1px solid rgba(245, 166, 35, 0.3);
-  border-radius: 4px;
-  padding: 1px 5px;
-  line-height: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700;
+  color: rgba(255,255,255,0.9);
   flex-shrink: 0;
 }
 
-/* ── Chevron-pil for merchant ── */
-.row__arrow {
-  width: 26px;
-  height: 26px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+.row__avatar-icon { font-size: 20px; }
+.row__initials { font-size: 14px; font-weight: 700; }
 
-.row__arrow svg {
-  width: 16px;
-  height: 16px;
-}
-
-/* ── Info ── */
 .row__info {
   flex: 1;
+  display: flex; flex-direction: column; gap: 3px;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
 }
 
 .row__name {
-  font-size: 16px;
-  font-weight: 400;
-  color: #ffffff;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-.row--selected .row__name {
-  font-weight: 500;
+.row__sub { font-size: 12px; color: var(--color-text-muted); }
+
+.row__badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  width: fit-content;
 }
 
-.row__sub {
-  font-size: 13px;
-  color: #666666;
-}
-
-/* ── Check-cirkel ── */
 .row__check {
-  width: 26px;
-  height: 26px;
+  width: 26px; height: 26px;
   border-radius: 50%;
-  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  border: 1.5px solid var(--color-border);
   flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   transition: background 0.15s, border-color 0.15s;
+  svg { width: 13px; height: 13px; }
 }
 
 .row__check--on {
-  background: #5a9e6f;
-  border-color: #5a9e6f;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
-.row__check svg {
-  width: 13px;
-  height: 13px;
-}
-
-/* ═══════════════════════════════
-   Footer – Tilføj-knap
-═══════════════════════════════ */
+/* Footer CTA */
 .find__footer {
   position: fixed;
-  bottom: 64px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 390px;
-  padding: 10px 14px 12px;
-  background: linear-gradient(to top, #0d0d0d 65%, transparent);
+  bottom: 68px; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 390px;
+  padding: 10px 20px 12px;
+  background: linear-gradient(to top, var(--color-bg) 70%, transparent);
 }
 
 .find__cta {
   width: 100%;
-  background: #3d5226;
-  color: #c8e09a;
+  background: var(--color-primary);
+  color: #000;
   border: none;
-  border-radius: 12px;
-  padding: 15px 20px;
-  font-size: 15px;
-  font-weight: 600;
+  border-radius: var(--radius-md);
+  padding: 15px;
+  font-size: 16px; font-weight: 700;
   cursor: pointer;
-  min-height: 50px;
-  letter-spacing: 0.1px;
-  transition: background 0.15s;
+  min-height: 52px;
+  transition: opacity 0.15s;
 }
 
-.find__cta:not(:disabled):active {
-  background: #4c6630;
-}
-
-.find__cta:disabled {
-  background: #1a1a1a;
-  color: #444444;
-  cursor: default;
-}
+.find__cta:active { opacity: 0.85; }
+.find__cta:disabled { background: var(--color-surface-elevated); color: var(--color-text-muted); cursor: default; }
