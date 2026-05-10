@@ -17,7 +17,8 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(
                   "http://localhost:4200", "https://localhost:4200",
-                  "http://localhost:4201", "https://localhost:4201"
+                  "http://localhost:4201", "https://localhost:4201",
+                  "https://icy-water-0750d2703.7.azurestaticapps.net"
               )
               .AllowAnyHeader()
               .AllowAnyMethod();
@@ -88,15 +89,12 @@ builder.Services.AddServiceLayer();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(options =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "PayBySharePay API v1");
-        options.RoutePrefix = string.Empty;
-    });
-}
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "PayBySharePay API v1");
+    options.RoutePrefix = string.Empty;
+});
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
