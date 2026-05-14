@@ -12,18 +12,7 @@ interface ParticipantRow extends OrderParticipantApiDto {
   orderLines: OrderLine[];
 }
 
-const MOCK_SETS: OrderLine[][] = [
-  [
-    { name: 'Pizza Margherita', quantity: 1, unitPrice: 100 },
-    { name: 'Pommes frites', quantity: 1, unitPrice: 33 },
-    { name: 'Coca Cola', quantity: 2, unitPrice: 16 },
-  ],
-  [
-    { name: 'Burger Classic', quantity: 2, unitPrice: 89 },
-    { name: 'Øl (0,5L)', quantity: 2, unitPrice: 45 },
-  ],
-  // index 2+ → ingen bestilling
-];
+
 
 interface ActiveOrderVM {
   id: number;
@@ -84,10 +73,10 @@ export class OrdersComponent implements OnInit {
       id: order.id,
       title: order.title,
       category: order.category,
-      participants: order.participants.map((p, i) => ({
+      participants: order.participants.map((p) => ({
         ...p,
-        expanded: i < 2,
-        orderLines: MOCK_SETS[i] ?? []
+        expanded: false,
+        orderLines: []
       }))
     });
   }

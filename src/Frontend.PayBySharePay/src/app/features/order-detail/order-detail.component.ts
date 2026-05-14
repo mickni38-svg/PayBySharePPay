@@ -21,22 +21,7 @@ function toInitials(name: string): string {
   return name.split(" ").slice(0, 2).map(p => p[0]).join("").toUpperCase();
 }
 
-const MOCK_SETS: OrderLine[][] = [
-  [
-    { name: "Pizza Margherita", quantity: 1, unitPrice: 100 },
-    { name: "Pommes frites", quantity: 1, unitPrice: 33 },
-    { name: "Coca Cola", quantity: 2, unitPrice: 16 },
-  ],
-  [
-    { name: "Burger Classic", quantity: 2, unitPrice: 89 },
-    { name: "Øl (0,5L)", quantity: 2, unitPrice: 45 },
-  ],
-  // index 2+ → ingen bestilling (afventer)
-];
 
-function mockLinesFor(index: number): OrderLine[] {
-  return MOCK_SETS[index] ?? [];
-}
 
 const CATEGORIES: CategoryOption[] = [
   { key: "sushi", icon: "🍣", label: "Sushi" }, { key: "pizza", icon: "🍕", label: "Pizza" },
@@ -86,12 +71,10 @@ export class OrderDetailComponent implements OnInit {
             id: i + 1, orderId: dto.orderId, participantId: p.participantId, participantName: p.name,
             participantType: ParticipantType.Person, status: mapOrderParticipantStatus(p.status),
             initials: toInitials(p.name), avatarColor: avatarColor(p.name),
-            orderLines: mockLinesFor(i)
+            orderLines: []
           }));
         this.participants.set(vms);
-        // Åbn de to første deltagere med mock-data automatisk
-        const defaultOpen = new Set(vms.filter(p => p.orderLines.length > 0).map(p => p.participantId));
-        this.expandedIds.set(defaultOpen);
+        this.expandedIds.set(new Set());
         this.isLoading.set(false);
       },
       error: () => { this.errorMessage.set("Kunne ikke hente ordre."); this.isLoading.set(false); }
