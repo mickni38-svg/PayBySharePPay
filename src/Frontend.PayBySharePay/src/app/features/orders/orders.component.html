@@ -31,10 +31,10 @@
               </div>
               <div class="participant__info">
                 <span class="participant__name">{{ p.name }}</span>
-                <span class="participant__sub">{{ statusLabel(p.status) }}</span>
+                <span class="participant__sub">{{ statusLabel(p.status, p.participantId) }}</span>
               </div>
               <div class="participant__right">
-                <span class="status-chip" [ngClass]="statusClass(p.status)">{{ statusLabel(p.status) }}</span>
+                <span class="status-chip" [ngClass]="statusClass(p.status)">{{ statusLabel(p.status, p.participantId) }}</span>
                 <span class="participant__arrow" [class.participant__arrow--open]="p.expanded">›</span>
               </div>
             </div>

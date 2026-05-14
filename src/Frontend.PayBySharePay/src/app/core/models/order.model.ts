@@ -105,6 +105,7 @@ export interface OrderSummaryApiDto {
   category?: string;
   status: string;
   createdAt: string;
+  createdByParticipantId: number;
   participants: OrderParticipantApiDto[];
 }
 

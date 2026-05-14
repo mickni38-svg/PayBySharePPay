@@ -160,6 +160,7 @@ public class OrderService : IOrderService
         Category = o.Category,
         Status = o.Status,
         CreatedAt = o.CreatedAt,
+        CreatedByParticipantId = o.CreatedByParticipantId,
         Participants = o.OrderParticipants.Select(op => new OrderParticipantDto
         {
             ParticipantId = op.ParticipantId,

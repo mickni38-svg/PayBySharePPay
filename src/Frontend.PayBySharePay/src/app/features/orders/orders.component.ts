@@ -18,6 +18,7 @@ interface ActiveOrderVM {
   id: number;
   title: string;
   category?: string;
+  createdByParticipantId: number;
   participants: ParticipantRow[];
 }
 
@@ -73,6 +74,7 @@ export class OrdersComponent implements OnInit {
       id: order.id,
       title: order.title,
       category: order.category,
+      createdByParticipantId: order.createdByParticipantId,
       participants: order.participants.map((p) => ({
         ...p,
         expanded: false,
@@ -102,7 +104,9 @@ export class OrdersComponent implements OnInit {
     return lines.reduce((sum, l) => sum + l.quantity * l.unitPrice, 0);
   }
 
-  statusLabel(s: string): string {
+  statusLabel(s: string, participantId?: number): string {
+    const vm = this.activeOrderVm();
+    if (s === 'Accepted' && vm && participantId === vm.createdByParticipantId) return 'vært';
     const map: Record<string, string> = {
       Invited: 'afventer', Accepted: 'accepteret', Declined: 'afvist', Paid: 'betalt'
     };

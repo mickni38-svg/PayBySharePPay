@@ -11,6 +11,7 @@ public class OrderSummaryDto
     public string? Category { get; set; }
     public string Status { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
+    public int CreatedByParticipantId { get; set; }
 
     /// <summary>Deltagere med navn og betalingsstatus</summary>
     public List<OrderParticipantDto> Participants { get; set; } = new();
