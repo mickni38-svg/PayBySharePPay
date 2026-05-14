@@ -8,6 +8,9 @@ import { BottomNavComponent } from './layout/bottom-nav/bottom-nav.component';
   imports: [RouterOutlet, BottomNavComponent],
   template: `
     <div class="app-shell">
+      <header class="app-header">
+        <img class="app-header__logo" src="images/logo.png" alt="PayBySharePay" />
+      </header>
       <main class="app-shell__content">
         <router-outlet></router-outlet>
       </main>
@@ -21,8 +24,23 @@ import { BottomNavComponent } from './layout/bottom-nav/bottom-nav.component';
       min-height: 100dvh;
       max-width: 390px;
       margin: 0 auto;
-      background: #0a0e1a;
+      background: #070B14;
       position: relative;
+    }
+
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 16px;
+      background: #070B14;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .app-header__logo {
+      height: 90px;
+      width: auto;
+      object-fit: contain;
     }
 
     .app-shell__content {

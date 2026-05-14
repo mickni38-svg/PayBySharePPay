@@ -1,18 +1,11 @@
 <div class="orders">
 
-  <header class="orders__header">
-    <h1 class="orders__title">Overblik</h1>
-  </header>
-
   @if (isLoading()) {
     <p class="orders__state">Henter ordrer…</p>
   } @else if (errorMessage()) {
     <p class="orders__state orders__state--error">{{ errorMessage() }}</p>
   } @else if (orders().length === 0) {
-    <div class="orders__empty">
-      <p>Ingen gruppebetalinger endnu.</p>
-      <button class="orders__empty-btn" (click)="goCreate()">Opret den første</button>
-    </div>
+    <p class="orders__state">Ingen gruppebetalinger endnu.</p>
   } @else {
 
     <!-- Ordre-tabs -->

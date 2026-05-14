@@ -1,0 +1,46 @@
+2026-05-10T18:43:19.5927524Z,Updating submodules.,2be957be-01f0-4aaa-b7e5-fd53a45eab08,0
+2026-05-10T18:43:19.6083779Z,Preparing deployment for commit id 'efd0103417'.,944a1b0a-b808-4011-b886-303c74c0c443,0
+2026-05-10T18:43:19.6396268Z,Running build. Project type: OneDeploy,7b7c5c92-8ecd-46d4-95c8-658a1e35554e,0
+2026-05-10T18:43:19.6552522Z,Copying the manifest,88d47bc2-4e03-4a4e-8bf7-9359f8cb73f6,0
+2026-05-10T18:43:19.6865006Z,Clean deploying to C:\home\site\wwwroot,b068d7b9-d36b-4fc3-9c61-6bece906ee2a,0
+2026-05-10T18:43:19.6865006Z,Generating deployment script.,2b672f0c-dd73-464d-bdc7-5d4be05f2ce9,0
+	2026-05-10T18:43:19.7021264Z,Using cached version of deployment script (command: 'azure -y --no-dot-deployment -r "C:\local\Temp\zipdeploy\extracted" -o "C:\home\site\deployments\tools" --basic --sitePath "C:\local\Temp\zipdeploy\extracted"').,,0
+2026-05-10T18:43:19.7333771Z,Running deployment command...,93b807e9-f328-4c85-9c01-8ea1959ea436,0
+	2026-05-10T18:43:19.7490018Z,Command: "C:\home\site\deployments\tools\deploy.cmd",,0
+	2026-05-10T18:43:19.8427539Z,Handling Basic Web Site deployment.,,0
+	2026-05-10T18:43:20.0458776Z,Creating app_offline.htm,,0
+	2026-05-10T18:43:20.0615006Z,KuduSync.NET from: 'C:\local\Temp\zipdeploy\extracted' to: 'C:\home\site\wwwroot',,0
+	2026-05-10T18:43:20.0615006Z,Copying file: 'Api.PayBySharePay.deps.json',,0
+	2026-05-10T18:43:20.0615006Z,Copying file: 'Api.PayBySharePay.dll',,0
+	2026-05-10T18:43:20.0771261Z,Copying file: 'Api.PayBySharePay.exe',,0
+	2026-05-10T18:43:20.0771261Z,Copying file: 'Api.PayBySharePay.pdb',,0
+	2026-05-10T18:43:20.0771261Z,Copying file: 'Api.PayBySharePay.runtimeconfig.json',,0
+	2026-05-10T18:43:20.0927514Z,Copying file: 'Azure.Core.dll',,0
+	2026-05-10T18:43:20.0927514Z,Copying file: 'Azure.Identity.dll',,0
+	2026-05-10T18:43:20.0927514Z,Copying file: 'DataStorage.PayBySharePay.dll',,0
+	2026-05-10T18:43:20.1083767Z,Copying file: 'DataStorage.PayBySharePay.pdb',,0
+	2026-05-10T18:43:20.1083767Z,Copying file: 'Microsoft.Bcl.AsyncInterfaces.dll',,0
+	2026-05-10T18:43:20.1083767Z,Copying file: 'Microsoft.Data.SqlClient.Extensions.Azure.dll',,0
+	2026-05-10T18:43:20.1240011Z,Copying file: 'Microsoft.Extensions.Diagnostics.Abstractions.dll',,0
+	2026-05-10T18:43:20.1240011Z,Copying file: 'Microsoft.Extensions.FileProviders.Abstractions.dll',,0
+	2026-05-10T18:43:20.1240011Z,Copying file: 'Microsoft.Extensions.Hosting.Abstractions.dll',,0
+	2026-05-10T18:43:20.1396261Z,Copying file: 'Microsoft.Identity.Client.dll',,0
+	2026-05-10T18:43:20.1396261Z,Copying file: 'Microsoft.Identity.Client.Extensions.Msal.dll',,0
+	2026-05-10T18:43:20.1396261Z,Copying file: 'Service.PayBySharePay.dll',,0
+	2026-05-10T18:43:20.1552505Z,Copying file: 'Service.PayBySharePay.pdb',,0
+	2026-05-10T18:43:22.2646404Z,Copying file: 'System.ClientModel.dll',,0
+	2026-05-10T18:43:22.2802422Z,Copying file: 'System.Diagnostics.DiagnosticSource.dll',,0
+	2026-05-10T18:43:22.2802422Z,Copying file: 'System.IO.Pipelines.dll',,0
+	2026-05-10T18:43:22.2802422Z,Copying file: 'System.Memory.Data.dll',,0
+	2026-05-10T18:43:22.2958670Z,Copying file: 'System.Text.Encodings.Web.dll',,0
+	2026-05-10T18:43:22.2958670Z,Copying file: 'System.Text.Json.dll',,0
+	2026-05-10T18:43:22.2958670Z,Copying file: 'runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll',,0
+	2026-05-10T18:43:22.3114916Z,Copying file: 'runtimes\win\lib\net9.0\System.Text.Encodings.Web.dll',,0
+	2026-05-10T18:43:22.3114916Z,Deleting app_offline.htm,,0
+	2026-05-10T18:43:22.3114916Z,Finished successfully.,,0
+2026-05-10T18:43:22.3271169Z,Build completed succesfully.,4db4e7a8-e9c5-46ac-93a1-c79f73673e31,0
+2026-05-10T18:43:22.3427413Z,Running post deployment command(s)...,ac983fe6-00d7-4fc8-9734-4f49719a0bf1,0
+2026-05-10T18:43:22.3583662Z,Requesting site restart,79270e4f-2827-435d-a8ea-af3b57b8f5bd,0
+2026-05-10T18:43:22.3739987Z,Requesting site restart. Attempt #1,46a671f8-b967-417f-9230-28f5a6f38c0d,0
+2026-05-10T18:43:22.4677412Z,Successfully requested a restart. Attempt #1,ab2b0e21-a0fe-4c68-a107-6b5a8b1cfd8a,0
+2026-05-10T18:43:22.4833663Z,Deployment successful.,d08770bd-4530-4008-950f-d1561ef8ae97,0

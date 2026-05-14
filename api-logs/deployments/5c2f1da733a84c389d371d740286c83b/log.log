@@ -1,0 +1,31 @@
+2026-05-10T17:51:47.5516248Z,Updating submodules.,bfcedb6f-4c83-40d4-85cf-9165fe716450,0
+2026-05-10T17:51:47.5828681Z,Preparing deployment for commit id '5c2f1da733'.,3d3ad928-18ad-415b-b66a-0b21bcecce9d,0
+2026-05-10T17:51:47.6141187Z,Running build. Project type: OneDeploy,9350fd3a-6d45-4b64-82f2-f8dc0050fe37,0
+2026-05-10T17:51:47.6299837Z,Copying the manifest,25b64989-e113-4510-a5ae-826ff1afcbef,0
+2026-05-10T17:51:47.6456389Z,Clean deploying to C:\home\site\wwwroot,ae8739c7-5ae0-493f-9c6e-4e8d7517766a,0
+2026-05-10T17:51:47.6612660Z,Generating deployment script.,fd5f2ec1-358f-4d81-812a-97f0c2c2e5a7,0
+	2026-05-10T17:51:47.6768880Z,Using cached version of deployment script (command: 'azure -y --no-dot-deployment -r "C:\local\Temp\zipdeploy\extracted" -o "C:\home\site\deployments\tools" --basic --sitePath "C:\local\Temp\zipdeploy\extracted"').,,0
+2026-05-10T17:51:47.7086720Z,Running deployment command...,a932ab46-0a85-4ca8-8311-8253f92fe849,0
+	2026-05-10T17:51:47.7086720Z,Command: "C:\home\site\deployments\tools\deploy.cmd",,0
+	2026-05-10T17:51:47.8180764Z,Handling Basic Web Site deployment.,,0
+	2026-05-10T17:51:47.9430768Z,Creating app_offline.htm,,0
+	2026-05-10T17:51:47.9899525Z,KuduSync.NET from: 'C:\local\Temp\zipdeploy\extracted' to: 'C:\home\site\wwwroot',,0
+	2026-05-10T17:51:48.0055791Z,Deleting file: 'Api.PayBySharePay',,0
+	2026-05-10T17:51:48.0055791Z,Copying file: 'Api.PayBySharePay.deps.json',,0
+	2026-05-10T17:51:48.0211994Z,Copying file: 'Api.PayBySharePay.dll',,0
+	2026-05-10T17:51:48.0211994Z,Copying file: 'Api.PayBySharePay.exe',,0
+	2026-05-10T17:51:48.0211994Z,Copying file: 'Api.PayBySharePay.pdb',,0
+	2026-05-10T17:51:48.0368257Z,Copying file: 'Api.PayBySharePay.runtimeconfig.json',,0
+	2026-05-10T17:51:48.0368257Z,Copying file: 'Api.PayBySharePay.staticwebassets.endpoints.json',,0
+	2026-05-10T17:51:48.0368257Z,Copying file: 'DataStorage.PayBySharePay.dll',,0
+	2026-05-10T17:51:48.0524509Z,Copying file: 'DataStorage.PayBySharePay.pdb',,0
+	2026-05-10T17:51:48.0524509Z,Copying file: 'Service.PayBySharePay.dll',,0
+	2026-05-10T17:51:48.0524509Z,Copying file: 'Service.PayBySharePay.pdb',,0
+	2026-05-10T17:51:48.0680768Z,Deleting app_offline.htm,,0
+	2026-05-10T17:51:48.0680768Z,Finished successfully.,,0
+2026-05-10T17:51:48.0837003Z,Build completed succesfully.,620724fd-395c-4842-afd9-8a5855fbbe7b,0
+2026-05-10T17:51:48.0993253Z,Running post deployment command(s)...,ac603034-8cf5-4565-9470-cf3285a78c54,0
+2026-05-10T17:51:48.1149508Z,Requesting site restart,b65e7113-1c8e-4ed1-8817-abda97852b43,0
+2026-05-10T17:51:48.1305759Z,Requesting site restart. Attempt #1,0ce21f79-f3a7-4593-b19d-877f4d90e5ff,0
+2026-05-10T17:51:48.2243248Z,Successfully requested a restart. Attempt #1,c7650120-ac4c-4302-a06d-06d4340ad219,0
+2026-05-10T17:51:48.2399541Z,Deployment successful.,8621661b-a74a-4c69-8e0e-422e1c2c82e2,0

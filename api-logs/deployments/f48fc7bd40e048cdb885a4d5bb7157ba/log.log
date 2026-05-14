@@ -1,0 +1,21 @@
+2026-05-10T18:05:14.0793662Z,Updating submodules.,5a5545c4-0c0f-41be-8b2e-e6ec2f0313a3,0
+2026-05-10T18:05:14.0949923Z,Preparing deployment for commit id 'f48fc7bd40'.,acc2e819-074e-41e3-b10f-c6127892aeb1,0
+2026-05-10T18:05:14.1262410Z,Running build. Project type: OneDeploy,1a0d1ebb-ae2e-4bed-b04b-b21013dc3a3a,0
+2026-05-10T18:05:14.1418664Z,Copying the manifest,60271d63-6141-4fac-895b-ae720416ec69,0
+2026-05-10T18:05:14.1731167Z,Clean deploying to C:\home\site\wwwroot,bfbbd34c-c6c6-44b2-b757-bb89162f43e8,0
+2026-05-10T18:05:14.1887417Z,Generating deployment script.,3736ab4d-c2aa-45c3-aedf-9550eda39dbf,0
+	2026-05-10T18:05:14.2043666Z,Using cached version of deployment script (command: 'azure -y --no-dot-deployment -r "C:\local\Temp\zipdeploy\extracted" -o "C:\home\site\deployments\tools" --basic --sitePath "C:\local\Temp\zipdeploy\extracted"').,,0
+2026-05-10T18:05:14.2356169Z,Running deployment command...,071a23de-800a-4516-bec5-8e2fc55e4ee0,0
+	2026-05-10T18:05:14.2356169Z,Command: "C:\home\site\deployments\tools\deploy.cmd",,0
+	2026-05-10T18:05:14.3293715Z,Handling Basic Web Site deployment.,,0
+	2026-05-10T18:05:14.4387403Z,Creating app_offline.htm,,0
+	2026-05-10T18:05:14.4543658Z,KuduSync.NET from: 'C:\local\Temp\zipdeploy\extracted' to: 'C:\home\site\wwwroot',,0
+	2026-05-10T18:05:14.4543658Z,Copying file: 'Api.PayBySharePay',,0
+	2026-05-10T18:05:14.4543658Z,Deleting app_offline.htm,,0
+	2026-05-10T18:05:14.4699908Z,Finished successfully.,,0
+2026-05-10T18:05:14.4856162Z,Build completed succesfully.,8cc21d13-462e-4b2e-a4d8-994a8f7f604d,0
+2026-05-10T18:05:14.5168669Z,Running post deployment command(s)...,fdc7f228-2368-469c-ae03-b20a81c9d0ca,0
+2026-05-10T18:05:14.5325971Z,Requesting site restart,24621be8-274d-4dfe-bdd0-e905781cd644,0
+2026-05-10T18:05:14.5482576Z,Requesting site restart. Attempt #1,4980b13f-9f6c-4ab8-a630-e557015d32bd,0
+2026-05-10T18:05:14.6297365Z,Successfully requested a restart. Attempt #1,064c218e-039b-4fd2-8e1e-9a23eed164c1,0
+2026-05-10T18:05:14.6609846Z,Deployment successful.,92d2d145-e8cb-4626-92a2-bcb9efe9e9f2,0

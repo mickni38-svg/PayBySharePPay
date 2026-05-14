@@ -2,7 +2,6 @@
 
   <header class="detail__header">
     <button class="detail__back" (click)="goBack()">‹</button>
-    <h1 class="detail__title">{{ order()?.title || 'Ordre' }}</h1>
   </header>
 
   @if (isLoading()) {
