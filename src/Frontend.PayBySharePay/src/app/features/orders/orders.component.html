@@ -41,7 +41,9 @@
 
             <!-- Accordion indhold -->
             <div class="order-lines" [class.order-lines--open]="p.expanded">
-              @if (p.orderLines.length === 0) {
+              @if (p.status !== 'Accepted' && p.status !== 'Paid') {
+                <p class="order-lines__empty">Intet at vise</p>
+              } @else if (p.orderLines.length === 0) {
                 <p class="order-lines__empty">Ingen bestilling endnu</p>
               } @else {
                 @for (line of p.orderLines; track line.name) {
