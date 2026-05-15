@@ -139,10 +139,10 @@ interface ActionCard {
 }
 
 interface StatusCard {
-  type: 'pending' | 'updated';
+  type: 'pending' | 'activity';
   title: string;
   subtitle: string;
-  orderId: number | null;
+  orderId?: number | null;
 }
 
 @Component({
