@@ -191,20 +191,18 @@ export class HomeComponent implements OnInit {
           cards.push({
             type: 'pending',
             title: `${summary.pendingParticipantCount} deltager${summary.pendingParticipantCount === 1 ? '' : 'e'} afventer`,
-            subtitle: `På tværs af ${summary.affectedOrderCount} ordre`,
-            orderId: null
+            subtitle: `På tværs af ${summary.affectedOrderCount} ordre`
           });
         }
         cards.push({
-          type: 'updated',
-          title: summary.pendingParticipantCount > 0 ? 'Ellers er du opdateret' : 'Du er opdateret',
-          subtitle: summary.pendingParticipantCount > 0 ? '' : 'Ingen afventende handlinger',
-          orderId: null
+          type: 'activity',
+          title: 'Seneste aktivitet',
+          subtitle: 'Ingen nye aktiviteter'
         });
         this.statusCards.set(cards);
       },
       error: () => {
-        this.statusCards.set([{ type: 'updated', title: 'Du er opdateret', subtitle: 'Ingen nye aktiviteter', orderId: null }]);
+        this.statusCards.set([{ type: 'activity', title: 'Seneste aktivitet', subtitle: 'Ingen nye aktiviteter' }]);
       }
     });
   }
@@ -213,7 +211,7 @@ export class HomeComponent implements OnInit {
     if (card.type === 'pending') {
       this.router.navigate(['/pending-participants']);
     } else {
-      this.router.navigate(['/messages']);
+      this.router.navigate(['/activity']);
     }
   }
 
