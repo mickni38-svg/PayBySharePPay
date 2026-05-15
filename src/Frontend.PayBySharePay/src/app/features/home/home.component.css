@@ -102,13 +102,97 @@
   margin-top: -6px;
 }
 
-/* Hurtig handling */
-.home__quick {
-  padding: 0 var(--space-page) var(--space-section);
+/* Statuskort */
+.home__status {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px var(--space-page) 4px;
 }
 
-.btn-ghost {
+.status-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
   width: 100%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid transparent;
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.15s, opacity 0.15s;
+}
+
+.status-card:active {
+  transform: scale(0.97);
+  opacity: 0.85;
+}
+
+.status-card--pending {
+  border-left-color: #7C3AED;
+}
+
+.status-card--updated {
+  border-left-color: #22C55E;
+}
+
+.status-card__icon {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.status-card--pending .status-card__icon {
+  background: rgba(124, 58, 237, 0.15);
+  color: #7C3AED;
+}
+
+.status-card--updated .status-card__icon {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22C55E;
+}
+
+.status-card__icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.status-card__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.status-card__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status-card__sub {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status-card__chevron {
+  width: 18px;
+  height: 18px;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
 }
 
 /* Dev panel */

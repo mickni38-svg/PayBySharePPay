@@ -1,10 +1,12 @@
-﻿import { Component, OnInit, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+﻿import { Component, OnInit, signal, computed } from '@angular/core';
+import { RouterLink, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { DirectoryService } from '../../core/services/directory.service';
+import { OrderService } from '../../core/services/order.service';
 import { DirectoryEntry } from '../../core/models/directory.model';
+import { OrderSummaryApiDto } from '../../core/models/order.model';
 
 interface ActionCard {
   label: string;
@@ -13,6 +15,13 @@ interface ActionCard {
   route: string;
   iconBg: string;
   accent: string;
+}
+
+interface StatusCard {
+  type: 'pending' | 'updated';
+  title: string;
+  subtitle: string;
+  orderId: number | null;
 }
 
 @Component({
@@ -30,18 +39,81 @@ export class HomeComponent implements OnInit {
     { label: 'Beskeder',  subtitle: 'Dine beskeder',     route: '/messages',           accent: '#F59E0B', iconBg: 'rgba(245,158,11,0.15)',  icon: 'chat'  },
   ];
 
+  statusCards = signal<StatusCard[]>([]);
+
   persons = signal<DirectoryEntry[]>([]);
   selectedEmail = '';
   loginError = signal<string | null>(null);
   loginLoading = signal(false);
 
-  constructor(readonly auth: AuthService, private directory: DirectoryService) {}
+  constructor(
+    readonly auth: AuthService,
+    private directory: DirectoryService,
+    private orderService: OrderService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.directory.search('').subscribe({
       next: (list) => this.persons.set(list.filter(e => e.type === 'Person')),
       error: () => {}
     });
+
+    const userId = this.auth.currentUserId();
+    if (userId) {
+      this.loadStatusCards(userId);
+    }
+  }
+
+  private loadStatusCards(userId: number): void {
+    this.orderService.getOrdersByParticipant(userId).subscribe({
+      next: (orders) => {
+        const cards: StatusCard[] = [];
+
+        // Find ordre med afventende deltagere
+        const pendingOrder = orders.find(o =>
+          o.participants.some(p => p.status === 'Invited' && p.type !== 'Merchant')
+        );
+
+        if (pendingOrder) {
+          const pendingCount = pendingOrder.participants.filter(
+            p => p.status === 'Invited' && p.type !== 'Merchant'
+          ).length;
+          cards.push({
+            type: 'pending',
+            title: `${pendingCount} deltager${pendingCount === 1 ? '' : 'e'} afventer`,
+            subtitle: `${pendingOrder.title} mangler svar`,
+            orderId: pendingOrder.id
+          });
+        }
+
+        // "Du er opdateret"-kort
+        cards.push({
+          type: 'updated',
+          title: pendingOrder ? 'Ellers er du opdateret' : 'Du er opdateret',
+          subtitle: pendingOrder ? '' : 'Ingen nye aktiviteter',
+          orderId: null
+        });
+
+        this.statusCards.set(cards);
+      },
+      error: () => {
+        this.statusCards.set([{
+          type: 'updated',
+          title: 'Du er opdateret',
+          subtitle: 'Ingen nye aktiviteter',
+          orderId: null
+        }]);
+      }
+    });
+  }
+
+  onStatusCardClick(card: StatusCard): void {
+    if (card.type === 'pending' && card.orderId !== null) {
+      this.router.navigate(['/orders'], { queryParams: { active: card.orderId } });
+    } else {
+      this.router.navigate(['/messages']);
+    }
   }
 
   devLogin(): void {
@@ -49,7 +121,11 @@ export class HomeComponent implements OnInit {
     this.loginLoading.set(true);
     this.loginError.set(null);
     this.auth.login(this.selectedEmail).subscribe({
-      next: () => this.loginLoading.set(false),
+      next: () => {
+        this.loginLoading.set(false);
+        const userId = this.auth.currentUserId();
+        if (userId) this.loadStatusCards(userId);
+      },
       error: () => {
         this.loginError.set('Login fejlede – prøv igen.');
         this.loginLoading.set(false);
@@ -57,3 +133,4 @@ export class HomeComponent implements OnInit {
     });
   }
 }
+

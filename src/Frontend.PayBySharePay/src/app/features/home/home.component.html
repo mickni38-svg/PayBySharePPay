@@ -1,15 +1,38 @@
-﻿<!-- Forside – moderne dashboard -->
+﻿<!-- Forside – ny dashboard -->
 <div class="home">
 
-  <!-- Velkomst -->
-  <section class="home__welcome">
-    @if (auth.isLoggedIn()) {
-      <h1 class="home__greeting">Hej, {{ auth.currentUserName() }} 👋</h1>
-    } @else {
-      <h1 class="home__greeting">Hej 👋</h1>
-    }
-    <p class="home__sub">Hvad vil du gøre i dag?</p>
-  </section>
+  <!-- Statuskort -->
+  @if (statusCards().length > 0) {
+    <section class="home__status">
+      @for (card of statusCards(); track card.type) {
+        <button class="status-card status-card--{{ card.type }}" (click)="onStatusCardClick(card)">
+          <div class="status-card__icon">
+            @if (card.type === 'pending') {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            } @else {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            }
+          </div>
+          <div class="status-card__text">
+            <span class="status-card__title">{{ card.title }}</span>
+            @if (card.subtitle) {
+              <span class="status-card__sub">{{ card.subtitle }}</span>
+            }
+          </div>
+          <svg class="status-card__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+      }
+    </section>
+  }
 
   <!-- 2x2 Action cards -->
   <section class="home__cards">
@@ -49,16 +72,9 @@
     }
   </section>
 
-  <!-- Hurtig handling (logget ind) -->
-  @if (auth.isLoggedIn()) {
-    <section class="home__quick">
-      <button class="btn-ghost" routerLink="/orders">Se alle grupper</button>
-    </section>
-  }
-
   <!-- Diskret dev-panel nederst -->
   <section class="home__dev-panel">
-    <div class="dev-panel__title">⚙ Udvikler login</div>
+    <div class="dev-panel__title">⚙ UDVIKLER LOGIN</div>
     <p class="dev-panel__info">Denne login bruges kun til udvikling.</p>
 
     @if (auth.isLoggedIn()) {
@@ -85,3 +101,4 @@
   </section>
 
 </div>
+

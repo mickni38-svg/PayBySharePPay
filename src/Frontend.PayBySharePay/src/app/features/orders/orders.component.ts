@@ -1,6 +1,6 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { OrderService } from '../../core/services/order.service';
 import { AuthService } from '../../core/services/auth.service';
 import { OrderParticipantApiDto, OrderSummaryApiDto } from '../../core/models/order.model';
@@ -50,7 +50,7 @@ export class OrdersComponent implements OnInit {
     '#00838f','#558b2f','#4527a0','#6d4c41'
   ];
 
-  constructor(private orderService: OrderService, private router: Router, private auth: AuthService) {}
+  constructor(private orderService: OrderService, private router: Router, private auth: AuthService, private route: ActivatedRoute) {}
 
   ngOnInit(): void { this.load(); }
 
@@ -59,7 +59,13 @@ export class OrdersComponent implements OnInit {
     this.orderService.getOrdersByParticipant(this.auth.currentUserId() ?? 0).subscribe({
       next: (list) => {
         this.orders.set(list);
-        if (list.length > 0) this.setActive(list[0].id);
+        // Tjek om der er et ?active= query param fra forsidekortet
+        const activeParam = this.route.snapshot.queryParamMap.get('active');
+        const activeId = activeParam ? Number(activeParam) : null;
+        const defaultId = activeId && list.some(o => o.id === activeId)
+          ? activeId
+          : list.length > 0 ? list[0].id : null;
+        if (defaultId) this.setActive(defaultId);
         this.isLoading.set(false);
       },
       error: () => { this.errorMessage.set('Kunne ikke hente ordrer.'); this.isLoading.set(false); }
