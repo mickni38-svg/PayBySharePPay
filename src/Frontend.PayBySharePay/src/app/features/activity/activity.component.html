@@ -1,0 +1,51 @@
+<div class="activity">
+
+  <header class="activity__header">
+    <button class="activity__back" (click)="goBack()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <div class="activity__header-text">
+      <h1 class="activity__title">Seneste aktivitet</h1>
+      <p class="activity__subtitle">Hændelser på tværs af dine ordre</p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <p class="activity__state">Henter aktivitet...</p>
+  } @else if (error()) {
+    <p class="activity__state activity__state--error">Kunne ikke hente seneste aktivitet.</p>
+  } @else if (items().length === 0) {
+
+    <div class="activity__empty">
+      <div class="activity__empty-icon">✅</div>
+      <h2 class="activity__empty-title">Seneste aktivitet</h2>
+      <p class="activity__empty-sub">Ingen nye aktiviteter siden sidst.<br>Alt ser fint ud.</p>
+      <ul class="activity__empty-list">
+        <li>Ingen nye betalinger</li>
+        <li>Ingen nye beskeder</li>
+        <li>Ingen nye ordreændringer</li>
+        <li>Ingen nye invitationer</li>
+      </ul>
+    </div>
+
+  } @else {
+
+    @for (group of grouped; track group.label) {
+      <div class="activity__group">
+        <h2 class="activity__group-label">{{ group.label }}</h2>
+        @for (item of group.items; track item.id) {
+          <div class="activity__item">
+            <span class="activity__item-icon">{{ item.icon }}</span>
+            <div class="activity__item-body">
+              <span class="activity__item-title">{{ item.title }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+  }
+
+</div>

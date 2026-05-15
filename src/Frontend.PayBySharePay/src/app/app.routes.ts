@@ -39,6 +39,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/messages/messages.component').then(m => m.MessagesComponent)
   },
   {
+    path: 'activity',
+    loadComponent: () => import('./features/activity/activity.component').then(m => m.ActivityComponent)
+  },
+  {
     path: 'pending-participants',
     loadComponent: () => import('./features/pending-participants/pending-participants.component').then(m => m.PendingParticipantsComponent)
   },
