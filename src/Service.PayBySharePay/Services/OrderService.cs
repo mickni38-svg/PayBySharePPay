@@ -98,6 +98,7 @@ public class OrderService : IOrderService
         return new OrderOverviewDto
         {
             OrderId = order.Id,
+            CreatedByParticipantId = order.CreatedByParticipantId,
             Title = order.Title,
             Category = order.Category,
             Message = order.Message,

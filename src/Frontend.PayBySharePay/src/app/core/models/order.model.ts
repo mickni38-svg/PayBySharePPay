@@ -52,6 +52,7 @@ export interface OrderOverviewApiDto {
   message?: string;
   status: string;
   createdAt: string;
+  createdByParticipantId: number;
   participants: OrderParticipantApiDto[];
   payments: PaymentApiDto[];
   messages: MessageApiDto[];

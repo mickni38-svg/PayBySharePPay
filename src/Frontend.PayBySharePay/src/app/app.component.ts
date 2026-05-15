@@ -32,13 +32,12 @@ import { BottomNavComponent } from './layout/bottom-nav/bottom-nav.component';
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 12px 16px;
+      padding: 10px 16px 6px;
       background: #070B14;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     }
 
     .app-header__logo {
-      height: 90px;
+      height: 70px;
       width: auto;
       object-fit: contain;
     }

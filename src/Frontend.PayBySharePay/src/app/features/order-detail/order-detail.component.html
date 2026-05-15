@@ -1,29 +1,41 @@
 <div class="detail">
 
+  <!-- Header med titel -->
   <header class="detail__header">
-    <button class="detail__back" (click)="goBack()">‹</button>
+    <button class="detail__back" (click)="goBack()">&#8249;</button>
+    @if (order()) {
+      <h1 class="detail__title">{{ order()!.title }} {{ activeCategoryIcon() }}</h1>
+    } @else {
+      <h1 class="detail__title">Ordre</h1>
+    }
+    <div class="detail__header-end"></div>
   </header>
 
+  <!-- Overblik / Detaljer tabs -->
+  <div class="detail__tabs">
+    <button class="detail__tab" [class.detail__tab--active]="activeTab() === 'overview'" (click)="activeTab.set('overview')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14">
+        <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+      </svg>
+      Overblik
+    </button>
+    <button class="detail__tab" [class.detail__tab--active]="activeTab() === 'details'" (click)="activeTab.set('details')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14">
+        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+        <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+      </svg>
+      Detaljer
+    </button>
+  </div>
+
   @if (isLoading()) {
-    <p class="detail__state">Henter ordre…</p>
+    <p class="detail__state">Henter ordre...</p>
   } @else if (errorMessage()) {
     <p class="detail__state detail__state--error">{{ errorMessage() }}</p>
-  } @else {
+  } @else if (activeTab() === 'overview') {
 
-    @if (activeCategoryIcon()) {
-      <div class="detail__cat-bar">
-        <span class="detail__cat-icon">{{ activeCategoryIcon() }}</span>
-        <span class="detail__cat-label">{{ activeCategoryLabel() }}</span>
-      </div>
-    }
-
-    @if (order()?.message) {
-      <div class="detail__section">
-        <div class="detail__label">Besked</div>
-        <div class="detail__message">{{ order()?.message }}</div>
-      </div>
-    }
-
+    <!-- Deltagere -->
+    <div class="detail__section-header">Deltagere ({{ participants().length }})</div>
     <div class="detail__participants">
       @for (p of participants(); track p.participantId) {
         <div class="participant-block">
@@ -32,16 +44,14 @@
               {{ p.initials }}
             </div>
             <div class="participant__info">
-              <span class="participant__name">{{ p.participantName }}</span>
-              <span class="participant__sub">&#64;{{ p.participantName.split(' ')[0].toLowerCase() }}</span>
+              <span class="participant__name">
+                {{ p.participantName }}
+                @if (isCurrentUser(p.participantId)) { <span class="participant__you">(dig)</span> }
+              </span>
             </div>
             <div class="participant__right">
-              @if (p.orderLines.length > 0) {
-                <span class="status-chip status-ordered">bestilt</span>
-              } @else {
-                <span class="status-chip status-pending">afventer</span>
-              }
-              <span class="participant__arrow" [class.participant__arrow--open]="isExpanded(p.participantId)">›</span>
+              <span [class]="'status-chip ' + participantChipClass(p)">{{ participantChipLabel(p) }}</span>
+              <span class="participant__arrow" [class.participant__arrow--open]="isExpanded(p.participantId)">&#8250;</span>
             </div>
           </div>
 
@@ -51,15 +61,15 @@
             } @else {
               @for (line of p.orderLines; track line.name) {
                 <div class="order-line">
-                  <span class="order-line__qty">{{ line.quantity }}×</span>
+                  <span class="order-line__qty">{{ line.quantity }}x</span>
                   <span class="order-line__name">{{ line.name }}</span>
-                  <span class="order-line__price">{{ line.quantity * line.unitPrice }} kr</span>
+                  <span class="order-line__price">{{ line.quantity * line.unitPrice | number:'1.2-2' }} kr.</span>
                 </div>
               }
               <div class="order-line order-line--total">
                 <span></span>
                 <span>Total</span>
-                <span>{{ lineTotal(p.orderLines) }} kr</span>
+                <span>{{ lineTotal(p.orderLines) | number:'1.2-2' }} kr.</span>
               </div>
             }
           </div>
@@ -67,10 +77,68 @@
       }
     </div>
 
-    <div class="detail__footer">
-      <button class="detail__pay-btn" (click)="payOrder()">Betal ordre</button>
+    <!-- Bestilling samlet -->
+    <div class="detail__section-header">Bestilling</div>
+    <div class="detail__order-summary">
+      @if (activeCategoryIcon()) {
+        <div class="order-summary-line">
+          <span class="order-summary-line__icon">{{ activeCategoryIcon() }}</span>
+          <span class="order-summary-line__name">{{ activeCategoryLabel() }}</span>
+          <span class="order-summary-line__price"></span>
+        </div>
+      }
+      <div class="order-summary-line order-summary-line--total">
+        <span>I alt</span>
+        <span></span>
+        <span>{{ grandTotal() | number:'1.2-2' }} kr.</span>
+      </div>
+      <p class="order-summary__note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        Ingen har betalt endnu
+      </p>
+    </div>
+
+  } @else {
+
+    <!-- Detaljer tab -->
+    @if (order()?.message) {
+      <div class="detail__section-header">Besked</div>
+      <div class="detail__message-box">{{ order()?.message }}</div>
+    }
+    <div class="detail__info-list">
+      <div class="detail__info-row">
+        <span class="detail__info-label">Kategori</span>
+        <span class="detail__info-value">{{ activeCategoryIcon() }} {{ activeCategoryLabel() || '-' }}</span>
+      </div>
+      <div class="detail__info-row">
+        <span class="detail__info-label">Status</span>
+        <span class="detail__info-value">{{ order()?.status }}</span>
+      </div>
+      <div class="detail__info-row">
+        <span class="detail__info-label">Oprettet</span>
+        <span class="detail__info-value">{{ order()?.createdDate | date:'dd. MMM yyyy' }}</span>
+      </div>
     </div>
 
   }
+
+  <!-- Footer: Send pamindelse -->
+  <div class="detail__footer">
+    <button class="detail__reminder-btn" (click)="sendReminder()" [class.detail__reminder-btn--sent]="reminderSent()">
+      @if (reminderSent()) {
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="18" height="18">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Pamindelser sendt!
+      } @else {
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18">
+          <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+        Send pamindelse til alle
+      }
+    </button>
+  </div>
 
 </div>

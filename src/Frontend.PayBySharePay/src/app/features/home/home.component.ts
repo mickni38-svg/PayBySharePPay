@@ -110,7 +110,7 @@ export class HomeComponent implements OnInit {
 
   onStatusCardClick(card: StatusCard): void {
     if (card.type === 'pending' && card.orderId !== null) {
-      this.router.navigate(['/orders'], { queryParams: { active: card.orderId } });
+      this.router.navigate(['/orders', card.orderId]);
     } else {
       this.router.navigate(['/messages']);
     }

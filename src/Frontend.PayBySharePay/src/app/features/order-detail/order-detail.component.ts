@@ -1,9 +1,10 @@
-﻿import { Component, OnInit, signal } from "@angular/core";
+﻿import { Component, OnInit, signal, computed } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { ActivatedRoute, Router } from "@angular/router";
 import { Order, OrderParticipant, OrderParticipantStatus, OrderStatus, OrderOverviewApiDto, mapOrderParticipantStatus } from "../../core/models/order.model";
 import { ParticipantType } from "../../core/models/participant.model";
 import { OrderService } from "../../core/services/order.service";
+import { AuthService } from "../../core/services/auth.service";
 
 interface CategoryOption { icon: string; label: string; key: string; }
 interface OrderLine { name: string; quantity: number; unitPrice: number; }
@@ -20,8 +21,6 @@ function avatarColor(name: string): string {
 function toInitials(name: string): string {
   return name.split(" ").slice(0, 2).map(p => p[0]).join("").toUpperCase();
 }
-
-
 
 const CATEGORIES: CategoryOption[] = [
   { key: "sushi", icon: "🍣", label: "Sushi" }, { key: "pizza", icon: "🍕", label: "Pizza" },
@@ -49,17 +48,29 @@ export class OrderDetailComponent implements OnInit {
   expandedIds = signal<Set<number>>(new Set());
   isLoading = signal(true);
   errorMessage = signal<string | null>(null);
+  activeTab = signal<'overview' | 'details'>('overview');
+  createdByParticipantId = signal<number>(0);
+  reminderSent = signal(false);
 
-  constructor(private route: ActivatedRoute, private router: Router, private orderService: OrderService) {}
+  currentUserId = signal<number | null>(null);
+
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private orderService: OrderService,
+    private auth: AuthService
+  ) {}
 
   ngOnInit(): void {
+    this.currentUserId.set(this.auth.currentUserId());
     const id = Number(this.route.snapshot.paramMap.get("id"));
     if (!id) { this.router.navigate(["/orders"]); return; }
     this.orderService.getOrderOverview(id).subscribe({
       next: (dto: OrderOverviewApiDto) => {
+        this.createdByParticipantId.set(dto.createdByParticipantId);
         this.order.set({
           id: dto.orderId, title: dto.title, category: dto.category, message: dto.message,
-          createdDate: new Date(dto.createdAt), createdByParticipantId: 0,
+          createdDate: new Date(dto.createdAt), createdByParticipantId: dto.createdByParticipantId,
           status: dto.status as OrderStatus,
           orderParticipants: dto.participants.map((p, i) => ({
             id: i + 1, orderId: dto.orderId, participantId: p.participantId, participantName: p.name,
@@ -92,11 +103,37 @@ export class OrderDetailComponent implements OnInit {
     });
   }
 
-  isExpanded(id: number): boolean {
-    return this.expandedIds().has(id);
-  }
+  isExpanded(id: number): boolean { return this.expandedIds().has(id); }
 
   lineTotal(lines: OrderLine[]): number { return lines.reduce((sum, l) => sum + l.quantity * l.unitPrice, 0); }
+
+  grandTotal(): number {
+    return this.participants().reduce((sum, p) => sum + this.lineTotal(p.orderLines), 0);
+  }
+
+  isHost(participantId: number): boolean { return participantId === this.createdByParticipantId(); }
+
+  isCurrentUser(participantId: number): boolean { return participantId === this.currentUserId(); }
+
+  participantChipLabel(p: ParticipantVM): string {
+    if (this.isHost(p.participantId)) return 'Vært';
+    if (p.status === OrderParticipantStatus.Accepted || p.status === OrderParticipantStatus.Paid) return 'Accepteret';
+    if (p.status === OrderParticipantStatus.Declined) return 'Afvist';
+    return 'Afventer';
+  }
+
+  participantChipClass(p: ParticipantVM): string {
+    if (this.isHost(p.participantId)) return 'chip-host';
+    if (p.status === OrderParticipantStatus.Paid) return 'chip-paid';
+    if (p.status === OrderParticipantStatus.Accepted) return 'chip-accepted';
+    if (p.status === OrderParticipantStatus.Declined) return 'chip-declined';
+    return 'chip-pending';
+  }
+
+  sendReminder(): void {
+    this.reminderSent.set(true);
+    setTimeout(() => this.reminderSent.set(false), 3000);
+  }
 
   payOrder(): void { alert("Betaling registreres - implementeres i naeste step"); }
 
