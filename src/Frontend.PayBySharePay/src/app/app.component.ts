@@ -31,14 +31,15 @@ import { BottomNavComponent } from './layout/bottom-nav/bottom-nav.component';
     .app-header {
       display: flex;
       align-items: center;
-      justify-content: center;
-      padding: 10px 16px 6px;
+      justify-content: flex-start;
+      padding: 10px 20px 4px;
       background: #070B14;
     }
 
     .app-header__logo {
-      height: 70px;
-      width: auto;
+      width: calc(100% - 0px);
+      max-width: 340px;
+      height: auto;
       object-fit: contain;
     }
 
