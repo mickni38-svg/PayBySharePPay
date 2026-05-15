@@ -17,7 +17,7 @@ namespace DataStorage.PayBySharePay.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.15")
+                .HasAnnotation("ProductVersion", "9.0.16")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -124,6 +124,9 @@ namespace DataStorage.PayBySharePay.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("ParticipantId")
+                        .HasColumnType("int");
+
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
@@ -134,6 +137,8 @@ namespace DataStorage.PayBySharePay.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("MerchantOrderDraftId");
+
+                    b.HasIndex("ParticipantId");
 
                     b.ToTable("MerchantOrderLines");
                 });
@@ -359,7 +364,7 @@ namespace DataStorage.PayBySharePay.Migrations
                         .IsRequired();
 
                     b.HasOne("DataStorage.PayBySharePay.Entities.Order", "Order")
-                        .WithMany()
+                        .WithMany("MerchantOrderDrafts")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -377,7 +382,14 @@ namespace DataStorage.PayBySharePay.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("DataStorage.PayBySharePay.Entities.Participant", "Participant")
+                        .WithMany()
+                        .HasForeignKey("ParticipantId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("MerchantOrderDraft");
+
+                    b.Navigation("Participant");
                 });
 
             modelBuilder.Entity("DataStorage.PayBySharePay.Entities.Message", b =>
@@ -462,6 +474,8 @@ namespace DataStorage.PayBySharePay.Migrations
 
             modelBuilder.Entity("DataStorage.PayBySharePay.Entities.Order", b =>
                 {
+                    b.Navigation("MerchantOrderDrafts");
+
                     b.Navigation("Messages");
 
                     b.Navigation("OrderParticipants");

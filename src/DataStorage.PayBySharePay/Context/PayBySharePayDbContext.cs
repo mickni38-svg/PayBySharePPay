@@ -92,7 +92,7 @@ public class PayBySharePayDbContext : DbContext
             entity.Property(d => d.TotalAmount).HasPrecision(18, 2);
 
             entity.HasOne(d => d.Order)
-                .WithMany()
+                .WithMany(o => o.MerchantOrderDrafts)
                 .HasForeignKey(d => d.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
 
@@ -111,6 +111,12 @@ public class PayBySharePayDbContext : DbContext
                 .WithMany(d => d.Lines)
                 .HasForeignKey(l => l.MerchantOrderDraftId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(l => l.Participant)
+                .WithMany()
+                .HasForeignKey(l => l.ParticipantId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
         });
     }
 }

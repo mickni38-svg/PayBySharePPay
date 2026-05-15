@@ -3,23 +3,28 @@ import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { OrderService } from '../../core/services/order.service';
 import { AuthService } from '../../core/services/auth.service';
-import { OrderParticipantApiDto, OrderSummaryApiDto } from '../../core/models/order.model';
+import { OrderOverviewApiDto, OrderParticipantApiDto, OrderSummaryApiDto, ParticipantOrderLinesApiDto } from '../../core/models/order.model';
 
-interface OrderLine { name: string; quantity: number; unitPrice: number; }
-
-interface ParticipantRow extends OrderParticipantApiDto {
-  expanded: boolean;
-  orderLines: OrderLine[];
-}
-
-
-
-interface ActiveOrderVM {
+interface OrderCardVM {
   id: number;
   title: string;
   category?: string;
+  status: string;
+  createdAt: string;
   createdByParticipantId: number;
-  participants: ParticipantRow[];
+  isHost: boolean;
+  totalAmount: number;
+  merchantName?: string;
+  merchantAddress?: string;
+  participantCount: number;
+  paidParticipantCount: number;
+  canPayTotalOrder: boolean;
+  canPayOwnShare: boolean;
+  allPaid: boolean;
+  canShowOrderLines: boolean;
+  participants: OrderParticipantApiDto[];
+  participantOrderLines: ParticipantOrderLinesApiDto[];
+  detailsLoaded: boolean;
 }
 
 @Component({
@@ -31,98 +36,206 @@ interface ActiveOrderVM {
 })
 export class OrdersComponent implements OnInit {
 
-  orders = signal<OrderSummaryApiDto[]>([]);
-  activeId = signal<number | null>(null);
+  allOrders = signal<OrderSummaryApiDto[]>([]);
   isLoading = signal(false);
   errorMessage = signal<string | null>(null);
+  activeTab = signal<'host' | 'participant'>('host');
+  filterPending = signal(false);
 
-  // Aktiv ordre med expanded-state pr. deltager
-  activeOrderVm = signal<ActiveOrderVM | null>(null);
-
-  allPaid = computed(() => {
-    const vm = this.activeOrderVm();
-    if (!vm || vm.participants.length === 0) return false;
-    return vm.participants.every(p => p.status === 'Paid');
-  });
+  // Cache af ordredetaljer hentet fra API
+  private _detailsCache = signal<Map<number, OrderOverviewApiDto>>(new Map());
+  private _expandedIds = signal<Set<number>>(new Set());
+  private _loadingIds = signal<Set<number>>(new Set());
 
   private readonly AVATAR_COLORS = [
     '#7c5cbf','#2e7d32','#1565c0','#ad1457',
     '#00838f','#558b2f','#4527a0','#6d4c41'
   ];
 
-  constructor(private orderService: OrderService, private router: Router, private auth: AuthService, private route: ActivatedRoute) {}
+  constructor(
+    private orderService: OrderService,
+    private router: Router,
+    private auth: AuthService,
+    private route: ActivatedRoute
+  ) {}
 
   ngOnInit(): void { this.load(); }
 
   private load(): void {
     this.isLoading.set(true);
+    const filter = this.route.snapshot.queryParamMap.get('filter');
+    if (filter === 'pending-payments') {
+      this.filterPending.set(true);
+    }
     this.orderService.getOrdersByParticipant(this.auth.currentUserId() ?? 0).subscribe({
       next: (list) => {
-        this.orders.set(list);
-        // Tjek om der er et ?active= query param fra forsidekortet
-        const activeParam = this.route.snapshot.queryParamMap.get('active');
-        const activeId = activeParam ? Number(activeParam) : null;
-        const defaultId = activeId && list.some(o => o.id === activeId)
-          ? activeId
-          : list.length > 0 ? list[0].id : null;
-        if (defaultId) this.setActive(defaultId);
+        this.allOrders.set(list);
         this.isLoading.set(false);
       },
       error: () => { this.errorMessage.set('Kunne ikke hente ordrer.'); this.isLoading.set(false); }
     });
   }
 
-  setActive(id: number): void {
-    this.activeId.set(id);
-    const order = this.orders().find(o => o.id === id);
-    if (!order) return;
-    this.activeOrderVm.set({
-      id: order.id,
-      title: order.title,
-      category: order.category,
-      createdByParticipantId: order.createdByParticipantId,
-      participants: order.participants.map((p) => ({
-        ...p,
-        expanded: false,
-        orderLines: []
-      }))
+  private buildVM(o: OrderSummaryApiDto): OrderCardVM {
+    const userId = this.auth.currentUserId() ?? 0;
+    const isHost = o.createdByParticipantId === userId;
+    const nonMerchant = o.participants.filter(p => p.type !== 'Merchant');
+    const paidCount = nonMerchant.filter(p => p.status === 'Paid').length;
+    const isPending = o.status === 'Collecting' || o.status === 'WaitingForPayment' ||
+      nonMerchant.some(p => p.status === 'Invited');
+    const myPart = o.participants.find(p => p.participantId === userId);
+
+    // Hent detaljer fra cache hvis tilgængeligt
+    const cached = this._detailsCache().get(o.id);
+
+    // canShowOrderLines baseres på Payment.hasPaid fra overview-cachen
+    // For vært: vis linjer for deltagere der har betalt (hasPaid)
+    // For deltager: vis kun egne linjer hvis hasPaid
+    const myPaymentStatus = cached?.participantOrderLines
+      .find(g => g.participantId === userId)?.hasPaid ?? false;
+    const anyonePaid = cached?.participantOrderLines.some(g => g.hasPaid) ?? false;
+    const canShow = isHost ? anyonePaid : myPaymentStatus;
+
+    // Filtrer ordrelinjer: vært ser alle betalte deltagerlinjer, deltager kun egne hvis betalt
+    const visibleLines = cached?.participantOrderLines.filter(g =>
+      isHost ? g.hasPaid : (g.participantId === userId && g.hasPaid)
+    ) ?? [];
+
+    return {
+      id: o.id,
+      title: o.title,
+      category: o.category,
+      status: o.status,
+      createdAt: o.createdAt,
+      createdByParticipantId: o.createdByParticipantId,
+      isHost,
+      totalAmount: cached?.totalAmount ?? o.totalAmount,
+      merchantName: cached?.merchantName ?? o.merchantName,
+      merchantAddress: cached?.merchantAddress,
+      participantCount: nonMerchant.length,
+      paidParticipantCount: paidCount,
+      canPayTotalOrder: isHost && (isPending || paidCount === nonMerchant.length),
+      canPayOwnShare: !isHost && (myPart?.status === 'Invited' || myPart?.status === 'Accepted'),
+      allPaid: nonMerchant.length > 0 && paidCount === nonMerchant.length,
+      canShowOrderLines: canShow,
+      participants: nonMerchant,
+      participantOrderLines: visibleLines,
+      detailsLoaded: !!cached
+    };
+  }
+
+  hostOrders = computed(() => {
+    // Touch cache signal for reaktivitet
+    this._detailsCache();
+    const userId = this.auth.currentUserId() ?? 0;
+    let list = this.allOrders()
+      .filter(o => o.createdByParticipantId === userId)
+      .map(o => this.buildVM(o));
+    if (this.filterPending()) {
+      list = list.filter(vm => vm.canPayTotalOrder || !vm.canShowOrderLines);
+    }
+    return list;
+  });
+
+  participantOrders = computed(() => {
+    this._detailsCache();
+    const userId = this.auth.currentUserId() ?? 0;
+    let list = this.allOrders()
+      .filter(o => o.createdByParticipantId !== userId &&
+        o.participants.some(p => p.participantId === userId))
+      .map(o => this.buildVM(o));
+    if (this.filterPending()) {
+      list = list.filter(vm => vm.canPayOwnShare);
+    }
+    return list;
+  });
+
+  activeOrders = computed(() =>
+    this.activeTab() === 'host' ? this.hostOrders() : this.participantOrders()
+  );
+
+  setTab(tab: 'host' | 'participant'): void {
+    this.activeTab.set(tab);
+  }
+
+  clearFilter(): void {
+    this.filterPending.set(false);
+  }
+
+  toggleExpand(id: number): void {
+    const current = this._expandedIds();
+    if (current.has(id)) {
+      const next = new Set(current);
+      next.delete(id);
+      this._expandedIds.set(next);
+    } else {
+      this._expandedIds.set(new Set([...current, id]));
+      // Hent detaljer hvis ikke cachet
+      if (!this._detailsCache().has(id)) {
+        this.loadDetails(id);
+      }
+    }
+  }
+
+  private loadDetails(id: number): void {
+    const loading = new Set(this._loadingIds());
+    loading.add(id);
+    this._loadingIds.set(loading);
+
+    this.orderService.getOrderOverview(id).subscribe({
+      next: (overview) => {
+        const cache = new Map(this._detailsCache());
+        cache.set(id, overview);
+        this._detailsCache.set(cache);
+
+        const l = new Set(this._loadingIds());
+        l.delete(id);
+        this._loadingIds.set(l);
+      },
+      error: () => {
+        const l = new Set(this._loadingIds());
+        l.delete(id);
+        this._loadingIds.set(l);
+      }
     });
   }
 
-  toggleParticipant(participantId: number): void {
-    const vm = this.activeOrderVm();
-    if (!vm) return;
-    this.activeOrderVm.set({
-      ...vm,
-      participants: vm.participants.map(p =>
-        p.participantId === participantId ? { ...p, expanded: !p.expanded } : p
-      )
-    });
+  isExpanded(id: number): boolean {
+    return this._expandedIds().has(id);
+  }
+
+  isLoadingDetails(id: number): boolean {
+    return this._loadingIds().has(id);
+  }
+
+  payOrder(id: number): void {
+    alert(`Betal ordre #${id} til spisestedet — implementeres i næste step`);
+  }
+
+  payShare(id: number): void {
+    alert(`Betal din andel for ordre #${id} — implementeres i næste step`);
   }
 
   goCreate(): void { this.router.navigate(['/orders/create']); }
 
-  finalPay(): void {
-    alert('Alle har betalt — sender ordre til spisestedet (implementeres næste step)');
-  }
-
-  lineTotal(lines: OrderLine[]): number {
-    return lines.reduce((sum, l) => sum + l.quantity * l.unitPrice, 0);
-  }
-
-  statusLabel(s: string, participantId?: number): string {
-    const vm = this.activeOrderVm();
-    if (s === 'Accepted' && vm && participantId === vm.createdByParticipantId) return 'vært';
+  statusLabel(s: string): string {
     const map: Record<string, string> = {
-      Invited: 'afventer', Accepted: 'accepteret', Declined: 'afvist', Paid: 'betalt'
+      Collecting: 'Samler',
+      WaitingForPayment: 'Afventer betaling',
+      Ready: 'Klar',
+      Completed: 'Betalt',
+      Cancelled: 'Annulleret'
     };
-    return map[s] ?? s.toLowerCase();
+    return map[s] ?? s;
   }
 
   statusClass(s: string): string {
     const map: Record<string, string> = {
-      Invited: 'status-pending', Accepted: 'status-accepted',
-      Paid: 'status-paid', Declined: 'status-declined'
+      Collecting: 'badge--pending',
+      WaitingForPayment: 'badge--pending',
+      Ready: 'badge--ready',
+      Completed: 'badge--paid',
+      Cancelled: 'badge--declined'
     };
     return map[s] ?? '';
   }
@@ -136,6 +249,15 @@ export class OrdersComponent implements OnInit {
     return map[cat ?? ''] ?? '🍴';
   }
 
+  formatDate(dateStr: string): string {
+    try {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric' });
+    } catch {
+      return dateStr;
+    }
+  }
+
   initials(name: string): string {
     return name.split(' ').slice(0, 2).map(p => p[0]).join('').toUpperCase();
   }
@@ -145,4 +267,17 @@ export class OrdersComponent implements OnInit {
     for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
     return this.AVATAR_COLORS[Math.abs(hash) % this.AVATAR_COLORS.length];
   }
+
+  visibleAvatars(participants: OrderParticipantApiDto[]): OrderParticipantApiDto[] {
+    return participants.slice(0, 4);
+  }
+
+  extraAvatarCount(participants: OrderParticipantApiDto[]): number {
+    return Math.max(0, participants.length - 4);
+  }
+
+  isCurrentUser(participantId: number): boolean {
+    return participantId === (this.auth.currentUserId() ?? -1);
+  }
 }
+

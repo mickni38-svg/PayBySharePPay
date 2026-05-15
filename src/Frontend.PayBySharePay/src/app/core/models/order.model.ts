@@ -53,9 +53,29 @@ export interface OrderOverviewApiDto {
   status: string;
   createdAt: string;
   createdByParticipantId: number;
+  merchantName?: string;
+  merchantAddress?: string;
+  totalAmount: number;
   participants: OrderParticipantApiDto[];
   payments: PaymentApiDto[];
   messages: MessageApiDto[];
+  participantOrderLines: ParticipantOrderLinesApiDto[];
+}
+
+export interface ParticipantOrderLinesApiDto {
+  participantId: number;
+  participantName: string;
+  hasPaid: boolean;
+  lines: OrderLineApiDto[];
+}
+
+export interface OrderLineApiDto {
+  participantId?: number;
+  lineId: string;
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  lineTotal: number;
 }
 
 export interface OrderParticipantApiDto {
@@ -107,6 +127,68 @@ export interface OrderSummaryApiDto {
   status: string;
   createdAt: string;
   createdByParticipantId: number;
+  totalAmount: number;
+  merchantName?: string;
   participants: OrderParticipantApiDto[];
+}
+
+// Pending participants summary (beregnes client-side fra OrderSummaryApiDto)
+export interface PendingParticipant {
+  participantId: number;
+  displayName: string;
+  initials: string;
+  pendingReason: string;
+}
+
+export interface PendingOrder {
+  orderId: number;
+  orderTitle: string;
+  merchantName?: string;
+  pendingCount: number;
+  pendingParticipants: PendingParticipant[];
+}
+
+export interface PendingParticipantsSummary {
+  pendingParticipantCount: number;
+  affectedOrderCount: number;
+  orders: PendingOrder[];
+}
+
+export function computePendingSummary(
+  orders: OrderSummaryApiDto[],
+  currentUserId: number
+): PendingParticipantsSummary {
+  const hostOrders = orders.filter(o => o.createdByParticipantId === currentUserId);
+  const pendingOrders: PendingOrder[] = [];
+
+  for (const order of hostOrders) {
+    const pendingStatuses = ['Invited', 'Accepted'];
+    const activePendingStatuses = order.status === 'Ready' ? ['Invited', 'Accepted'] : ['Invited'];
+
+    const pendingPs = order.participants.filter(
+      p => p.type !== 'Merchant' && activePendingStatuses.includes(p.status)
+    );
+
+    if (pendingPs.length === 0) continue;
+
+    pendingOrders.push({
+      orderId: order.id,
+      orderTitle: order.title,
+      merchantName: order.merchantName,
+      pendingCount: pendingPs.length,
+      pendingParticipants: pendingPs.map(p => ({
+        participantId: p.participantId,
+        displayName: p.name,
+        initials: p.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2),
+        pendingReason: p.status === 'Invited' ? 'Mangler at bekræfte deltagelse' : 'Mangler betaling'
+      }))
+    });
+  }
+
+  return {
+    pendingParticipantCount: pendingOrders.reduce((s, o) => s + o.pendingCount, 0),
+    affectedOrderCount: pendingOrders.length,
+    orders: pendingOrders
+  };
 }
 

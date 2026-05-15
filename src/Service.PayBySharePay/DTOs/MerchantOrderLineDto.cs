@@ -2,6 +2,7 @@ namespace Service.PayBySharePay.DTOs;
 
 public class MerchantOrderLineDto
 {
+    public int? ParticipantId { get; set; }
     public string LineId { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public int Quantity { get; set; }

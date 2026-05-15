@@ -17,4 +17,5 @@ public class Order
     public ICollection<OrderParticipant> OrderParticipants { get; set; } = new List<OrderParticipant>();
     public ICollection<Payment> Payments { get; set; } = new List<Payment>();
     public ICollection<Message> Messages { get; set; } = new List<Message>();
+    public ICollection<MerchantOrderDraft> MerchantOrderDrafts { get; set; } = new List<MerchantOrderDraft>();
 }

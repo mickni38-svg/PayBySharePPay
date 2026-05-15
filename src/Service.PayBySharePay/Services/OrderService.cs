@@ -95,6 +95,75 @@ public class OrderService : IOrderService
         var order = await _orderRepository.GetByIdWithDetailsAsync(orderId)
             ?? throw new KeyNotFoundException($"Ordre med id {orderId} findes ikke.");
 
+        var draft = order.MerchantOrderDrafts.FirstOrDefault();
+
+        // Betalingsstatus pr. deltager
+        var paidParticipantIds = order.Payments
+            .Where(p => p.Status == "Completed")
+            .Select(p => p.ParticipantId)
+            .ToHashSet();
+
+        // Byg ordrelinjer pr. deltager
+        var participantOrderLines = new List<ParticipantOrderLinesDto>();
+        if (draft != null)
+        {
+            var nonMerchantParticipants = order.OrderParticipants
+                .Where(op => op.Participant.Type != DataStorage.PayBySharePay.Entities.ParticipantType.Merchant)
+                .ToList();
+
+            // Grupper linjer på ParticipantId hvis tilgængeligt
+            var linesByParticipant = draft.Lines
+                .Where(l => l.ParticipantId.HasValue)
+                .GroupBy(l => l.ParticipantId!.Value)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            // Linjer uden ParticipantId
+            var unassignedLines = draft.Lines.Where(l => !l.ParticipantId.HasValue).ToList();
+
+            foreach (var op in nonMerchantParticipants)
+            {
+                var lines = linesByParticipant.TryGetValue(op.ParticipantId, out var pl) ? pl : new();
+                var hasPaid = paidParticipantIds.Contains(op.ParticipantId);
+                if (lines.Any() || !unassignedLines.Any())
+                {
+                    participantOrderLines.Add(new ParticipantOrderLinesDto
+                    {
+                        ParticipantId = op.ParticipantId,
+                        ParticipantName = op.Participant.Name,
+                        HasPaid = hasPaid,
+                        Lines = lines.Select(l => new MerchantOrderLineDto
+                        {
+                            ParticipantId = l.ParticipantId,
+                            LineId = l.LineId,
+                            Name = l.Name,
+                            Quantity = l.Quantity,
+                            UnitPrice = l.UnitPrice,
+                            LineTotal = l.LineTotal
+                        }).ToList()
+                    });
+                }
+            }
+
+            // Hvis ingen linjer er tildelt deltager, vis alle under én samlet gruppe
+            if (!linesByParticipant.Any() && unassignedLines.Any())
+            {
+                participantOrderLines.Add(new ParticipantOrderLinesDto
+                {
+                    ParticipantId = 0,
+                    ParticipantName = "Bestilling",
+                    HasPaid = false,
+                    Lines = unassignedLines.Select(l => new MerchantOrderLineDto
+                    {
+                        LineId = l.LineId,
+                        Name = l.Name,
+                        Quantity = l.Quantity,
+                        UnitPrice = l.UnitPrice,
+                        LineTotal = l.LineTotal
+                    }).ToList()
+                });
+            }
+        }
+
         return new OrderOverviewDto
         {
             OrderId = order.Id,
@@ -104,6 +173,9 @@ public class OrderService : IOrderService
             Message = order.Message,
             Status = order.Status,
             CreatedAt = order.CreatedAt,
+            MerchantName = order.MerchantParticipant?.CompanyName ?? order.MerchantParticipant?.Name,
+            MerchantAddress = order.MerchantParticipant?.CompanyAddress,
+            TotalAmount = draft?.TotalAmount ?? 0m,
             Participants = order.OrderParticipants.Select(op => new OrderParticipantDto
             {
                 ParticipantId = op.ParticipantId,
@@ -127,7 +199,8 @@ public class OrderService : IOrderService
                 ParticipantName = m.Participant.Name,
                 Content = m.Content,
                 CreatedAt = m.CreatedAt
-            }).ToList()
+            }).ToList(),
+            ParticipantOrderLines = participantOrderLines
         };
     }
 
@@ -162,6 +235,8 @@ public class OrderService : IOrderService
         Status = o.Status,
         CreatedAt = o.CreatedAt,
         CreatedByParticipantId = o.CreatedByParticipantId,
+        TotalAmount = o.MerchantOrderDrafts.FirstOrDefault()?.TotalAmount ?? 0m,
+        MerchantName = o.MerchantParticipant?.CompanyName ?? o.MerchantParticipant?.Name,
         Participants = o.OrderParticipants.Select(op => new OrderParticipantDto
         {
             ParticipantId = op.ParticipantId,

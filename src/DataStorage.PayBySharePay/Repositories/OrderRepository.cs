@@ -19,6 +19,8 @@ public class OrderRepository : IOrderRepository
             .Include(o => o.OrderParticipants).ThenInclude(op => op.Participant)
             .Include(o => o.Payments).ThenInclude(p => p.Participant)
             .Include(o => o.Messages).ThenInclude(m => m.Participant)
+            .Include(o => o.MerchantParticipant)
+            .Include(o => o.MerchantOrderDrafts).ThenInclude(d => d.Lines)
             .FirstOrDefaultAsync(o => o.Id == id);
     }
 
@@ -36,6 +38,8 @@ public class OrderRepository : IOrderRepository
         return await _context.Orders
             .Include(o => o.OrderParticipants).ThenInclude(op => op.Participant)
             .Include(o => o.Payments)
+            .Include(o => o.MerchantParticipant)
+            .Include(o => o.MerchantOrderDrafts)
             .Where(o => o.CreatedByParticipantId == participantId ||
                         o.OrderParticipants.Any(op => op.ParticipantId == participantId))
             .OrderByDescending(o => o.CreatedAt)

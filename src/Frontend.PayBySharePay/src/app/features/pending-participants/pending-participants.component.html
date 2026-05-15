@@ -1,0 +1,126 @@
+<div class="pending">
+
+  <!-- Header -->
+  <header class="pending__header">
+    <button class="pending__back" (click)="goBack()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <div class="pending__header-text">
+      <h1 class="pending__title">Deltagere der afventer</h1>
+      <p class="pending__subtitle">Liste over alle deltagere, der mangler at gøre noget</p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <p class="pending__state">Indlæser...</p>
+  } @else if (!summary()) {
+    <p class="pending__state">Kunne ikke hente data.</p>
+  } @else if (summary()!.pendingParticipantCount === 0) {
+
+    <!-- Tom tilstand -->
+    <div class="pending__empty">
+      <div class="pending__empty-icon">✅</div>
+      <h2 class="pending__empty-title">Du er opdateret</h2>
+      <p class="pending__empty-sub">Ingen deltagere afventer handling lige nu.</p>
+    </div>
+
+  } @else {
+
+    <!-- Summary kort -->
+    <div class="pending__summary">
+      <div class="pending__summary-item">
+        <span class="pending__summary-num">{{ summary()!.pendingParticipantCount }}</span>
+        <span class="pending__summary-label">Deltagere</span>
+      </div>
+      <div class="pending__summary-divider"></div>
+      <div class="pending__summary-item">
+        <span class="pending__summary-num">{{ summary()!.affectedOrderCount }}</span>
+        <span class="pending__summary-label">Ordre</span>
+      </div>
+    </div>
+
+    <p class="pending__desc">Disse deltagere har endnu ikke fuldført deres handling.</p>
+
+    <!-- Ordrekort -->
+    <div class="pending__orders">
+      @for (order of summary()!.orders; track order.orderId) {
+        <div class="pending-order-card">
+          <div class="pending-order-card__header">
+            <div class="pending-order-card__title-row">
+              <span class="pending-order-card__icon">👑</span>
+              <span class="pending-order-card__title">{{ order.orderTitle }}</span>
+            </div>
+            <span class="pending-order-card__badge">{{ order.pendingCount }} afventer</span>
+          </div>
+
+          <div class="pending-order-card__participants">
+            @for (p of order.pendingParticipants; track p.participantId) {
+              <div class="pending-participant">
+                <div class="pending-participant__avatar" [attr.data-initials]="initials(p.displayName)">
+                  {{ initials(p.displayName) }}
+                </div>
+                <div class="pending-participant__info">
+                  <span class="pending-participant__name">{{ p.displayName }}</span>
+                  <span class="pending-participant__reason">{{ p.pendingReason }}</span>
+                </div>
+              </div>
+            }
+              </div>
+              </div>
+            }
+          </div>
+
+    <!-- Send påmindelse knap -->
+    <div class="pending__footer">
+      <button class="btn btn--primary pending__remind-btn" (click)="openReminderDialog()">
+        Send påmindelse til alle afventende
+      </button>
+      <p class="pending__footer-note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        Påmindelser sendes som besked i appen. Du kan tilpasse beskeden før afsendelse.
+      </p>
+    </div>
+
+  }
+
+  <!-- Send påmindelse dialog -->
+  @if (showReminderDialog()) {
+    <div class="reminder-overlay" (click)="closeReminderDialog()">
+      <div class="reminder-dialog" (click)="$event.stopPropagation()">
+        <h2 class="reminder-dialog__title">Send påmindelse</h2>
+
+        <div class="reminder-dialog__summary">
+          <strong>{{ summary()!.pendingParticipantCount }} deltagere</strong> vil modtage en påmindelse<br>
+          På tværs af {{ summary()!.affectedOrderCount }} ordre
+        </div>
+
+        <div class="reminder-dialog__section-label">Modtagere</div>
+        <ul class="reminder-dialog__recipients">
+          @for (r of allPendingParticipants(); track r.name + r.orderTitle) {
+            <li class="reminder-dialog__recipient">
+              <span class="reminder-dialog__recipient-name">{{ r.name }}</span>
+              <span class="reminder-dialog__recipient-order">{{ r.orderTitle }}</span>
+            </li>
+          }
+        </ul>
+
+        <div class="reminder-dialog__section-label">Besked</div>
+        <pre class="reminder-dialog__message">{{ reminderMessage }}</pre>
+
+        @if (reminderSent()) {
+          <p class="reminder-dialog__sent">✅ Påmindelser sendt!</p>
+        } @else {
+          <button class="btn btn--primary reminder-dialog__send-btn" (click)="sendReminders()">
+            Send påmindelse
+          </button>
+          <button class="reminder-dialog__cancel" (click)="closeReminderDialog()">Annuller</button>
+        }
+      </div>
+    </div>
+  }
+
+</div>

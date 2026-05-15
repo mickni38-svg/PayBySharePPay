@@ -24,6 +24,29 @@ switch (args[0].ToLowerInvariant())
     case "seed":
         await SeedAsync(db);
         break;
+    case "seed-pizza":
+        await SeedPizzaOrderAsync(db);
+        break;
+    case "fix-pizza-lines":
+        await FixPizzaLinesAsync(db);
+        break;
+    case "mark-pizza-paid":
+        await MarkPizzaPaidAsync(db);
+        break;
+    case "set-pizza-ready":
+        await SetPizzaReadyAsync(db);
+        break;
+    case "check-pizza-lines":
+        await CheckPizzaLinesAsync(db);
+        break;
+    case "seed-pizza-payments":
+        await SeedPizzaPaymentsAsync(db);
+        break;
+    case "bestillingpaid":
+        if (args.Length < 3 || !int.TryParse(args[1], out var orderId) || !int.TryParse(args[2], out var participantId))
+        { Console.WriteLine("Usage: dotnet run bestillingpaid <orderId> <participantId>"); return; }
+        await BestillingPaidAsync(db, orderId, participantId);
+        break;
     case "flush":
         await FlushAsync(db);
         break;
@@ -36,8 +59,330 @@ static void PrintUsage()
 {
     Console.WriteLine("PayBySharePay Tools");
     Console.WriteLine("Usage:");
-    Console.WriteLine("  dotnet run seed   – Seed 50 persons and 10 merchants");
-    Console.WriteLine("  dotnet run flush  – Remove all seeded data");
+    Console.WriteLine("  dotnet run seed         – Seed 50 persons and 10 merchants");
+    Console.WriteLine("  dotnet run seed-pizza   – Seed a pizza order for Michael Nielsen and Selma Markussen");
+    Console.WriteLine("  dotnet run flush        – Remove all seeded data");
+    Console.WriteLine("  dotnet run bestillingpaid <orderId> <participantId>  – Seed betaling (Completed) for deltager på ordre");
+}
+
+static async Task SeedPizzaPaymentsAsync(PayBySharePayDbContext db)
+{
+    Console.WriteLine("Seeder betalinger for Michael og Selma på ordre id=5...");
+
+    var michael = db.Participants.FirstOrDefault(p => p.Name == "Michael Nielsen");
+    var selma   = db.Participants.FirstOrDefault(p => p.Name == "Selma Markussen");
+
+    if (michael == null || selma == null)
+    {
+        Console.WriteLine("Fejl: Deltagere ikke fundet."); return;
+    }
+
+    // Beregn beløb fra ordrelinjer
+    var draft = db.MerchantOrderDrafts.FirstOrDefault(d => d.OrderId == 5);
+    if (draft == null) { Console.WriteLine("Fejl: Draft for ordre 5 ikke fundet."); return; }
+
+    var lines = db.MerchantOrderLines.Where(l => l.MerchantOrderDraftId == draft.Id).ToList();
+    var michaelAmount = lines.Where(l => l.ParticipantId == michael.Id).Sum(l => l.LineTotal);
+    var selmaAmount   = lines.Where(l => l.ParticipantId == selma.Id).Sum(l => l.LineTotal);
+
+    // Fjern eksisterende betalinger for ordre 5 (undgå dubletter)
+    var existing = db.Payments.Where(p => p.OrderId == 5).ToList();
+    if (existing.Any())
+    {
+        db.Payments.RemoveRange(existing);
+        await db.SaveChangesAsync();
+        Console.WriteLine($"  Fjernede {existing.Count} eksisterende betalinger.");
+    }
+
+    var payments = new[]
+    {
+        new Payment { OrderId = 5, ParticipantId = michael.Id, Amount = michaelAmount, Status = "Completed", CreatedAt = DateTime.UtcNow },
+        new Payment { OrderId = 5, ParticipantId = selma.Id,   Amount = selmaAmount,   Status = "Completed", CreatedAt = DateTime.UtcNow }
+    };
+    db.Payments.AddRange(payments);
+    await db.SaveChangesAsync();
+
+    Console.WriteLine($"  ✅ Michael Nielsen: {michaelAmount:N2} kr – Completed");
+    Console.WriteLine($"  ✅ Selma Markussen: {selmaAmount:N2} kr – Completed");
+    Console.WriteLine("✅ Betalinger seedet.");
+}
+
+static async Task CheckPizzaLinesAsync(PayBySharePayDbContext db)
+{
+    var order = db.Orders.FirstOrDefault(o => o.Id == 5);
+    Console.WriteLine($"Ordre 5 status: {order?.Status ?? "IKKE FUNDET"}");
+
+    var drafts = db.MerchantOrderDrafts.Where(d => d.OrderId == 5).ToList();
+    Console.WriteLine($"Drafts for ordre 5: {drafts.Count}");
+    foreach (var d in drafts)
+    {
+        Console.WriteLine($"  Draft id={d.Id} status={d.Status} total={d.TotalAmount}");
+        var lines = db.MerchantOrderLines.Where(l => l.MerchantOrderDraftId == d.Id).ToList();
+        Console.WriteLine($"  Linjer: {lines.Count}");
+        foreach (var l in lines)
+            Console.WriteLine($"    LineId={l.LineId} ParticipantId={l.ParticipantId} Name={l.Name} Qty={l.Quantity} Total={l.LineTotal}");
+    }
+
+    var ops = db.OrderParticipants.Where(op => op.OrderId == 5).ToList();
+    Console.WriteLine($"OrderParticipants for ordre 5:");
+    foreach (var op in ops)
+    {
+        var p = db.Participants.FirstOrDefault(x => x.Id == op.ParticipantId);
+        Console.WriteLine($"  ParticipantId={op.ParticipantId} Name={p?.Name} Status={op.Status}");
+    }
+    await Task.CompletedTask;
+}
+
+static async Task SetPizzaReadyAsync(PayBySharePayDbContext db)
+{
+    Console.WriteLine("Sætter ordre id=5 til Ready og opdaterer draft til Ready...");
+
+    var order = db.Orders.FirstOrDefault(o => o.Id == 5);
+    if (order == null) { Console.WriteLine("Fejl: Ordre 5 ikke fundet."); return; }
+
+    order.Status = "Ready";
+    Console.WriteLine($"  Ordre status -> Ready");
+
+    var draft = db.MerchantOrderDrafts.FirstOrDefault(d => d.OrderId == 5);
+    if (draft != null)
+    {
+        draft.Status = "Ready";
+        Console.WriteLine($"  Draft status -> Ready");
+    }
+
+    await db.SaveChangesAsync();
+    Console.WriteLine("✅ Færdig.");
+}
+
+static async Task MarkPizzaPaidAsync(PayBySharePayDbContext db)
+{
+    Console.WriteLine("Sætter Michael og Selma til Paid på ordre id=5...");
+
+    var participants = db.OrderParticipants
+        .Where(op => op.OrderId == 5)
+        .ToList();
+
+    var michael = db.Participants.FirstOrDefault(p => p.Name == "Michael Nielsen");
+    var selma   = db.Participants.FirstOrDefault(p => p.Name == "Selma Markussen");
+
+    if (michael == null || selma == null)
+    {
+        Console.WriteLine("Fejl: Michael Nielsen eller Selma Markussen ikke fundet.");
+        return;
+    }
+
+    foreach (var op in participants)
+    {
+        if (op.ParticipantId == michael.Id || op.ParticipantId == selma.Id)
+        {
+            op.Status = "Paid";
+            Console.WriteLine($"  Sat ParticipantId={op.ParticipantId} til Paid");
+        }
+    }
+
+    await db.SaveChangesAsync();
+    Console.WriteLine("✅ Færdig – Michael og Selma er nu Paid på ordre 5.");
+}
+
+static async Task FixPizzaLinesAsync(PayBySharePayDbContext db)
+{
+    Console.WriteLine("Sætter ParticipantId på eksisterende pizzalinjer...");
+
+    var michael = db.Participants.FirstOrDefault(p => p.Name == "Michael Nielsen");
+    var selma   = db.Participants.FirstOrDefault(p => p.Name == "Selma Markussen");
+
+    if (michael == null || selma == null)
+    {
+        Console.WriteLine("Fejl: Michael Nielsen eller Selma Markussen ikke fundet.");
+        return;
+    }
+
+    var lines = db.MerchantOrderLines.ToList();
+
+    foreach (var l in lines)
+    {
+        if (l.LineId.StartsWith("M-")) l.ParticipantId = michael.Id;
+        else if (l.LineId.StartsWith("S-")) l.ParticipantId = selma.Id;
+    }
+
+    await db.SaveChangesAsync();
+    Console.WriteLine($"  Opdaterede {lines.Count} linjer.");
+    Console.WriteLine("✅ Færdig.");
+}
+
+static async Task SeedPizzaOrderAsync(PayBySharePayDbContext db)
+{
+    Console.WriteLine("Seeder pizzaorden for Michael Nielsen og Selma Markussen...");
+
+    // Find eller opret Michael Nielsen
+    var michael = db.Participants.FirstOrDefault(p => p.Type == ParticipantType.Person && p.Name == "Michael Nielsen")
+        ?? db.Participants.FirstOrDefault(p => p.Email == "michael.nielsen@mail.dk");
+
+    if (michael == null)
+    {
+        michael = new Participant
+        {
+            Type = ParticipantType.Person,
+            Name = "Michael Nielsen",
+            Email = "michael.nielsen@mail.dk",
+            Phone = "51234567"
+        };
+        db.Participants.Add(michael);
+        await db.SaveChangesAsync();
+        Console.WriteLine($"  Oprettede Michael Nielsen (id={michael.Id})");
+    }
+    else
+    {
+        Console.WriteLine($"  Fandt Michael Nielsen (id={michael.Id})");
+    }
+
+    // Find eller opret Selma Markussen
+    var selma = db.Participants.FirstOrDefault(p => p.Type == ParticipantType.Person && p.Name == "Selma Markussen")
+        ?? db.Participants.FirstOrDefault(p => p.Email == "selma.markussen@mail.dk");
+
+    if (selma == null)
+    {
+        selma = new Participant
+        {
+            Type = ParticipantType.Person,
+            Name = "Selma Markussen",
+            Email = "selma.markussen@mail.dk",
+            Phone = "51234568"
+        };
+        db.Participants.Add(selma);
+        await db.SaveChangesAsync();
+        Console.WriteLine($"  Oprettede Selma Markussen (id={selma.Id})");
+    }
+    else
+    {
+        Console.WriteLine($"  Fandt Selma Markussen (id={selma.Id})");
+    }
+
+    // Find eller opret pizzarestaurant-merchant (Mother Pizza)
+    var merchant = db.Participants.FirstOrDefault(p => p.Type == ParticipantType.Merchant && p.Name == "Mother");
+    if (merchant == null)
+    {
+        merchant = new Participant
+        {
+            Type = ParticipantType.Merchant,
+            Name = "Mother",
+            Email = "hej@mother.dk",
+            CompanyName = "Mother Pizza ApS",
+            CvrNumber = "34109855",
+            ContactEmail = "hej@mother.dk",
+            CompanyAddress = "Høkerboderne 9-15, 1712 København V",
+            PaymentReference = "MOTHER-PAY"
+        };
+        db.Participants.Add(merchant);
+        await db.SaveChangesAsync();
+        Console.WriteLine($"  Oprettede merchant Mother (id={merchant.Id})");
+    }
+    else
+    {
+        Console.WriteLine($"  Fandt merchant Mother (id={merchant.Id})");
+    }
+
+    // Opret pizzaorden – Michael er vært
+    var order = new Order
+    {
+        CreatedByParticipantId = michael.Id,
+        Title = "Pizzaaften",
+        Category = "pizza",
+        Message = "Fredagens pizzaaften hos Michael – bestil hvad du vil have!",
+        Status = "Collecting",
+        MerchantParticipantId = merchant.Id,
+        CreatedAt = DateTime.UtcNow
+    };
+    db.Orders.Add(order);
+    await db.SaveChangesAsync();
+    Console.WriteLine($"  Oprettede ordre '{order.Title}' (id={order.Id})");
+
+    // Tilknyt Michael som OrderParticipant (Accepted = vært)
+    var michaelOp = new OrderParticipant
+    {
+        OrderId = order.Id,
+        ParticipantId = michael.Id,
+        Status = "Accepted"
+    };
+    // Tilknyt Selma som OrderParticipant (Invited)
+    var selmaOp = new OrderParticipant
+    {
+        OrderId = order.Id,
+        ParticipantId = selma.Id,
+        Status = "Invited"
+    };
+    // Tilknyt merchant
+    var merchantOp = new OrderParticipant
+    {
+        OrderId = order.Id,
+        ParticipantId = merchant.Id,
+        Status = "Accepted"
+    };
+    db.OrderParticipants.AddRange(michaelOp, selmaOp, merchantOp);
+    await db.SaveChangesAsync();
+
+    // Opret MerchantOrderDraft med ordrelinjer
+    var draft = new MerchantOrderDraft
+    {
+        OrderId = order.Id,
+        MerchantParticipantId = merchant.Id,
+        MerchantDraftReference = $"MOTHER-DRAFT-{order.Id:D5}",
+        SubtotalAmount = 0,
+        TotalAmount = 0,
+        Currency = "DKK",
+        PaymentMode = "AuthorizeThenCapture",
+        Status = "Collecting",
+        CreatedAtUtc = DateTime.UtcNow
+    };
+    db.MerchantOrderDrafts.Add(draft);
+    await db.SaveChangesAsync();
+
+    // Ordrelinjer for Michael
+    var michaelLines = new[]
+    {
+        new MerchantOrderLine { MerchantOrderDraftId = draft.Id, ParticipantId = michael.Id, LineId = $"M-{order.Id}-1", Name = "Margherita pizza",    Quantity = 1, UnitPrice = 119m, LineTotal = 119m },
+        new MerchantOrderLine { MerchantOrderDraftId = draft.Id, ParticipantId = michael.Id, LineId = $"M-{order.Id}-2", Name = "Coca-Cola 50cl",      Quantity = 2, UnitPrice = 39m,  LineTotal = 78m  },
+        new MerchantOrderLine { MerchantOrderDraftId = draft.Id, ParticipantId = michael.Id, LineId = $"M-{order.Id}-3", Name = "Hvidløgsdip",         Quantity = 1, UnitPrice = 25m,  LineTotal = 25m  },
+    };
+
+    // Ordrelinjer for Selma
+    var selmaLines = new[]
+    {
+        new MerchantOrderLine { MerchantOrderDraftId = draft.Id, ParticipantId = selma.Id, LineId = $"S-{order.Id}-1", Name = "Diavola pizza",       Quantity = 1, UnitPrice = 129m, LineTotal = 129m },
+        new MerchantOrderLine { MerchantOrderDraftId = draft.Id, ParticipantId = selma.Id, LineId = $"S-{order.Id}-2", Name = "San Pellegrino 33cl", Quantity = 1, UnitPrice = 35m,  LineTotal = 35m  },
+        new MerchantOrderLine { MerchantOrderDraftId = draft.Id, ParticipantId = selma.Id, LineId = $"S-{order.Id}-3", Name = "Ekstra ost",          Quantity = 1, UnitPrice = 20m,  LineTotal = 20m  },
+    };
+
+    db.MerchantOrderLines.AddRange(michaelLines);
+    db.MerchantOrderLines.AddRange(selmaLines);
+
+    // Opdater beløb på draft
+    var allLines = michaelLines.Concat(selmaLines).ToList();
+    draft.SubtotalAmount = allLines.Sum(l => l.LineTotal);
+    draft.TotalAmount = draft.SubtotalAmount;
+
+    await db.SaveChangesAsync();
+
+    Console.WriteLine();
+    Console.WriteLine("✅ Pizzaorden seedet!");
+    Console.WriteLine($"   Ordre id      : {order.Id}");
+    Console.WriteLine($"   Titel         : {order.Title}");
+    Console.WriteLine($"   Vært          : {michael.Name} (id={michael.Id})");
+    Console.WriteLine($"   Deltager      : {selma.Name} (id={selma.Id})");
+    Console.WriteLine($"   Merchant      : {merchant.Name} (id={merchant.Id})");
+    Console.WriteLine($"   Draft id      : {draft.Id}");
+    Console.WriteLine($"   Samlet beløb  : {draft.TotalAmount:N2} DKK");
+    Console.WriteLine();
+    Console.WriteLine("   Michael Nielsens linjer:");
+    foreach (var l in michaelLines)
+        Console.WriteLine($"     - {l.Name,-25} {l.Quantity}x  {l.UnitPrice:N2} kr  = {l.LineTotal:N2} kr");
+    Console.WriteLine();
+    Console.WriteLine("   Selma Markussens linjer:");
+    foreach (var l in selmaLines)
+        Console.WriteLine($"     - {l.Name,-25} {l.Quantity}x  {l.UnitPrice:N2} kr  = {l.LineTotal:N2} kr");
+    Console.WriteLine();
+    Console.WriteLine($"   Login som Michael: michael.nielsen@mail.dk");
+    Console.WriteLine($"   Login som Selma:   selma.markussen@mail.dk");
 }
 
 static async Task SeedAsync(PayBySharePayDbContext db)
@@ -230,6 +575,48 @@ static async Task SeedAsync(PayBySharePayDbContext db)
     Console.WriteLine("DEV login-konti (brug email til login, ingen password kræves):");
     foreach (var p in personData.Take(10))
         Console.WriteLine($"  {p.Email,-22}  ({p.Name})");
+}
+
+static async Task BestillingPaidAsync(PayBySharePayDbContext db, int orderId, int participantId)
+{
+    var order = db.Orders.FirstOrDefault(o => o.Id == orderId);
+    if (order == null) { Console.WriteLine($"Fejl: Ordre {orderId} ikke fundet."); return; }
+
+    var participant = db.Participants.FirstOrDefault(p => p.Id == participantId);
+    if (participant == null) { Console.WriteLine($"Fejl: Deltager {participantId} ikke fundet."); return; }
+
+    var draft = db.MerchantOrderDrafts.FirstOrDefault(d => d.OrderId == orderId);
+    if (draft == null) { Console.WriteLine($"Fejl: Draft for ordre {orderId} ikke fundet."); return; }
+
+    var lines = db.MerchantOrderLines
+        .Where(l => l.MerchantOrderDraftId == draft.Id && l.ParticipantId == participantId)
+        .ToList();
+    if (lines.Count == 0) { Console.WriteLine($"Fejl: Ingen ordrelinjer fundet for deltager {participantId} på ordre {orderId}."); return; }
+
+    var amount = lines.Sum(l => l.LineTotal);
+
+    var existing = db.Payments.Where(p => p.OrderId == orderId && p.ParticipantId == participantId).ToList();
+    if (existing.Any())
+    {
+        db.Payments.RemoveRange(existing);
+        await db.SaveChangesAsync();
+        Console.WriteLine($"  Fjernede {existing.Count} eksisterende betalinger.");
+    }
+
+    db.Payments.Add(new Payment
+    {
+        OrderId = orderId,
+        ParticipantId = participantId,
+        Amount = amount,
+        Status = "Completed",
+        CreatedAt = DateTime.UtcNow
+    });
+
+    var op = db.OrderParticipants.FirstOrDefault(x => x.OrderId == orderId && x.ParticipantId == participantId);
+    if (op != null) op.Status = "Paid";
+
+    await db.SaveChangesAsync();
+    Console.WriteLine($"✅ {participant.Name} (id={participantId}) – {amount:N2} kr – Completed på ordre {orderId}.");
 }
 
 static async Task FlushAsync(PayBySharePayDbContext db)

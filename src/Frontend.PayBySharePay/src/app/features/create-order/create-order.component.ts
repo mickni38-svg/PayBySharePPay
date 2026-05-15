@@ -171,7 +171,7 @@ function avatarColor(name: string): string {
       participantIds
     }).subscribe({
       next: (order) => {
-        this.router.navigate(['/orders', order.id]);
+        this.router.navigate(['/home']);
       },
       error: () => {
         this.errorMessage.set('Kunne ikke oprette ordre. Prøv igen.');

@@ -39,6 +39,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/messages/messages.component').then(m => m.MessagesComponent)
   },
   {
+    path: 'pending-participants',
+    loadComponent: () => import('./features/pending-participants/pending-participants.component').then(m => m.PendingParticipantsComponent)
+  },
+  {
     path: '**',
     redirectTo: 'home'
   }
