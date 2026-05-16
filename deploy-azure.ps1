@@ -20,9 +20,8 @@ npx @azure/static-web-apps-cli deploy ./dist/frontend.paybysharepay `
 if ($LASTEXITCODE -ne 0) { Write-Host "Frontend deploy fejlede!" -ForegroundColor Red; exit 1 }
 
 Write-Host "Trin 3/6 - Deployer Frontend.MerchantDemo til Azure Static Web Apps..." -ForegroundColor Cyan
-Set-Location "$root\src\Frontend.MerchantDemo"
-# OBS: Erstat MERCHANT_DEMO_DEPLOYMENT_TOKEN med det rigtige token fra Azure-portalen
-npx @azure/static-web-apps-cli deploy . `
+Set-Location "$root"
+npx @azure/static-web-apps-cli deploy "$root\src\Frontend.MerchantDemo" `
     --deployment-token "37c702bfe9ec68958e87eb3bdb8470a3cb3126e73910d869a94517bd97177f1107-354904cb-ccc4-4a6f-adcf-c401582b999b00300010e753db03" `
     --env production
 if ($LASTEXITCODE -ne 0) { Write-Host "MerchantDemo deploy fejlede!" -ForegroundColor Red; exit 1 }
