@@ -31,9 +31,6 @@
       <div class="orders__empty">
         <span class="orders__empty-icon">📋</span>
         <p>Ingen ordrer at vise.</p>
-        @if (activeTab() === 'host') {
-          <button class="orders__create-btn" (click)="goCreate()">Opret ny ordre</button>
-        }
       </div>
     } @else {
       <div class="orders__list">
