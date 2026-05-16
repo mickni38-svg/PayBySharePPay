@@ -23,7 +23,7 @@ Write-Host "Trin 3/6 - Deployer Frontend.MerchantDemo til Azure Static Web Apps.
 Set-Location "$root\src\Frontend.MerchantDemo"
 # OBS: Erstat MERCHANT_DEMO_DEPLOYMENT_TOKEN med det rigtige token fra Azure-portalen
 npx @azure/static-web-apps-cli deploy . `
-    --deployment-token "MERCHANT_DEMO_DEPLOYMENT_TOKEN" `
+    --deployment-token "37c702bfe9ec68958e87eb3bdb8470a3cb3126e73910d869a94517bd97177f1107-354904cb-ccc4-4a6f-adcf-c401582b999b00300010e753db03" `
     --env production
 if ($LASTEXITCODE -ne 0) { Write-Host "MerchantDemo deploy fejlede!" -ForegroundColor Red; exit 1 }
 
@@ -48,5 +48,5 @@ if ($LASTEXITCODE -ne 0) { Write-Host "API deploy fejlede!" -ForegroundColor Red
 Write-Host ""
 Write-Host "Deploy faerdig!" -ForegroundColor Green
 Write-Host "Frontend:      https://icy-water-0750d2703.7.azurestaticapps.net" -ForegroundColor Green
-Write-Host "MerchantDemo:  https://MERCHANT_DEMO_AZURE_URL (opdater efter oprettelse)" -ForegroundColor Yellow
+Write-Host "MerchantDemo:  https://ashy-bay-0e753db03.7.azurestaticapps.net" -ForegroundColor Green
 Write-Host "API:           https://paybysharepay-api-win.azurewebsites.net" -ForegroundColor Green
