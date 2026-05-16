@@ -3,7 +3,7 @@ using DataStorage.PayBySharePay.Entities;
 using DataStorage.PayBySharePay.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 
-const string connectionString =
+const string localConnectionString =
     "Server=DESKTOP-HNI6DDI\\SQLEXPRESS;Database=PayBySharePay;Trusted_Connection=True;TrustServerCertificate=True";
 
 if (args.Length == 0)
@@ -11,6 +11,18 @@ if (args.Length == 0)
     PrintUsage();
     return;
 }
+
+// Understøt --conn "..." som første eller andet argument
+string connectionString = localConnectionString;
+var argList = args.ToList();
+int connIdx = argList.IndexOf("--conn");
+if (connIdx >= 0 && connIdx + 1 < argList.Count)
+{
+    connectionString = argList[connIdx + 1];
+    argList.RemoveRange(connIdx, 2);
+    Console.WriteLine("Bruger custom connection string.");
+}
+args = argList.ToArray();
 
 var services = new ServiceCollection();
 services.AddDataStorage(connectionString);
@@ -47,6 +59,9 @@ switch (args[0].ToLowerInvariant())
         { Console.WriteLine("Usage: dotnet run bestillingpaid <orderId> <participantId>"); return; }
         await BestillingPaidAsync(db, orderId, participantId);
         break;
+    case "list-orders":
+        await ListOrdersAsync(db);
+        break;
     case "flush":
         await FlushAsync(db);
         break;
@@ -60,6 +75,7 @@ static void PrintUsage()
     Console.WriteLine("PayBySharePay Tools");
     Console.WriteLine("Usage:");
     Console.WriteLine("  dotnet run seed         – Seed 50 persons and 10 merchants");
+    Console.WriteLine("  dotnet run -- --conn \"<connstr>\" seed  – Seed mod en bestemt database");
     Console.WriteLine("  dotnet run seed-pizza   – Seed a pizza order for Michael Nielsen and Selma Markussen");
     Console.WriteLine("  dotnet run flush        – Remove all seeded data");
     Console.WriteLine("  dotnet run bestillingpaid <orderId> <participantId>  – Seed betaling (Completed) for deltager på ordre");
@@ -617,6 +633,25 @@ static async Task BestillingPaidAsync(PayBySharePayDbContext db, int orderId, in
 
     await db.SaveChangesAsync();
     Console.WriteLine($"✅ {participant.Name} (id={participantId}) – {amount:N2} kr – Completed på ordre {orderId}.");
+}
+
+static async Task ListOrdersAsync(PayBySharePayDbContext db)
+{
+    var orders = db.Orders.OrderBy(o => o.Id).ToList();
+    Console.WriteLine($"{"Id",-5} {"Titel",-25} {"Status",-12} {"Vært",-6} {"Draft?"}");
+    Console.WriteLine(new string('-', 65));
+    foreach (var o in orders)
+    {
+        var hasDraft = db.MerchantOrderDrafts.Any(d => d.OrderId == o.Id);
+        var participants = db.OrderParticipants.Where(op => op.OrderId == o.Id).ToList();
+        Console.WriteLine($"{o.Id,-5} {o.Title,-25} {o.Status,-12} {o.CreatedByParticipantId,-6} {(hasDraft ? "Ja" : "Nej")}");
+        foreach (var op in participants)
+        {
+            var p = db.Participants.FirstOrDefault(x => x.Id == op.ParticipantId);
+            Console.WriteLine($"       → ParticipantId={op.ParticipantId,-4} {p?.Name,-25} {op.Status}");
+        }
+    }
+    await Task.CompletedTask;
 }
 
 static async Task FlushAsync(PayBySharePayDbContext db)
