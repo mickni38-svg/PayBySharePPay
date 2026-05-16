@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pizzeria Roma – Menubestilling</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f5f5f0;
+      color: #222;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #c0392b;
+      color: white;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    header .logo { font-size: 2rem; }
+    header h1 { font-size: 1.4rem; font-weight: 700; }
+    header p { font-size: 0.85rem; opacity: 0.85; }
+
+    .badge {
+      display: inline-block;
+      background: #27ae60;
+      color: white;
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-top: 4px;
+    }
+
+    main { max-width: 520px; margin: 24px auto; padding: 0 16px 80px; }
+
+    .info-box {
+      background: #fff8e1;
+      border-left: 4px solid #f39c12;
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+    }
+    .info-box strong { display: block; margin-bottom: 4px; }
+
+    h2 { font-size: 1.1rem; margin: 20px 0 10px; color: #c0392b; }
+
+    .menu-item {
+      background: white;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      cursor: pointer;
+      transition: box-shadow 0.15s;
+    }
+    .menu-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.14); }
+    .menu-item input[type=checkbox] {
+      width: 20px; height: 20px;
+      accent-color: #c0392b;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .menu-item .emoji { font-size: 1.6rem; flex-shrink: 0; }
+    .menu-item .desc { flex: 1; }
+    .menu-item .desc strong { display: block; font-size: 0.95rem; }
+    .menu-item .desc span { font-size: 0.8rem; color: #777; }
+    .menu-item .price { font-weight: 700; font-size: 1rem; color: #c0392b; white-space: nowrap; }
+
+    .total-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: white;
+      border-top: 1px solid #ddd;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+    .total-bar .total-label { font-size: 0.85rem; color: #666; }
+    .total-bar .total-amount { font-size: 1.2rem; font-weight: 700; color: #222; }
+
+    button#payBtn {
+      background: #27ae60;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 22px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    button#payBtn:hover { background: #1e8449; }
+    button#payBtn:disabled { background: #aaa; cursor: default; }
+
+    #result {
+      display: none;
+      background: #eafaf1;
+      border: 2px solid #27ae60;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      margin: 24px 0;
+    }
+    #result .check { font-size: 2.5rem; }
+    #result h3 { margin: 8px 0 4px; font-size: 1.1rem; }
+    #result p { font-size: 0.85rem; color: #555; }
+
+    #errorMsg {
+      display: none;
+      background: #fdecea;
+      border: 2px solid #e74c3c;
+      border-radius: 10px;
+      padding: 16px;
+      color: #c0392b;
+      font-size: 0.9rem;
+      margin: 12px 0;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🍕</div>
+  <div>
+    <h1>Pizzeria Roma</h1>
+    <p>Vælg dine retter og send til gruppen</p>
+    <span class="badge">Gruppebetaling aktiveret</span>
+  </div>
+</header>
+
+<main>
+  <div class="info-box" id="groupInfo">
+    <strong>📦 Gruppebetaling</strong>
+    <span id="groupLabel">Henter ordre-info...</span>
+  </div>
+
+  <div id="errorMsg"></div>
+  <div id="result">
+    <div class="check">✅</div>
+    <h3>Bestilling sendt!</h3>
+    <p>Din bestilling er registreret i gruppen.<br>Du kan nu lukke denne side.</p>
+  </div>
+
+  <div id="menuSection">
+    <h2>🍕 Pizzaer</h2>
+    <div class="menu-item" onclick="toggle(this)">
+      <input type="checkbox" data-name="Margherita" data-price="89" />
+      <div class="emoji">🍕</div>
+      <div class="desc"><strong>Margherita</strong><span>Tomatsauce, mozzarella, basilikum</span></div>
+      <div class="price">89 kr</div>
+    </div>
+    <div class="menu-item" onclick="toggle(this)">
+      <input type="checkbox" data-name="Pepperoni" data-price="99" />
+      <div class="emoji">🍕</div>
+      <div class="desc"><strong>Pepperoni</strong><span>Tomatsauce, mozzarella, pepperoni</span></div>
+      <div class="price">99 kr</div>
+    </div>
+    <div class="menu-item" onclick="toggle(this)">
+      <input type="checkbox" data-name="Vegetariana" data-price="95" />
+      <div class="emoji">🥦</div>
+      <div class="desc"><strong>Vegetariana</strong><span>Grøntsager, pesto, mozzarella</span></div>
+      <div class="price">95 kr</div>
+    </div>
+    <div class="menu-item" onclick="toggle(this)">
+      <input type="checkbox" data-name="Quattro Stagioni" data-price="105" />
+      <div class="emoji">🍄</div>
+      <div class="desc"><strong>Quattro Stagioni</strong><span>Skinke, svampe, artiskok, oliven</span></div>
+      <div class="price">105 kr</div>
+    </div>
+
+    <h2>🥤 Drikkevarer</h2>
+    <div class="menu-item" onclick="toggle(this)">
+      <input type="checkbox" data-name="Cola" data-price="25" />
+      <div class="emoji">🥤</div>
+      <div class="desc"><strong>Cola (50 cl)</strong><span>Iskold cola</span></div>
+      <div class="price">25 kr</div>
+    </div>
+    <div class="menu-item" onclick="toggle(this)">
+      <input type="checkbox" data-name="Vand" data-price="15" />
+      <div class="emoji">💧</div>
+      <div class="desc"><strong>Vand (50 cl)</strong><span>Stille eller brusende</span></div>
+      <div class="price">15 kr</div>
+    </div>
+    <div class="menu-item" onclick="toggle(this)">
+      <input type="checkbox" data-name="Øl" data-price="35" />
+      <div class="emoji">🍺</div>
+      <div class="desc"><strong>Øl (33 cl)</strong><span>Fadøl på flaske</span></div>
+      <div class="price">35 kr</div>
+    </div>
+
+    <h2>🍰 Dessert</h2>
+    <div class="menu-item" onclick="toggle(this)">
+      <input type="checkbox" data-name="Tiramisu" data-price="55" />
+      <div class="emoji">🍰</div>
+      <div class="desc"><strong>Tiramisu</strong><span>Klassisk italiensk dessert</span></div>
+      <div class="price">55 kr</div>
+    </div>
+  </div>
+</main>
+
+<div class="total-bar">
+  <div>
+    <div class="total-label">Valgt i alt</div>
+    <div class="total-amount" id="totalDisplay">0 kr</div>
+  </div>
+  <button id="payBtn" disabled onclick="submitOrder()">Gruppebetaling</button>
+</div>
+
+<script>
+  // Læs query params: ?orderId=1&merchantId=2
+  const params = new URLSearchParams(window.location.search);
+  const orderId = parseInt(params.get('orderId')) || null;
+  const merchantId = parseInt(params.get('merchantId')) || null;
+
+  // API base URL – skift til prod hvis nødvendigt
+  const API_BASE = params.get('api') || 'https://paybysharepay-api.azurewebsites.net';
+
+  document.getElementById('groupLabel').textContent =
+    orderId ? `Ordre #${orderId}` : 'Mangler orderId i URL (brug ?orderId=X&merchantId=Y)';
+
+  function toggle(row) {
+    const cb = row.querySelector('input[type=checkbox]');
+    if (event.target === cb) return; // lad checkboxen selv håndtere det
+    cb.checked = !cb.checked;
+    updateTotal();
+  }
+
+  document.querySelectorAll('input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', updateTotal);
+  });
+
+  function updateTotal() {
+    let sum = 0;
+    document.querySelectorAll('input[type=checkbox]:checked').forEach(cb => {
+      sum += parseFloat(cb.dataset.price);
+    });
+    document.getElementById('totalDisplay').textContent = sum + ' kr';
+    document.getElementById('payBtn').disabled = sum === 0 || !orderId;
+  }
+
+  async function submitOrder() {
+    const selected = [];
+    document.querySelectorAll('input[type=checkbox]:checked').forEach((cb, i) => {
+      selected.push({
+        lineId: 'line-' + (i + 1),
+        name: cb.dataset.name,
+        quantity: 1,
+        unitPrice: parseFloat(cb.dataset.price),
+        lineTotal: parseFloat(cb.dataset.price)
+      });
+    });
+
+    const total = selected.reduce((s, l) => s + l.lineTotal, 0);
+
+    const body = {
+      orderId: orderId,
+      merchantParticipantId: merchantId || 1,
+      merchantDraftReference: 'ROMA-' + Date.now(),
+      subtotalAmount: total,
+      totalAmount: total,
+      currency: 'DKK',
+      paymentMode: 'GroupPay',
+      expiresAtUtc: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      lines: selected
+    };
+
+    document.getElementById('payBtn').disabled = true;
+    document.getElementById('payBtn').textContent = 'Sender...';
+    document.getElementById('errorMsg').style.display = 'none';
+
+    try {
+      const res = await fetch(`${API_BASE}/api/merchant-orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(err || res.statusText);
+      }
+
+      document.getElementById('menuSection').style.display = 'none';
+      document.getElementById('result').style.display = 'block';
+      document.querySelector('.total-bar').style.display = 'none';
+    } catch (e) {
+      document.getElementById('errorMsg').textContent = '⚠️ Fejl: ' + e.message;
+      document.getElementById('errorMsg').style.display = 'block';
+      document.getElementById('payBtn').disabled = false;
+      document.getElementById('payBtn').textContent = 'Gruppebetaling';
+    }
+  }
+</script>
+
+</body>
+</html>

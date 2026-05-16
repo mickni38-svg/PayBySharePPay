@@ -23,6 +23,7 @@ public class MerchantOrdersController : ControllerBase
     /// Status sættes til Collecting. Ordre frigives ikke endnu.
     /// </summary>
     [HttpPost]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(MerchantOrderDraftDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
