@@ -8,4 +8,5 @@ public class OrderParticipant
     public int ParticipantId { get; set; }
     public Participant Participant { get; set; } = null!;
     public string Status { get; set; } = "Pending";
+    public string ParticipantToken { get; set; } = Guid.NewGuid().ToString("N");
 }

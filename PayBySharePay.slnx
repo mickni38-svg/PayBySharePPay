@@ -1,6 +1,11 @@
 <Solution>
   <Folder Name="/Docs/">
     <File Path="docs/00-README.md" />
+    <File Path="docs/SBYS_Group_Order_Context_Pack/00_START_HERE.md" />
+    <File Path="docs/SBYS_Group_Order_Context_Pack/01_AI_CONTEXT_GROUP_ORDER_FLOW.md" />
+    <File Path="docs/SBYS_Group_Order_Context_Pack/02_AI_CONTEXT_DUMMY_PIZZA.md" />
+    <File Path="docs/SBYS_Group_Order_Context_Pack/03_AI_CONTEXT_READY_TO_PAY.md" />
+    <File Path="docs/SBYS_Group_Order_Context_Pack/04_PROMPT_IMPLEMENT_GROUP_ORDER.md" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Api.PayBySharePay/Api.PayBySharePay.csproj" />

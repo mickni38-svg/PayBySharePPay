@@ -22,6 +22,15 @@ public class MessageRepository : IMessageRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<Message>> GetByParticipantIdAsync(int participantId)
+    {
+        return await _context.Messages
+            .Where(m => m.ParticipantId == participantId)
+            .Include(m => m.Participant)
+            .OrderByDescending(m => m.CreatedAt)
+            .ToListAsync();
+    }
+
     public async Task<Message> AddAsync(Message message)
     {
         _context.Messages.Add(message);

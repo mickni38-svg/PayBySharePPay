@@ -7,6 +7,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { DirectoryService } from '../../core/services/directory.service';
 import { OrderService } from '../../core/services/order.service';
 import { ActivityService } from '../../core/services/activity.service';
+import { MessageService } from '../../core/services/message.service';
 import { DirectoryEntry } from '../../core/models/directory.model';
 import { computePendingSummary } from '../../core/models/order.model';
 
@@ -42,6 +43,7 @@ export class HomeComponent implements OnInit {
 
   statusCards = signal<StatusCard[]>([]);
   persons = signal<DirectoryEntry[]>([]);
+  unreadCount = signal(0);
   selectedEmail = '';
   loginError = signal<string | null>(null);
   loginLoading = signal(false);
@@ -51,6 +53,7 @@ export class HomeComponent implements OnInit {
     private directory: DirectoryService,
     private orderService: OrderService,
     private activityService: ActivityService,
+    private messageService: MessageService,
     private router: Router
   ) {}
 
@@ -60,7 +63,12 @@ export class HomeComponent implements OnInit {
       error: () => {}
     });
     const userId = this.auth.currentUserId();
-    if (userId) this.loadStatusCards(userId);
+    if (userId) {
+      this.loadStatusCards(userId);
+      this.messageService.getUnreadCount(userId).subscribe({
+        next: (count) => this.unreadCount.set(count)
+      });
+    }
   }
 
   private loadStatusCards(userId: number): void {

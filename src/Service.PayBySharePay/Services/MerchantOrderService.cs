@@ -1,5 +1,7 @@
+using DataStorage.PayBySharePay.Context;
 using DataStorage.PayBySharePay.Entities;
 using DataStorage.PayBySharePay.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Service.PayBySharePay.DTOs;
 using Service.PayBySharePay.Interfaces;
 
@@ -10,15 +12,21 @@ public class MerchantOrderService : IMerchantOrderService
     private readonly IMerchantOrderDraftRepository _draftRepository;
     private readonly IOrderRepository _orderRepository;
     private readonly IParticipantRepository _participantRepository;
+    private readonly IOrderService _orderService;
+    private readonly PayBySharePayDbContext _db;
 
     public MerchantOrderService(
         IMerchantOrderDraftRepository draftRepository,
         IOrderRepository orderRepository,
-        IParticipantRepository participantRepository)
+        IParticipantRepository participantRepository,
+        IOrderService orderService,
+        PayBySharePayDbContext db)
     {
         _draftRepository = draftRepository;
         _orderRepository = orderRepository;
         _participantRepository = participantRepository;
+        _orderService = orderService;
+        _db = db;
     }
 
     public async Task<MerchantOrderDraftDto> InitOrderAsync(InitMerchantOrderDto dto)
@@ -32,16 +40,38 @@ public class MerchantOrderService : IMerchantOrderService
         if (merchant.Type != ParticipantType.Merchant)
             throw new InvalidOperationException($"Deltager {dto.MerchantParticipantId} er ikke en merchant.");
 
+        // Valider participantToken og find OrderParticipant
+        var orderParticipant = await _db.OrderParticipants
+            .Include(op => op.Participant)
+            .FirstOrDefaultAsync(op => op.OrderId == dto.OrderId && op.ParticipantToken == dto.ParticipantToken);
+
+        if (orderParticipant == null)
+            throw new UnauthorizedAccessException("Ugyldigt participantToken for denne ordre.");
+
+        if (orderParticipant.Participant.Type == ParticipantType.Merchant)
+            throw new InvalidOperationException("En merchant kan ikke indsende en deltagerbestilling.");
+
+        // Slet eventuel eksisterende draft for samme deltager (re-submit)
+        var existing = await _db.MerchantOrderDrafts
+            .Where(d => d.OrderId == dto.OrderId && d.ParticipantId == orderParticipant.ParticipantId)
+            .FirstOrDefaultAsync();
+        if (existing != null)
+        {
+            _db.MerchantOrderDrafts.Remove(existing);
+            await _db.SaveChangesAsync();
+        }
+
         var draft = new MerchantOrderDraft
         {
             OrderId = dto.OrderId,
             MerchantParticipantId = dto.MerchantParticipantId,
+            ParticipantId = orderParticipant.ParticipantId,
             MerchantDraftReference = dto.MerchantDraftReference,
             SubtotalAmount = dto.SubtotalAmount,
             TotalAmount = dto.TotalAmount,
             Currency = dto.Currency,
             PaymentMode = dto.PaymentMode,
-            Status = "Collecting",
+            Status = "Submitted",
             ExpiresAtUtc = dto.ExpiresAtUtc,
             Lines = dto.Lines.Select(l => new MerchantOrderLine
             {
@@ -49,12 +79,20 @@ public class MerchantOrderService : IMerchantOrderService
                 Name = l.Name,
                 Quantity = l.Quantity,
                 UnitPrice = l.UnitPrice,
-                LineTotal = l.LineTotal
+                LineTotal = l.LineTotal,
+                ParticipantId = orderParticipant.ParticipantId
             }).ToList()
         };
 
         await _draftRepository.AddAsync(draft);
         await _draftRepository.SaveChangesAsync();
+
+        // Opdater deltagerens status til OrderSubmitted
+        orderParticipant.Status = "OrderSubmitted";
+        await _db.SaveChangesAsync();
+
+        // Tjek om alle deltagere har indsendt — sæt ReadyToPay hvis ja
+        await _orderService.CheckAndSetReadyToPayAsync(dto.OrderId);
 
         return MapToDto(draft);
     }
@@ -80,6 +118,7 @@ public class MerchantOrderService : IMerchantOrderService
         CreatedAtUtc = d.CreatedAtUtc,
         Lines = d.Lines.Select(l => new MerchantOrderLineDto
         {
+            ParticipantId = l.ParticipantId,
             LineId = l.LineId,
             Name = l.Name,
             Quantity = l.Quantity,

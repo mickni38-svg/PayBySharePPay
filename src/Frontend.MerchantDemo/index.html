@@ -219,16 +219,17 @@
 </div>
 
 <script>
-  // Læs query params: ?orderId=1&merchantId=2
+  // Læs query params: ?orderId=1&merchantId=2&participantToken=abc123&api=...
   const params = new URLSearchParams(window.location.search);
   const orderId = parseInt(params.get('orderId')) || null;
   const merchantId = parseInt(params.get('merchantId')) || null;
+  const participantToken = params.get('participantToken') || null;
 
   // API base URL – skift til prod hvis nødvendigt
   const API_BASE = params.get('api') || 'https://paybysharepay-api.azurewebsites.net';
 
   document.getElementById('groupLabel').textContent =
-    orderId ? `Ordre #${orderId}` : 'Mangler orderId i URL (brug ?orderId=X&merchantId=Y)';
+    orderId ? `Ordre #${orderId}` : 'Mangler orderId i URL (brug ?orderId=X&merchantId=Y&participantToken=Z)';
 
   function toggle(row) {
     const cb = row.querySelector('input[type=checkbox]');
@@ -247,7 +248,7 @@
       sum += parseFloat(cb.dataset.price);
     });
     document.getElementById('totalDisplay').textContent = sum + ' kr';
-    document.getElementById('payBtn').disabled = sum === 0 || !orderId;
+    document.getElementById('payBtn').disabled = sum === 0 || !orderId || !participantToken;
   }
 
   async function submitOrder() {
@@ -267,6 +268,7 @@
     const body = {
       orderId: orderId,
       merchantParticipantId: merchantId || 1,
+      participantToken: participantToken || '',
       merchantDraftReference: 'ROMA-' + Date.now(),
       subtotalAmount: total,
       totalAmount: total,

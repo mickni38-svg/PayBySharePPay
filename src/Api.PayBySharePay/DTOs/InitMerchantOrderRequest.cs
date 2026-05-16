@@ -13,6 +13,9 @@ public class InitMerchantOrderRequest
     public int MerchantParticipantId { get; set; }
 
     [Required]
+    public string ParticipantToken { get; set; } = string.Empty;
+
+    [Required]
     public string MerchantDraftReference { get; set; } = string.Empty;
 
     [Range(0.01, double.MaxValue)]

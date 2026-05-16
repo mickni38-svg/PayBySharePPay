@@ -1,4 +1,4 @@
-ï»¿using DataStorage.PayBySharePay.Context;
+using DataStorage.PayBySharePay.Context;
 using DataStorage.PayBySharePay.Entities;
 using DataStorage.PayBySharePay.Extensions;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,7 +12,7 @@ if (args.Length == 0)
     return;
 }
 
-// UnderstÃ¸t --conn "..." som fÃ¸rste eller andet argument
+// Understøt --conn "..." som første eller andet argument
 string connectionString = localConnectionString;
 var argList = args.ToList();
 int connIdx = argList.IndexOf("--conn");
@@ -35,6 +35,9 @@ switch (args[0].ToLowerInvariant())
 {
     case "seed":
         await SeedAsync(db);
+        break;
+    case "seed-group-orders":
+        await SeedGroupOrdersAsync(db);
         break;
     case "seed-pizza":
         await SeedPizzaOrderAsync(db);
@@ -74,16 +77,17 @@ static void PrintUsage()
 {
     Console.WriteLine("PayBySharePay Tools");
     Console.WriteLine("Usage:");
-    Console.WriteLine("  dotnet run seed         â€“ Seed 50 persons and 10 merchants");
-    Console.WriteLine("  dotnet run -- --conn \"<connstr>\" seed  â€“ Seed mod en bestemt database");
-    Console.WriteLine("  dotnet run seed-pizza   â€“ Seed a pizza order for Michael Nielsen and Selma Markussen");
-    Console.WriteLine("  dotnet run flush        â€“ Remove all seeded data");
-    Console.WriteLine("  dotnet run bestillingpaid <orderId> <participantId>  â€“ Seed betaling (Completed) for deltager pÃ¥ ordre");
+    Console.WriteLine("  dotnet run seed               – Seed 50 persons and 10 merchants");
+    Console.WriteLine("  dotnet run seed-group-orders  – Seed two group orders (participant 1 and 2 as hosts)");
+    Console.WriteLine("  dotnet run -- --conn \"<connstr>\" seed  – Seed mod en bestemt database");
+    Console.WriteLine("  dotnet run seed-pizza         – Seed a pizza order for Michael Nielsen and Selma Markussen");
+    Console.WriteLine("  dotnet run flush              – Remove all seeded data");
+    Console.WriteLine("  dotnet run bestillingpaid <orderId> <participantId>  – Seed betaling (Completed) for deltager på ordre");
 }
 
 static async Task SeedPizzaPaymentsAsync(PayBySharePayDbContext db)
 {
-    Console.WriteLine("Seeder betalinger for Michael og Selma pÃ¥ ordre id=5...");
+    Console.WriteLine("Seeder betalinger for Michael og Selma på ordre id=5...");
 
     var michael = db.Participants.FirstOrDefault(p => p.Name == "Michael Nielsen");
     var selma   = db.Participants.FirstOrDefault(p => p.Name == "Selma Markussen");
@@ -93,7 +97,7 @@ static async Task SeedPizzaPaymentsAsync(PayBySharePayDbContext db)
         Console.WriteLine("Fejl: Deltagere ikke fundet."); return;
     }
 
-    // Beregn belÃ¸b fra ordrelinjer
+    // Beregn beløb fra ordrelinjer
     var draft = db.MerchantOrderDrafts.FirstOrDefault(d => d.OrderId == 5);
     if (draft == null) { Console.WriteLine("Fejl: Draft for ordre 5 ikke fundet."); return; }
 
@@ -101,7 +105,7 @@ static async Task SeedPizzaPaymentsAsync(PayBySharePayDbContext db)
     var michaelAmount = lines.Where(l => l.ParticipantId == michael.Id).Sum(l => l.LineTotal);
     var selmaAmount   = lines.Where(l => l.ParticipantId == selma.Id).Sum(l => l.LineTotal);
 
-    // Fjern eksisterende betalinger for ordre 5 (undgÃ¥ dubletter)
+    // Fjern eksisterende betalinger for ordre 5 (undgå dubletter)
     var existing = db.Payments.Where(p => p.OrderId == 5).ToList();
     if (existing.Any())
     {
@@ -118,9 +122,9 @@ static async Task SeedPizzaPaymentsAsync(PayBySharePayDbContext db)
     db.Payments.AddRange(payments);
     await db.SaveChangesAsync();
 
-    Console.WriteLine($"  âœ… Michael Nielsen: {michaelAmount:N2} kr â€“ Completed");
-    Console.WriteLine($"  âœ… Selma Markussen: {selmaAmount:N2} kr â€“ Completed");
-    Console.WriteLine("âœ… Betalinger seedet.");
+    Console.WriteLine($"  ? Michael Nielsen: {michaelAmount:N2} kr – Completed");
+    Console.WriteLine($"  ? Selma Markussen: {selmaAmount:N2} kr – Completed");
+    Console.WriteLine("? Betalinger seedet.");
 }
 
 static async Task CheckPizzaLinesAsync(PayBySharePayDbContext db)
@@ -151,7 +155,7 @@ static async Task CheckPizzaLinesAsync(PayBySharePayDbContext db)
 
 static async Task SetPizzaReadyAsync(PayBySharePayDbContext db)
 {
-    Console.WriteLine("SÃ¦tter ordre id=5 til Ready og opdaterer draft til Ready...");
+    Console.WriteLine("Sætter ordre id=5 til Ready og opdaterer draft til Ready...");
 
     var order = db.Orders.FirstOrDefault(o => o.Id == 5);
     if (order == null) { Console.WriteLine("Fejl: Ordre 5 ikke fundet."); return; }
@@ -167,12 +171,12 @@ static async Task SetPizzaReadyAsync(PayBySharePayDbContext db)
     }
 
     await db.SaveChangesAsync();
-    Console.WriteLine("âœ… FÃ¦rdig.");
+    Console.WriteLine("? Færdig.");
 }
 
 static async Task MarkPizzaPaidAsync(PayBySharePayDbContext db)
 {
-    Console.WriteLine("SÃ¦tter Michael og Selma til Paid pÃ¥ ordre id=5...");
+    Console.WriteLine("Sætter Michael og Selma til Paid på ordre id=5...");
 
     var participants = db.OrderParticipants
         .Where(op => op.OrderId == 5)
@@ -197,12 +201,12 @@ static async Task MarkPizzaPaidAsync(PayBySharePayDbContext db)
     }
 
     await db.SaveChangesAsync();
-    Console.WriteLine("âœ… FÃ¦rdig â€“ Michael og Selma er nu Paid pÃ¥ ordre 5.");
+    Console.WriteLine("? Færdig – Michael og Selma er nu Paid på ordre 5.");
 }
 
 static async Task FixPizzaLinesAsync(PayBySharePayDbContext db)
 {
-    Console.WriteLine("SÃ¦tter ParticipantId pÃ¥ eksisterende pizzalinjer...");
+    Console.WriteLine("Sætter ParticipantId på eksisterende pizzalinjer...");
 
     var michael = db.Participants.FirstOrDefault(p => p.Name == "Michael Nielsen");
     var selma   = db.Participants.FirstOrDefault(p => p.Name == "Selma Markussen");
@@ -223,7 +227,7 @@ static async Task FixPizzaLinesAsync(PayBySharePayDbContext db)
 
     await db.SaveChangesAsync();
     Console.WriteLine($"  Opdaterede {lines.Count} linjer.");
-    Console.WriteLine("âœ… FÃ¦rdig.");
+    Console.WriteLine("? Færdig.");
 }
 
 static async Task SeedPizzaOrderAsync(PayBySharePayDbContext db)
@@ -274,37 +278,38 @@ static async Task SeedPizzaOrderAsync(PayBySharePayDbContext db)
         Console.WriteLine($"  Fandt Selma Markussen (id={selma.Id})");
     }
 
-    // Find eller opret pizzarestaurant-merchant (Mother Pizza)
-    var merchant = db.Participants.FirstOrDefault(p => p.Type == ParticipantType.Merchant && p.Name == "Mother");
+    // Find eller opret pizzarestaurant-merchant (Pizzeria Roma)
+    var merchant = db.Participants.FirstOrDefault(p => p.Type == ParticipantType.Merchant && p.Name == "Pizzeria Roma");
     if (merchant == null)
     {
         merchant = new Participant
         {
             Type = ParticipantType.Merchant,
-            Name = "Mother",
-            Email = "hej@mother.dk",
-            CompanyName = "Mother Pizza ApS",
+            Name = "Pizzeria Roma",
+            Email = "hej@pizzeriaroma.dk",
+            CompanyName = "Pizzeria Roma ApS",
             CvrNumber = "34109855",
-            ContactEmail = "hej@mother.dk",
-            CompanyAddress = "HÃ¸kerboderne 9-15, 1712 KÃ¸benhavn V",
-            PaymentReference = "MOTHER-PAY"
+            ContactEmail = "hej@pizzeriaroma.dk",
+            CompanyAddress = "Vesterbrogade 12, 1620 København V",
+            GroupOrderUrl = "http://localhost:8081",
+            PaymentReference = "ROMA-PAY"
         };
         db.Participants.Add(merchant);
         await db.SaveChangesAsync();
-        Console.WriteLine($"  Oprettede merchant Mother (id={merchant.Id})");
+        Console.WriteLine($"  Oprettede merchant Pizzeria Roma (id={merchant.Id})");
     }
     else
     {
-        Console.WriteLine($"  Fandt merchant Mother (id={merchant.Id})");
+        Console.WriteLine($"  Fandt merchant Pizzeria Roma (id={merchant.Id})");
     }
 
-    // Opret pizzaorden â€“ Michael er vÃ¦rt
+    // Opret pizzaorden – Michael er vært
     var order = new Order
     {
         CreatedByParticipantId = michael.Id,
         Title = "Pizzaaften",
         Category = "pizza",
-        Message = "Fredagens pizzaaften hos Michael â€“ bestil hvad du vil have!",
+        Message = "Fredagens pizzaaften hos Michael – bestil hvad du vil have!",
         Status = "Collecting",
         MerchantParticipantId = merchant.Id,
         CreatedAt = DateTime.UtcNow
@@ -313,7 +318,7 @@ static async Task SeedPizzaOrderAsync(PayBySharePayDbContext db)
     await db.SaveChangesAsync();
     Console.WriteLine($"  Oprettede ordre '{order.Title}' (id={order.Id})");
 
-    // Tilknyt Michael som OrderParticipant (Accepted = vÃ¦rt)
+    // Tilknyt Michael som OrderParticipant (Accepted = vært)
     var michaelOp = new OrderParticipant
     {
         OrderId = order.Id,
@@ -358,7 +363,7 @@ static async Task SeedPizzaOrderAsync(PayBySharePayDbContext db)
     {
         new MerchantOrderLine { MerchantOrderDraftId = draft.Id, ParticipantId = michael.Id, LineId = $"M-{order.Id}-1", Name = "Margherita pizza",    Quantity = 1, UnitPrice = 119m, LineTotal = 119m },
         new MerchantOrderLine { MerchantOrderDraftId = draft.Id, ParticipantId = michael.Id, LineId = $"M-{order.Id}-2", Name = "Coca-Cola 50cl",      Quantity = 2, UnitPrice = 39m,  LineTotal = 78m  },
-        new MerchantOrderLine { MerchantOrderDraftId = draft.Id, ParticipantId = michael.Id, LineId = $"M-{order.Id}-3", Name = "HvidlÃ¸gsdip",         Quantity = 1, UnitPrice = 25m,  LineTotal = 25m  },
+        new MerchantOrderLine { MerchantOrderDraftId = draft.Id, ParticipantId = michael.Id, LineId = $"M-{order.Id}-3", Name = "Hvidløgsdip",         Quantity = 1, UnitPrice = 25m,  LineTotal = 25m  },
     };
 
     // Ordrelinjer for Selma
@@ -372,7 +377,7 @@ static async Task SeedPizzaOrderAsync(PayBySharePayDbContext db)
     db.MerchantOrderLines.AddRange(michaelLines);
     db.MerchantOrderLines.AddRange(selmaLines);
 
-    // Opdater belÃ¸b pÃ¥ draft
+    // Opdater beløb på draft
     var allLines = michaelLines.Concat(selmaLines).ToList();
     draft.SubtotalAmount = allLines.Sum(l => l.LineTotal);
     draft.TotalAmount = draft.SubtotalAmount;
@@ -380,14 +385,14 @@ static async Task SeedPizzaOrderAsync(PayBySharePayDbContext db)
     await db.SaveChangesAsync();
 
     Console.WriteLine();
-    Console.WriteLine("âœ… Pizzaorden seedet!");
+    Console.WriteLine("? Pizzaorden seedet!");
     Console.WriteLine($"   Ordre id      : {order.Id}");
     Console.WriteLine($"   Titel         : {order.Title}");
-    Console.WriteLine($"   VÃ¦rt          : {michael.Name} (id={michael.Id})");
+    Console.WriteLine($"   Vært          : {michael.Name} (id={michael.Id})");
     Console.WriteLine($"   Deltager      : {selma.Name} (id={selma.Id})");
     Console.WriteLine($"   Merchant      : {merchant.Name} (id={merchant.Id})");
     Console.WriteLine($"   Draft id      : {draft.Id}");
-    Console.WriteLine($"   Samlet belÃ¸b  : {draft.TotalAmount:N2} DKK");
+    Console.WriteLine($"   Samlet beløb  : {draft.TotalAmount:N2} DKK");
     Console.WriteLine();
     Console.WriteLine("   Michael Nielsens linjer:");
     foreach (var l in michaelLines)
@@ -405,24 +410,24 @@ static async Task SeedAsync(PayBySharePayDbContext db)
 {
     Console.WriteLine("Seeding 50 persons and 10 merchants...");
 
-    // De fÃ¸rste 10 er DEV-login-konti med kendte emails (test1@dev.dk â€¦ test10@dev.dk)
+    // De første 10 er DEV-login-konti med kendte emails (test1@dev.dk … test10@dev.dk)
     var personData = new List<(string Name, string Email, string Phone)>
     {
         ("Anders Nielsen",     "test1@dev.dk",  "20101001"),
         ("Mette Christensen",  "test2@dev.dk",  "20102002"),
-        ("SÃ¸ren Jensen",       "test3@dev.dk",  "20103003"),
+        ("Søren Jensen",       "test3@dev.dk",  "20103003"),
         ("Lene Hansen",        "test4@dev.dk",  "20104004"),
         ("Mikkel Pedersen",    "test5@dev.dk",  "20105005"),
         ("Camilla Andersen",   "test6@dev.dk",  "20106006"),
         ("Thomas Larsen",      "test7@dev.dk",  "20107007"),
-        ("Maria MÃ¸ller",       "test8@dev.dk",  "20108008"),
+        ("Maria Møller",       "test8@dev.dk",  "20108008"),
         ("Rasmus Thomsen",     "test9@dev.dk",  "20109009"),
         ("Julie Kristensen",   "test10@dev.dk", "20110010"),
         ("Christian Madsen",   "christian.madsen@mail.dk",    "51110011"),
         ("Louise Olsen",       "louise.olsen@mail.dk",        "51110012"),
-        ("Henrik SÃ¸rensen",    "henrik.sorensen@mail.dk",     "51110013"),
+        ("Henrik Sørensen",    "henrik.sorensen@mail.dk",     "51110013"),
         ("Sofie Rasmussen",    "sofie.rasmussen@mail.dk",     "51110014"),
-        ("Klaus JÃ¸rgensen",    "klaus.jorgensen@mail.dk",     "51110015"),
+        ("Klaus Jørgensen",    "klaus.jorgensen@mail.dk",     "51110015"),
         ("Emma Petersen",      "emma.petersen@mail.dk",       "51110016"),
         ("Martin Johansen",    "martin.johansen@mail.dk",     "51110017"),
         ("Sara Knudsen",       "sara.knudsen@mail.dk",        "51110018"),
@@ -437,7 +442,7 @@ static async Task SeedAsync(PayBySharePayDbContext db)
         ("Oliver Dahl",        "oliver.dahl@mail.dk",         "51110027"),
         ("Maja Berg",          "maja.berg@mail.dk",           "51110028"),
         ("Frederik Vestergaard","frederik.vestergaard@mail.dk","51110029"),
-        ("Cecilie KjÃ¦r",       "cecilie.kjaer@mail.dk",       "51110030"),
+        ("Cecilie Kjær",       "cecilie.kjaer@mail.dk",       "51110030"),
         ("Magnus Laursen",     "magnus.laursen@mail.dk",      "51110031"),
         ("Astrid Borg",        "astrid.borg@mail.dk",         "51110032"),
         ("Nikolaj Buhl",       "nikolaj.buhl@mail.dk",        "51110033"),
@@ -478,7 +483,7 @@ static async Task SeedAsync(PayBySharePayDbContext db)
             CompanyName = "Sticks & Sushi A/S",
             CvrNumber = "25283485",
             ContactEmail = "kontakt@sticksandsushi.dk",
-            CompanyAddress = "Nansensgade 47, 1366 KÃ¸benhavn K",
+            CompanyAddress = "Nansensgade 47, 1366 København K",
             PaymentReference = "SUSHI-PAY"
         },
         new()
@@ -489,7 +494,7 @@ static async Task SeedAsync(PayBySharePayDbContext db)
             CompanyName = "Gasoline Grill ApS",
             CvrNumber = "35869164",
             ContactEmail = "info@gasolinegrill.com",
-            CompanyAddress = "Landgreven 10, 1301 KÃ¸benhavn K",
+            CompanyAddress = "Landgreven 10, 1301 København K",
             PaymentReference = "GASOLINE-PAY"
         },
         new()
@@ -500,7 +505,7 @@ static async Task SeedAsync(PayBySharePayDbContext db)
             CompanyName = "Noma ApS",
             CvrNumber = "27592432",
             ContactEmail = "reservations@noma.dk",
-            CompanyAddress = "Refshalevej 96, 1432 KÃ¸benhavn K",
+            CompanyAddress = "Refshalevej 96, 1432 København K",
             PaymentReference = "NOMA-PAY"
         },
         new()
@@ -511,7 +516,7 @@ static async Task SeedAsync(PayBySharePayDbContext db)
             CompanyName = "Jagger Burger ApS",
             CvrNumber = "36441312",
             ContactEmail = "info@jaggerburger.dk",
-            CompanyAddress = "StudiestrÃ¦de 13, 1455 KÃ¸benhavn K",
+            CompanyAddress = "Studiestræde 13, 1455 København K",
             PaymentReference = "JAGGER-PAY"
         },
         new()
@@ -522,7 +527,7 @@ static async Task SeedAsync(PayBySharePayDbContext db)
             CompanyName = "Warpigs I/S",
             CvrNumber = "37066543",
             ContactEmail = "hello@warpigs.dk",
-            CompanyAddress = "FlÃ¦sketorvet 25-37, 1711 KÃ¸benhavn V",
+            CompanyAddress = "Flæsketorvet 25-37, 1711 København V",
             PaymentReference = "WARPIGS-PAY"
         },
         new()
@@ -533,19 +538,20 @@ static async Task SeedAsync(PayBySharePayDbContext db)
             CompanyName = "Souls Restaurant ApS",
             CvrNumber = "38874521",
             ContactEmail = "info@soulsrestaurant.dk",
-            CompanyAddress = "Kristen Bernikows Gade 4, 1105 KÃ¸benhavn K",
+            CompanyAddress = "Kristen Bernikows Gade 4, 1105 København K",
             PaymentReference = "SOULS-PAY"
         },
         new()
         {
             Type = ParticipantType.Merchant,
-            Name = "Mother",
-            Email = "hej@mother.dk",
-            CompanyName = "Mother Pizza ApS",
+            Name = "Pizzeria Roma",
+            Email = "hej@pizzeriaroma.dk",
+            CompanyName = "Pizzeria Roma ApS",
             CvrNumber = "34109855",
-            ContactEmail = "hej@mother.dk",
-            CompanyAddress = "HÃ¸kerboderne 9-15, 1712 KÃ¸benhavn V",
-            PaymentReference = "MOTHER-PAY"
+            ContactEmail = "hej@pizzeriaroma.dk",
+            CompanyAddress = "Vesterbrogade 12, 1620 København V",
+            GroupOrderUrl = "http://localhost:8081",
+            PaymentReference = "ROMA-PAY"
         },
         new()
         {
@@ -555,29 +561,29 @@ static async Task SeedAsync(PayBySharePayDbContext db)
             CompanyName = "Spontan ApS",
             CvrNumber = "39145678",
             ContactEmail = "kontakt@spontan.dk",
-            CompanyAddress = "SÃ¸nder Boulevard 28, 1720 KÃ¸benhavn V",
+            CompanyAddress = "Sønder Boulevard 28, 1720 København V",
             PaymentReference = "SPONTAN-PAY"
         },
         new()
         {
             Type = ParticipantType.Merchant,
-            Name = "The Laundromat CafÃ©",
+            Name = "The Laundromat Café",
             Email = "info@thelaundromatcafe.com",
-            CompanyName = "The Laundromat CafÃ© ApS",
+            CompanyName = "The Laundromat Café ApS",
             CvrNumber = "30218765",
             ContactEmail = "info@thelaundromatcafe.com",
-            CompanyAddress = "Elmegade 15, 2200 KÃ¸benhavn N",
+            CompanyAddress = "Elmegade 15, 2200 København N",
             PaymentReference = "LAUNDROMAT-PAY"
         },
         new()
         {
             Type = ParticipantType.Merchant,
-            Name = "BÃ¦st",
+            Name = "Bæst",
             Email = "hello@baest.dk",
-            CompanyName = "BÃ¦st ApS",
+            CompanyName = "Bæst ApS",
             CvrNumber = "36782910",
             ContactEmail = "hello@baest.dk",
-            CompanyAddress = "Guldbergsgade 29, 2200 KÃ¸benhavn N",
+            CompanyAddress = "Guldbergsgade 29, 2200 København N",
             PaymentReference = "BAEST-PAY"
         }
     };
@@ -586,11 +592,189 @@ static async Task SeedAsync(PayBySharePayDbContext db)
     db.Participants.AddRange(merchants);
     await db.SaveChangesAsync();
 
+    // Tilknyt 5 venner til person 1 (test1@dev.dk) og 5 venner til person 2 (test2@dev.dk)
+    var p1 = db.Participants.First(p => p.Email == "test1@dev.dk");
+    var p2 = db.Participants.First(p => p.Email == "test2@dev.dk");
+
+    var allPersons = db.Participants.Where(p => p.Type == ParticipantType.Person).ToList();
+
+    // Person 1 – venner: test3..test7
+    var p1Friends = allPersons.Where(p => new[] { "test3@dev.dk", "test4@dev.dk", "test5@dev.dk", "test6@dev.dk", "test7@dev.dk" }.Contains(p.Email)).ToList();
+    foreach (var f in p1Friends)
+        db.FriendRelations.Add(new FriendRelation { InitiatorId = p1.Id, ReceiverId = f.Id });
+
+    // Person 2 – venner: test8..test10 + test3 + test4
+    var p2Friends = allPersons.Where(p => new[] { "test8@dev.dk", "test9@dev.dk", "test10@dev.dk", "test3@dev.dk", "test4@dev.dk" }.Contains(p.Email)).ToList();
+    foreach (var f in p2Friends)
+    {
+        var alreadyExists = db.FriendRelations.Any(r =>
+            (r.InitiatorId == p2.Id && r.ReceiverId == f.Id) ||
+            (r.InitiatorId == f.Id && r.ReceiverId == p2.Id));
+        if (!alreadyExists)
+            db.FriendRelations.Add(new FriendRelation { InitiatorId = p2.Id, ReceiverId = f.Id });
+    }
+
+    await db.SaveChangesAsync();
+
     Console.WriteLine($"Done. Added {persons.Count} persons and {merchants.Count} merchants.");
+    Console.WriteLine($"  Tilknyttet {p1Friends.Count} venner til {p1.Name} (test1@dev.dk)");
+    Console.WriteLine($"  Tilknyttet {p2Friends.Count} venner til {p2.Name} (test2@dev.dk)");
     Console.WriteLine();
-    Console.WriteLine("DEV login-konti (brug email til login, ingen password krÃ¦ves):");
+    Console.WriteLine("DEV login-konti (brug email til login, ingen password kræves):");
     foreach (var p in personData.Take(10))
         Console.WriteLine($"  {p.Email,-22}  ({p.Name})");
+}
+
+static async Task SeedGroupOrdersAsync(PayBySharePayDbContext db)
+{
+    Console.WriteLine("Seeder to gruppeordrer...");
+
+    var p1 = db.Participants.FirstOrDefault(p => p.Email == "test1@dev.dk")
+        ?? throw new Exception("Participant test1@dev.dk ikke fundet – kør seed først.");
+    var p2 = db.Participants.FirstOrDefault(p => p.Email == "test2@dev.dk")
+        ?? throw new Exception("Participant test2@dev.dk ikke fundet – kør seed først.");
+
+    // Find 5 venner til p1 og p2
+    var p1FriendIds = db.FriendRelations
+        .Where(r => r.InitiatorId == p1.Id || r.ReceiverId == p1.Id)
+        .Select(r => r.InitiatorId == p1.Id ? r.ReceiverId : r.InitiatorId)
+        .Take(3).ToList();
+
+    var p2FriendIds = db.FriendRelations
+        .Where(r => r.InitiatorId == p2.Id || r.ReceiverId == p2.Id)
+        .Select(r => r.InitiatorId == p2.Id ? r.ReceiverId : r.InitiatorId)
+        .Take(3).ToList();
+
+    // Find to merchants med GroupOrderUrl
+    var allMerchants = db.Participants.Where(p => p.Type == ParticipantType.Merchant).ToList();
+    var merchant1 = allMerchants.FirstOrDefault(m => m.Name == "Pizzeria Roma")
+        ?? allMerchants.First();
+    var merchant2 = allMerchants.FirstOrDefault(m => m.Name == "Sticks & Sushi")
+        ?? allMerchants.Skip(1).First();
+
+    // Sæt GroupOrderUrl på merchants hvis ikke sat
+    if (merchant1.GroupOrderUrl == null)
+    {
+        merchant1.GroupOrderUrl = "http://localhost:8081";
+        Console.WriteLine($"  Sætter GroupOrderUrl på {merchant1.Name}");
+    }
+    if (merchant2.GroupOrderUrl == null)
+    {
+        merchant2.GroupOrderUrl = "http://localhost:8081";
+        Console.WriteLine($"  Sætter GroupOrderUrl på {merchant2.Name}");
+    }
+    await db.SaveChangesAsync();
+
+    // --- Ordre 1: p1 er host, deltagere: 3 venner, merchant: merchant1 ---
+    var order1 = new Order
+    {
+        CreatedByParticipantId = p1.Id,
+        Title = "Fredagspizza med holdet",
+        Category = "pizza",
+        Message = "Bestil din pizza – vi betaler samlet!",
+        Status = "Collecting",
+        MerchantParticipantId = merchant1.Id,
+        JoinToken = Guid.NewGuid().ToString("N"),
+        CreatedAt = DateTime.UtcNow
+    };
+    db.Orders.Add(order1);
+    await db.SaveChangesAsync();
+
+    var order1Participants = new List<int> { p1.Id }.Concat(p1FriendIds).Distinct().ToList();
+    foreach (var pid in order1Participants)
+    {
+        db.OrderParticipants.Add(new OrderParticipant
+        {
+            OrderId = order1.Id,
+            ParticipantId = pid,
+            Status = pid == p1.Id ? "Accepted" : "Invited",
+            ParticipantToken = Guid.NewGuid().ToString("N")
+        });
+    }
+    await db.SaveChangesAsync();
+
+    // Tilføj besked med personlige links
+    var order1Ops = db.OrderParticipants.Where(op => op.OrderId == order1.Id).ToList();
+    foreach (var op in order1Ops)
+    {
+        var link = $"{merchant1.GroupOrderUrl}?orderId={order1.Id}&merchantId={merchant1.Id}&participantToken={op.ParticipantToken}&api=http://localhost:5071";
+        db.Messages.Add(new Message
+        {
+            OrderId = order1.Id,
+            ParticipantId = op.ParticipantId,
+            Content = $"Bestil din mad hos {merchant1.CompanyName ?? merchant1.Name}: {link}",
+            CreatedAt = DateTime.UtcNow
+        });
+    }
+    await db.SaveChangesAsync();
+
+    // --- Ordre 2: p2 er host, deltagere: 3 venner, merchant: merchant2 ---
+    var order2 = new Order
+    {
+        CreatedByParticipantId = p2.Id,
+        Title = "Sushibaften – bestil selv",
+        Category = "sushi",
+        Message = "Vælg din sushi og vi deler regningen!",
+        Status = "Collecting",
+        MerchantParticipantId = merchant2.Id,
+        JoinToken = Guid.NewGuid().ToString("N"),
+        CreatedAt = DateTime.UtcNow
+    };
+    db.Orders.Add(order2);
+    await db.SaveChangesAsync();
+
+    var order2Participants = new List<int> { p2.Id }.Concat(p2FriendIds).Distinct().ToList();
+    foreach (var pid in order2Participants)
+    {
+        db.OrderParticipants.Add(new OrderParticipant
+        {
+            OrderId = order2.Id,
+            ParticipantId = pid,
+            Status = pid == p2.Id ? "Accepted" : "Invited",
+            ParticipantToken = Guid.NewGuid().ToString("N")
+        });
+    }
+    await db.SaveChangesAsync();
+
+    var order2Ops = db.OrderParticipants.Where(op => op.OrderId == order2.Id).ToList();
+    foreach (var op in order2Ops)
+    {
+        var link = $"{merchant2.GroupOrderUrl}?orderId={order2.Id}&merchantId={merchant2.Id}&participantToken={op.ParticipantToken}&api=http://localhost:5071";
+        db.Messages.Add(new Message
+        {
+            OrderId = order2.Id,
+            ParticipantId = op.ParticipantId,
+            Content = $"Bestil din mad hos {merchant2.CompanyName ?? merchant2.Name}: {link}",
+            CreatedAt = DateTime.UtcNow
+        });
+    }
+    await db.SaveChangesAsync();
+
+    Console.WriteLine();
+    Console.WriteLine("? Gruppeordrer seedet!");
+    Console.WriteLine();
+    Console.WriteLine($"  Ordre 1 (id={order1.Id}): \"{order1.Title}\"");
+    Console.WriteLine($"    Host    : {p1.Name} (id={p1.Id})");
+    Console.WriteLine($"    Merchant: {merchant1.Name} (id={merchant1.Id})");
+    Console.WriteLine($"    Deltagere ({order1Participants.Count}):");
+    foreach (var op in order1Ops)
+    {
+        var p = db.Participants.Find(op.ParticipantId);
+        Console.WriteLine($"      - {p?.Name,-25} token={op.ParticipantToken[..8]}...");
+        Console.WriteLine($"        URL: {merchant1.GroupOrderUrl}?orderId={order1.Id}&merchantId={merchant1.Id}&participantToken={op.ParticipantToken}&api=http://localhost:5071");
+    }
+
+    Console.WriteLine();
+    Console.WriteLine($"  Ordre 2 (id={order2.Id}): \"{order2.Title}\"");
+    Console.WriteLine($"    Host    : {p2.Name} (id={p2.Id})");
+    Console.WriteLine($"    Merchant: {merchant2.Name} (id={merchant2.Id})");
+    Console.WriteLine($"    Deltagere ({order2Participants.Count}):");
+    foreach (var op in order2Ops)
+    {
+        var p = db.Participants.Find(op.ParticipantId);
+        Console.WriteLine($"      - {p?.Name,-25} token={op.ParticipantToken[..8]}...");
+        Console.WriteLine($"        URL: {merchant2.GroupOrderUrl}?orderId={order2.Id}&merchantId={merchant2.Id}&participantToken={op.ParticipantToken}&api=http://localhost:5071");
+    }
 }
 
 static async Task BestillingPaidAsync(PayBySharePayDbContext db, int orderId, int participantId)
@@ -607,7 +791,7 @@ static async Task BestillingPaidAsync(PayBySharePayDbContext db, int orderId, in
     var lines = db.MerchantOrderLines
         .Where(l => l.MerchantOrderDraftId == draft.Id && l.ParticipantId == participantId)
         .ToList();
-    if (lines.Count == 0) { Console.WriteLine($"Fejl: Ingen ordrelinjer fundet for deltager {participantId} pÃ¥ ordre {orderId}."); return; }
+    if (lines.Count == 0) { Console.WriteLine($"Fejl: Ingen ordrelinjer fundet for deltager {participantId} på ordre {orderId}."); return; }
 
     var amount = lines.Sum(l => l.LineTotal);
 
@@ -632,13 +816,13 @@ static async Task BestillingPaidAsync(PayBySharePayDbContext db, int orderId, in
     if (op != null) op.Status = "Paid";
 
     await db.SaveChangesAsync();
-    Console.WriteLine($"âœ… {participant.Name} (id={participantId}) â€“ {amount:N2} kr â€“ Completed pÃ¥ ordre {orderId}.");
+    Console.WriteLine($"? {participant.Name} (id={participantId}) – {amount:N2} kr – Completed på ordre {orderId}.");
 }
 
 static async Task ListOrdersAsync(PayBySharePayDbContext db)
 {
     var orders = db.Orders.OrderBy(o => o.Id).ToList();
-    Console.WriteLine($"{"Id",-5} {"Titel",-25} {"Status",-12} {"VÃ¦rt",-6} {"Draft?"}");
+    Console.WriteLine($"{"Id",-5} {"Titel",-25} {"Status",-12} {"Vært",-6} {"Draft?"}");
     Console.WriteLine(new string('-', 65));
     foreach (var o in orders)
     {
@@ -648,7 +832,7 @@ static async Task ListOrdersAsync(PayBySharePayDbContext db)
         foreach (var op in participants)
         {
             var p = db.Participants.FirstOrDefault(x => x.Id == op.ParticipantId);
-            Console.WriteLine($"       â†’ ParticipantId={op.ParticipantId,-4} {p?.Name,-25} {op.Status}");
+            Console.WriteLine($"       ? ParticipantId={op.ParticipantId,-4} {p?.Name,-25} {op.Status}");
         }
     }
     await Task.CompletedTask;

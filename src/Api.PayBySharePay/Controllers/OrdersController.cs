@@ -60,4 +60,16 @@ public class OrdersController : ControllerBase
         var result = await _orderService.GetOrderOverviewAsync(id);
         return Ok(result);
     }
+
+    /// <summary>Host gennemfører gruppebetaling — sætter status til Completed</summary>
+    [HttpPost("{id}/complete")]
+    [ProducesResponseType(typeof(OrderDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> CompleteOrder(int id, [FromBody] CompleteOrderRequest request)
+    {
+        var result = await _orderService.CompleteOrderAsync(id, request.RequestingParticipantId);
+        return Ok(result);
+    }
 }

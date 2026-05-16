@@ -48,7 +48,8 @@ public class OrderService : IOrderService
         order.OrderParticipants.Add(new OrderParticipant
         {
             ParticipantId = dto.CreatedByParticipantId,
-            Status = "Accepted"
+            Status = "Accepted",
+            ParticipantToken = Guid.NewGuid().ToString("N")
         });
 
         foreach (var participantId in dto.ParticipantIds.Where(id => id != dto.CreatedByParticipantId))
@@ -59,7 +60,8 @@ public class OrderService : IOrderService
             order.OrderParticipants.Add(new OrderParticipant
             {
                 ParticipantId = participantId,
-                Status = "Invited"
+                Status = "Invited",
+                ParticipantToken = Guid.NewGuid().ToString("N")
             });
         }
 
@@ -69,18 +71,14 @@ public class OrderService : IOrderService
         // Send notifikation (besked) til alle deltagere hvis merchant er valgt
         if (merchant?.GroupOrderUrl != null)
         {
-            var orderUrl = $"{merchant.GroupOrderUrl}?sbysGroup={order.Id}&sbysJoin={joinToken}";
-            var allParticipantIds = dto.ParticipantIds
-                .Union(new[] { dto.CreatedByParticipantId })
-                .Distinct();
-
-            foreach (var participantId in allParticipantIds)
+            foreach (var op in order.OrderParticipants.ToList())
             {
+                var participantLink = $"{merchant.GroupOrderUrl}?orderId={order.Id}&merchantId={merchant.Id}&participantToken={op.ParticipantToken}&api=http://localhost:5071";
                 order.Messages.Add(new Message
                 {
                     OrderId = order.Id,
-                    ParticipantId = dto.CreatedByParticipantId,
-                    Content = $"Bestil din mad hos {merchant.CompanyName ?? merchant.Name}: {orderUrl}"
+                    ParticipantId = op.ParticipantId,
+                    Content = $"Bestil din mad hos {merchant.CompanyName ?? merchant.Name}: {participantLink}"
                 });
             }
 
@@ -95,7 +93,9 @@ public class OrderService : IOrderService
         var order = await _orderRepository.GetByIdWithDetailsAsync(orderId)
             ?? throw new KeyNotFoundException($"Ordre med id {orderId} findes ikke.");
 
-        var draft = order.MerchantOrderDrafts.FirstOrDefault();
+        // Alle drafts (én per deltager der har bestilt)
+        var allDrafts = order.MerchantOrderDrafts.ToList();
+        var draft = allDrafts.FirstOrDefault(); // bruges kun til totalAmount/status
 
         // Betalingsstatus pr. deltager
         var paidParticipantIds = order.Payments
@@ -105,20 +105,23 @@ public class OrderService : IOrderService
 
         // Byg ordrelinjer pr. deltager
         var participantOrderLines = new List<ParticipantOrderLinesDto>();
-        if (draft != null)
+        if (allDrafts.Any())
         {
             var nonMerchantParticipants = order.OrderParticipants
                 .Where(op => op.Participant.Type != DataStorage.PayBySharePay.Entities.ParticipantType.Merchant)
                 .ToList();
 
-            // Grupper linjer på ParticipantId hvis tilgængeligt
-            var linesByParticipant = draft.Lines
+            // Saml alle linjer fra alle drafts grupperet på ParticipantId
+            var linesByParticipant = allDrafts
+                .SelectMany(d => d.Lines)
                 .Where(l => l.ParticipantId.HasValue)
                 .GroupBy(l => l.ParticipantId!.Value)
                 .ToDictionary(g => g.Key, g => g.ToList());
 
-            // Linjer uden ParticipantId
-            var unassignedLines = draft.Lines.Where(l => !l.ParticipantId.HasValue).ToList();
+            // Linjer uden ParticipantId (fra drafts uden tildeling)
+            var unassignedLines = allDrafts
+                .SelectMany(d => d.Lines)
+                .Where(l => !l.ParticipantId.HasValue).ToList();
 
             foreach (var op in nonMerchantParticipants)
             {
@@ -245,4 +248,44 @@ public class OrderService : IOrderService
             Status = op.Status
         }).ToList()
     };
+
+    public async Task<OrderDto> CompleteOrderAsync(int orderId, int requestingParticipantId)
+    {
+        var order = await _orderRepository.GetByIdWithDetailsAsync(orderId)
+            ?? throw new KeyNotFoundException($"Ordre med id {orderId} findes ikke.");
+
+        if (order.CreatedByParticipantId != requestingParticipantId)
+            throw new UnauthorizedAccessException("Kun værten kan gennemføre betalingen.");
+
+        if (order.Status != "ReadyToPay")
+            throw new InvalidOperationException($"Ordren er ikke klar til betaling. Status: {order.Status}");
+
+        order.Status = "Completed";
+        await _orderRepository.SaveChangesAsync();
+
+        return MapToDto(order);
+    }
+
+    public async Task CheckAndSetReadyToPayAsync(int orderId)
+    {
+        var order = await _orderRepository.GetByIdWithDetailsAsync(orderId)
+            ?? throw new KeyNotFoundException($"Ordre med id {orderId} findes ikke.");
+
+        if (order.Status != "Collecting")
+            return;
+
+        var nonMerchantParticipants = order.OrderParticipants
+            .Where(op => op.Participant.Type != DataStorage.PayBySharePay.Entities.ParticipantType.Merchant)
+            .ToList();
+
+        if (nonMerchantParticipants.Count == 0)
+            return;
+
+        var allSubmitted = nonMerchantParticipants.All(op => op.Status == "OrderSubmitted");
+        if (allSubmitted)
+        {
+            order.Status = "ReadyToPay";
+            await _orderRepository.SaveChangesAsync();
+        }
+    }
 }

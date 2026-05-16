@@ -1,11 +1,37 @@
 <div class="messages">
-
-  <div class="messages__body">
-    <app-empty-state
-      icon="💬"
-      title="Ingen beskeder endnu"
-      subtitle="Beskeder vises her, når der er aktivitet i dine gruppebetalinger."
-    />
+  <div class="messages__header">
+    <h2>Notifikationer</h2>
   </div>
 
+  <div class="messages__body">
+    @if (isLoading()) {
+      <div class="messages__loading">Henter beskeder…</div>
+    } @else if (messages().length === 0) {
+      <app-empty-state
+        icon="💬"
+        title="Ingen beskeder endnu"
+        subtitle="Beskeder vises her, når der er aktivitet i dine gruppebetalinger."
+      />
+    } @else {
+      <ul class="messages__list">
+        @for (msg of messages(); track msg.id) {
+          <li class="messages__item" [class.messages__item--unread]="!msg.isRead">
+            <div class="messages__item-icon">🍕</div>
+            <div class="messages__item-body">
+              <p class="messages__item-text">{{ textWithoutUrl(msg.content) }}</p>
+              @if (extractUrl(msg.content); as url) {
+                <a [href]="url" target="_blank" class="messages__item-link">
+                  👆 Klik her for at bestille
+                </a>
+              }
+              <span class="messages__item-time">{{ msg.createdAt | date:'d. MMM HH:mm' }}</span>
+            </div>
+            @if (!msg.isRead) {
+              <span class="messages__item-dot"></span>
+            }
+          </li>
+        }
+      </ul>
+    }
+  </div>
 </div>

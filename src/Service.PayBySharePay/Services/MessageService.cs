@@ -27,10 +27,12 @@ public class MessageService : IMessageService
         return messages.Select(m => new MessageDto
         {
             Id = m.Id,
+            OrderId = m.OrderId,
             ParticipantId = m.ParticipantId,
             ParticipantName = m.Participant.Name,
             Content = m.Content,
-            CreatedAt = m.CreatedAt
+            CreatedAt = m.CreatedAt,
+            IsRead = m.IsRead
         });
     }
 
@@ -58,10 +60,41 @@ public class MessageService : IMessageService
         return new MessageDto
         {
             Id = message.Id,
+            OrderId = message.OrderId,
             ParticipantId = message.ParticipantId,
             ParticipantName = participant.Name,
             Content = message.Content,
-            CreatedAt = message.CreatedAt
+            CreatedAt = message.CreatedAt,
+            IsRead = message.IsRead
         };
+    }
+
+    public async Task<IEnumerable<MessageDto>> GetByParticipantAsync(int participantId)
+    {
+        var messages = await _messageRepository.GetByParticipantIdAsync(participantId);
+        return messages.Select(m => new MessageDto
+        {
+            Id = m.Id,
+            OrderId = m.OrderId,
+            ParticipantId = m.ParticipantId,
+            ParticipantName = m.Participant.Name,
+            Content = m.Content,
+            CreatedAt = m.CreatedAt,
+            IsRead = m.IsRead
+        });
+    }
+
+    public async Task<int> GetUnreadCountAsync(int participantId)
+    {
+        var messages = await _messageRepository.GetByParticipantIdAsync(participantId);
+        return messages.Count(m => !m.IsRead);
+    }
+
+    public async Task MarkAllReadAsync(int participantId)
+    {
+        var messages = await _messageRepository.GetByParticipantIdAsync(participantId);
+        foreach (var m in messages.Where(m => !m.IsRead))
+            m.IsRead = true;
+        await _messageRepository.SaveChangesAsync();
     }
 }

@@ -17,6 +17,21 @@ export class MessageService {
     return this.http.get<Message[]>(`${this.apiUrl}/order/${orderId}`);
   }
 
+  // GET /api/messages/by-participant/{participantId}
+  getByParticipant(participantId: number): Observable<Message[]> {
+    return this.http.get<Message[]>(`${this.apiUrl}/by-participant/${participantId}`);
+  }
+
+  // GET /api/messages/unread-count?participantId=x
+  getUnreadCount(participantId: number): Observable<number> {
+    return this.http.get<number>(`${this.apiUrl}/unread-count?participantId=${participantId}`);
+  }
+
+  // POST /api/messages/mark-read?participantId=x
+  markAllRead(participantId: number): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/mark-read?participantId=${participantId}`, {});
+  }
+
   // POST /api/messages
   createMessage(request: CreateMessageRequest): Observable<Message> {
     return this.http.post<Message>(this.apiUrl, request);

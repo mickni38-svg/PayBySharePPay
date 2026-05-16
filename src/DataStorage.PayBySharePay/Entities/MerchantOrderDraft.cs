@@ -17,6 +17,10 @@ public class MerchantOrderDraft
     public decimal TotalAmount { get; set; }
     public string Currency { get; set; } = "DKK";
 
+    /// <summary>Knytter denne draft til en specifik deltager (én draft pr. deltager pr. ordre)</summary>
+    public int? ParticipantId { get; set; }
+    public Participant? Participant { get; set; }
+
     /// <summary>AuthorizeThenCapture eller ManualCapture</summary>
     public string PaymentMode { get; set; } = "AuthorizeThenCapture";
 

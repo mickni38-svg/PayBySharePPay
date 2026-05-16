@@ -88,17 +88,14 @@ export class OrdersComponent implements OnInit {
     // Hent detaljer fra cache hvis tilgængeligt
     const cached = this._detailsCache().get(o.id);
 
-    // canShowOrderLines baseres på Payment.hasPaid fra overview-cachen
-    // For vært: vis linjer for deltagere der har betalt (hasPaid)
-    // For deltager: vis kun egne linjer hvis hasPaid
-    const myPaymentStatus = cached?.participantOrderLines
-      .find(g => g.participantId === userId)?.hasPaid ?? false;
-    const anyonePaid = cached?.participantOrderLines.some(g => g.hasPaid) ?? false;
-    const canShow = isHost ? anyonePaid : myPaymentStatus;
+    // canShowOrderLines: vis linjer så snart de er tilgængelige (bestilling indsendt)
+    const anyoneHasLines = cached?.participantOrderLines.some(g => g.lines.length > 0) ?? false;
+    const myLines = cached?.participantOrderLines.find(g => g.participantId === userId);
+    const canShow = isHost ? anyoneHasLines : (myLines?.lines?.length ?? 0) > 0;
 
-    // Filtrer ordrelinjer: vært ser alle betalte deltagerlinjer, deltager kun egne hvis betalt
+    // Filtrer ordrelinjer: vært ser alle med linjer, deltager kun egne
     const visibleLines = cached?.participantOrderLines.filter(g =>
-      isHost ? g.hasPaid : (g.participantId === userId && g.hasPaid)
+      isHost ? g.lines.length > 0 : g.participantId === userId && g.lines.length > 0
     ) ?? [];
 
     return {

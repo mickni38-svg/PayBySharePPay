@@ -1,6 +1,7 @@
 using System.Text;
 using Api.PayBySharePay.Auth;
 using Api.PayBySharePay.Middleware;
+using Api.PayBySharePay.Services;
 using DataStorage.PayBySharePay.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -11,6 +12,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddHostedService<MerchantDemoHostedService>();
+}
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
@@ -18,6 +24,7 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(
                   "http://localhost:4200", "https://localhost:4200",
                   "http://localhost:4201", "https://localhost:4201",
+                  "http://localhost:8081", "https://localhost:8081",
                   "https://icy-water-0750d2703.7.azurestaticapps.net",
                   "https://paybysharepay.dk",
                   "https://www.paybysharepay.dk"
@@ -102,7 +109,12 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseCors("Frontend");
 
-app.UseHttpsRedirection();
+// UseHttpsRedirection er deaktiveret i dev – merchant-demo kører på http://localhost:8081
+// og kan ikke følge redirect til self-signed HTTPS
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseAuthentication();
 app.UseAuthorization();

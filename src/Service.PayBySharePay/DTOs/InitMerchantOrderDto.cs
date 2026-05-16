@@ -4,6 +4,7 @@ public class InitMerchantOrderDto
 {
     public int OrderId { get; set; }
     public int MerchantParticipantId { get; set; }
+    public string ParticipantToken { get; set; } = string.Empty;
     public string MerchantDraftReference { get; set; } = string.Empty;
     public decimal SubtotalAmount { get; set; }
     public decimal TotalAmount { get; set; }

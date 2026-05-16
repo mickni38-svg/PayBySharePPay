@@ -8,4 +8,6 @@ public interface IOrderService
     Task<OrderOverviewDto> GetOrderOverviewAsync(int orderId);
     Task<IEnumerable<OrderSummaryDto>> GetAllOrdersAsync();
     Task<IEnumerable<OrderSummaryDto>> GetOrdersByParticipantAsync(int participantId);
+    Task<OrderDto> CompleteOrderAsync(int orderId, int requestingParticipantId);
+    Task CheckAndSetReadyToPayAsync(int orderId);
 }

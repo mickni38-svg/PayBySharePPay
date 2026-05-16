@@ -56,6 +56,8 @@ public class PayBySharePayDbContext : DbContext
                 .WithMany(p => p.OrderParticipants)
                 .HasForeignKey(op => op.ParticipantId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(op => op.ParticipantToken).IsUnique();
         });
 
         modelBuilder.Entity<Payment>(entity =>
@@ -100,6 +102,12 @@ public class PayBySharePayDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(d => d.MerchantParticipantId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(d => d.Participant)
+                .WithMany()
+                .HasForeignKey(d => d.ParticipantId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
         });
 
         modelBuilder.Entity<MerchantOrderLine>(entity =>

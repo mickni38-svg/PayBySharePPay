@@ -1,6 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, effect, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { MessageService } from '../../core/services/message.service';
+import { AuthService } from '../../core/services/auth.service';
+import { Subscription, interval } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-bottom-nav',
@@ -39,13 +43,18 @@ import { CommonModule } from '@angular/common';
         </svg>
         <span>Brugere</span>
       </a>
-      <a routerLink="/messages" routerLinkActive="active" class="bottom-nav__item">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-          <circle cx="9" cy="10" r="1" fill="currentColor"/>
-          <circle cx="12" cy="10" r="1" fill="currentColor"/>
-          <circle cx="15" cy="10" r="1" fill="currentColor"/>
-        </svg>
+      <a routerLink="/messages" routerLinkActive="active" class="bottom-nav__item" (click)="clearBadge()">
+        <div class="bottom-nav__icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            <circle cx="9" cy="10" r="1" fill="currentColor"/>
+            <circle cx="12" cy="10" r="1" fill="currentColor"/>
+            <circle cx="15" cy="10" r="1" fill="currentColor"/>
+          </svg>
+          @if (unreadCount() > 0) {
+            <span class="bottom-nav__badge">{{ unreadCount() > 9 ? '9+' : unreadCount() }}</span>
+          }
+        </div>
         <span>Beskeder</span>
       </a>
     </nav>
@@ -85,7 +94,67 @@ import { CommonModule } from '@angular/common';
     .bottom-nav__item.active { color: #ffffff; }
     .bottom-nav__item--create svg { width: 26px; height: 26px; }
     .bottom-nav__item--create.active { color: #2ecc71; }
+    .bottom-nav__icon-wrap {
+      position: relative;
+      display: inline-flex;
+    }
+    .bottom-nav__badge {
+      position: absolute;
+      top: -6px;
+      right: -8px;
+      background: #e74c3c;
+      color: #fff;
+      font-size: 9px;
+      font-weight: 700;
+      min-width: 16px;
+      height: 16px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 3px;
+    }
   `]
 })
-export class BottomNavComponent {}
+export class BottomNavComponent implements OnInit, OnDestroy {
+  unreadCount = signal(0);
+  private pollSub?: Subscription;
+
+  constructor(
+    private messageService: MessageService,
+    private auth: AuthService
+  ) {
+    // Reagér med det samme når bruger logger ind/ud
+    effect(() => {
+      const userId = this.auth.currentUserId();
+      if (userId != null) {
+        this.fetchUnread(userId);
+      } else {
+        this.unreadCount.set(0);
+      }
+    });
+  }
+
+  ngOnInit(): void {
+    // Poll hvert 60. sekund
+    this.pollSub = interval(60_000).subscribe(() => {
+      const userId = this.auth.currentUserId();
+      if (userId != null) this.fetchUnread(userId);
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.pollSub?.unsubscribe();
+  }
+
+  private fetchUnread(userId: number): void {
+    this.messageService.getUnreadCount(userId).subscribe({
+      next: (count) => this.unreadCount.set(count)
+    });
+  }
+
+  clearBadge(): void {
+    this.unreadCount.set(0);
+  }
+}
 

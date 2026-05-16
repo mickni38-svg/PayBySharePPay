@@ -33,6 +33,7 @@ public class MerchantOrdersController : ControllerBase
         {
             OrderId = request.OrderId,
             MerchantParticipantId = request.MerchantParticipantId,
+            ParticipantToken = request.ParticipantToken,
             MerchantDraftReference = request.MerchantDraftReference,
             SubtotalAmount = request.SubtotalAmount,
             TotalAmount = request.TotalAmount,
