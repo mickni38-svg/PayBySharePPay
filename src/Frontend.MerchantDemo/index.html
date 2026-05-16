@@ -226,7 +226,7 @@
   const participantToken = params.get('participantToken') || null;
 
   // API base URL – skift til prod hvis nødvendigt
-  const API_BASE = params.get('api') || 'https://paybysharepay-api.azurewebsites.net';
+  const API_BASE = params.get('api') || 'https://paybysharepay-api-win.azurewebsites.net';
 
   document.getElementById('groupLabel').textContent =
     orderId ? `Ordre #${orderId}` : 'Mangler orderId i URL (brug ?orderId=X&merchantId=Y&participantToken=Z)';

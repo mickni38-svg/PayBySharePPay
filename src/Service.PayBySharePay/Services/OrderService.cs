@@ -1,5 +1,6 @@
 using DataStorage.PayBySharePay.Entities;
 using DataStorage.PayBySharePay.Repositories;
+using Microsoft.Extensions.Configuration;
 using Service.PayBySharePay.DTOs;
 using Service.PayBySharePay.Interfaces;
 
@@ -9,11 +10,13 @@ public class OrderService : IOrderService
 {
     private readonly IOrderRepository _orderRepository;
     private readonly IParticipantRepository _participantRepository;
+    private readonly string _apiBaseUrl;
 
-    public OrderService(IOrderRepository orderRepository, IParticipantRepository participantRepository)
+    public OrderService(IOrderRepository orderRepository, IParticipantRepository participantRepository, IConfiguration configuration)
     {
         _orderRepository = orderRepository;
         _participantRepository = participantRepository;
+        _apiBaseUrl = configuration["AppSettings:ApiBaseUrl"] ?? "http://localhost:5071";
     }
 
     public async Task<OrderDto> CreateOrderAsync(CreateOrderDto dto)
@@ -73,7 +76,7 @@ public class OrderService : IOrderService
         {
             foreach (var op in order.OrderParticipants.ToList())
             {
-                var participantLink = $"{merchant.GroupOrderUrl}?orderId={order.Id}&merchantId={merchant.Id}&participantToken={op.ParticipantToken}&api=http://localhost:5071";
+                var participantLink = $"{merchant.GroupOrderUrl}?orderId={order.Id}&merchantId={merchant.Id}&participantToken={op.ParticipantToken}&api={_apiBaseUrl}";
                 order.Messages.Add(new Message
                 {
                     OrderId = order.Id,

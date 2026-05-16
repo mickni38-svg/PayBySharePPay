@@ -26,6 +26,7 @@ builder.Services.AddCors(options =>
                   "http://localhost:4201", "https://localhost:4201",
                   "http://localhost:8081", "https://localhost:8081",
                   "https://icy-water-0750d2703.7.azurestaticapps.net",
+                  "https://MERCHANT_DEMO_AZURE_URL",
                   "https://paybysharepay.dk",
                   "https://www.paybysharepay.dk"
               )
