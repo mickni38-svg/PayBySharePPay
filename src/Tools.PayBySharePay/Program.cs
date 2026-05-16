@@ -22,6 +22,26 @@ if (connIdx >= 0 && connIdx + 1 < argList.Count)
     argList.RemoveRange(connIdx, 2);
     Console.WriteLine("Bruger custom connection string.");
 }
+
+// Understøt --merchant-url og --api-url
+string merchantUrl = "http://localhost:8081";
+int merchantUrlIdx = argList.IndexOf("--merchant-url");
+if (merchantUrlIdx >= 0 && merchantUrlIdx + 1 < argList.Count)
+{
+    merchantUrl = argList[merchantUrlIdx + 1];
+    argList.RemoveRange(merchantUrlIdx, 2);
+    Console.WriteLine($"Bruger merchant URL: {merchantUrl}");
+}
+
+string apiUrl = "http://localhost:5071";
+int apiUrlIdx = argList.IndexOf("--api-url");
+if (apiUrlIdx >= 0 && apiUrlIdx + 1 < argList.Count)
+{
+    apiUrl = argList[apiUrlIdx + 1];
+    argList.RemoveRange(apiUrlIdx, 2);
+    Console.WriteLine($"Bruger API URL: {apiUrl}");
+}
+
 args = argList.ToArray();
 
 var services = new ServiceCollection();
@@ -34,13 +54,13 @@ var db = scope.ServiceProvider.GetRequiredService<PayBySharePayDbContext>();
 switch (args[0].ToLowerInvariant())
 {
     case "seed":
-        await SeedAsync(db);
+        await SeedAsync(db, merchantUrl);
         break;
     case "seed-group-orders":
-        await SeedGroupOrdersAsync(db);
+        await SeedGroupOrdersAsync(db, merchantUrl, apiUrl);
         break;
     case "seed-pizza":
-        await SeedPizzaOrderAsync(db);
+        await SeedPizzaOrderAsync(db, merchantUrl, apiUrl);
         break;
     case "fix-pizza-lines":
         await FixPizzaLinesAsync(db);
@@ -230,7 +250,7 @@ static async Task FixPizzaLinesAsync(PayBySharePayDbContext db)
     Console.WriteLine("? Færdig.");
 }
 
-static async Task SeedPizzaOrderAsync(PayBySharePayDbContext db)
+static async Task SeedPizzaOrderAsync(PayBySharePayDbContext db, string merchantUrl = "http://localhost:8081", string apiUrl = "http://localhost:5071")
 {
     Console.WriteLine("Seeder pizzaorden for Michael Nielsen og Selma Markussen...");
 
@@ -290,8 +310,8 @@ static async Task SeedPizzaOrderAsync(PayBySharePayDbContext db)
             CompanyName = "Pizzeria Roma ApS",
             CvrNumber = "34109855",
             ContactEmail = "hej@pizzeriaroma.dk",
-            CompanyAddress = "Vesterbrogade 12, 1620 København V",
-            GroupOrderUrl = "http://localhost:8081",
+            CompanyAddress = "Vesterbrogade 12, 1620 K\u00f8benhavn V",
+            GroupOrderUrl = merchantUrl,
             PaymentReference = "ROMA-PAY"
         };
         db.Participants.Add(merchant);
@@ -406,7 +426,7 @@ static async Task SeedPizzaOrderAsync(PayBySharePayDbContext db)
     Console.WriteLine($"   Login som Selma:   selma.markussen@mail.dk");
 }
 
-static async Task SeedAsync(PayBySharePayDbContext db)
+static async Task SeedAsync(PayBySharePayDbContext db, string merchantUrl = "http://localhost:8081")
 {
     Console.WriteLine("Seeding 50 persons and 10 merchants...");
 
@@ -549,8 +569,8 @@ static async Task SeedAsync(PayBySharePayDbContext db)
             CompanyName = "Pizzeria Roma ApS",
             CvrNumber = "34109855",
             ContactEmail = "hej@pizzeriaroma.dk",
-            CompanyAddress = "Vesterbrogade 12, 1620 København V",
-            GroupOrderUrl = "http://localhost:8081",
+            CompanyAddress = "Vesterbrogade 12, 1620 K\u00f8benhavn V",
+            GroupOrderUrl = merchantUrl,
             PaymentReference = "ROMA-PAY"
         },
         new()
@@ -625,7 +645,7 @@ static async Task SeedAsync(PayBySharePayDbContext db)
         Console.WriteLine($"  {p.Email,-22}  ({p.Name})");
 }
 
-static async Task SeedGroupOrdersAsync(PayBySharePayDbContext db)
+static async Task SeedGroupOrdersAsync(PayBySharePayDbContext db, string merchantUrl = "http://localhost:8081", string apiUrl = "http://localhost:5071")
 {
     Console.WriteLine("Seeder to gruppeordrer...");
 
@@ -655,13 +675,13 @@ static async Task SeedGroupOrdersAsync(PayBySharePayDbContext db)
     // Sæt GroupOrderUrl på merchants hvis ikke sat
     if (merchant1.GroupOrderUrl == null)
     {
-        merchant1.GroupOrderUrl = "http://localhost:8081";
-        Console.WriteLine($"  Sætter GroupOrderUrl på {merchant1.Name}");
+        merchant1.GroupOrderUrl = merchantUrl;
+        Console.WriteLine($"  S\u00e6tter GroupOrderUrl p\u00e5 {merchant1.Name}");
     }
     if (merchant2.GroupOrderUrl == null)
     {
-        merchant2.GroupOrderUrl = "http://localhost:8081";
-        Console.WriteLine($"  Sætter GroupOrderUrl på {merchant2.Name}");
+        merchant2.GroupOrderUrl = merchantUrl;
+        Console.WriteLine($"  S\u00e6tter GroupOrderUrl p\u00e5 {merchant2.Name}");
     }
     await db.SaveChangesAsync();
 
@@ -697,7 +717,7 @@ static async Task SeedGroupOrdersAsync(PayBySharePayDbContext db)
     var order1Ops = db.OrderParticipants.Where(op => op.OrderId == order1.Id).ToList();
     foreach (var op in order1Ops)
     {
-        var link = $"{merchant1.GroupOrderUrl}?orderId={order1.Id}&merchantId={merchant1.Id}&participantToken={op.ParticipantToken}&api=http://localhost:5071";
+        var link = $"{merchant1.GroupOrderUrl}?orderId={order1.Id}&merchantId={merchant1.Id}&participantToken={op.ParticipantToken}&api={apiUrl}";
         db.Messages.Add(new Message
         {
             OrderId = order1.Id,
@@ -739,7 +759,7 @@ static async Task SeedGroupOrdersAsync(PayBySharePayDbContext db)
     var order2Ops = db.OrderParticipants.Where(op => op.OrderId == order2.Id).ToList();
     foreach (var op in order2Ops)
     {
-        var link = $"{merchant2.GroupOrderUrl}?orderId={order2.Id}&merchantId={merchant2.Id}&participantToken={op.ParticipantToken}&api=http://localhost:5071";
+        var link = $"{merchant2.GroupOrderUrl}?orderId={order2.Id}&merchantId={merchant2.Id}&participantToken={op.ParticipantToken}&api={apiUrl}";
         db.Messages.Add(new Message
         {
             OrderId = order2.Id,
@@ -761,7 +781,7 @@ static async Task SeedGroupOrdersAsync(PayBySharePayDbContext db)
     {
         var p = db.Participants.Find(op.ParticipantId);
         Console.WriteLine($"      - {p?.Name,-25} token={op.ParticipantToken[..8]}...");
-        Console.WriteLine($"        URL: {merchant1.GroupOrderUrl}?orderId={order1.Id}&merchantId={merchant1.Id}&participantToken={op.ParticipantToken}&api=http://localhost:5071");
+        Console.WriteLine($"        URL: {merchant1.GroupOrderUrl}?orderId={order1.Id}&merchantId={merchant1.Id}&participantToken={op.ParticipantToken}&api={apiUrl}");
     }
 
     Console.WriteLine();
@@ -773,7 +793,7 @@ static async Task SeedGroupOrdersAsync(PayBySharePayDbContext db)
     {
         var p = db.Participants.Find(op.ParticipantId);
         Console.WriteLine($"      - {p?.Name,-25} token={op.ParticipantToken[..8]}...");
-        Console.WriteLine($"        URL: {merchant2.GroupOrderUrl}?orderId={order2.Id}&merchantId={merchant2.Id}&participantToken={op.ParticipantToken}&api=http://localhost:5071");
+        Console.WriteLine($"        URL: {merchant2.GroupOrderUrl}?orderId={order2.Id}&merchantId={merchant2.Id}&participantToken={op.ParticipantToken}&api={apiUrl}");
     }
 }
 
