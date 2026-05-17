@@ -1,132 +1,314 @@
-<div class="create">
+<div class="wizard">
 
-  <header class="create__header">
-    <button class="create__back" (click)="goBack()">‹</button>
-  </header>
-
-  <!-- Titel -->
-  <div class="create__section">
-    <label class="create__label">Titel</label>
-    <input
-      class="create__input"
-      type="text"
-      placeholder="fx pizza aften"
-      [ngModel]="title()"
-      (ngModelChange)="title.set($event)"
-      maxlength="80"
-    />
-  </div>
-
-  <!-- Kategori -->
-  <div class="create__section">
-    <label class="create__label">Kategori</label>
-    <div class="create__emojis">
-      @for (cat of categories; track cat.key) {
-        <button
-          class="emoji-btn"
-          [class.emoji-btn--active]="selectedCategory() === cat.key"
-          [title]="cat.label"
-          (click)="toggleCategory(cat.key)"
-        >{{ cat.icon }}</button>
+  <!-- Step indikator -->
+  <div class="wizard__steps">
+    @for (step of [1,2,3,4]; track step) {
+      <div class="wizard__step"
+           [class.wizard__step--active]="currentStep() === step"
+           [class.wizard__step--done]="isStepDone(step)"
+           (click)="goToStep(step)">
+        <div class="wizard__step-circle">
+          @if (isStepDone(step)) {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          } @else {
+            {{ step }}
+          }
+        </div>
+        <span class="wizard__step-label">
+          @switch (step) {
+            @case (1) { Grundinfo }
+            @case (2) { Spisested }
+            @case (3) { Deltagere }
+            @case (4) { Gennemse }
+          }
+        </span>
+      </div>
+      @if (step < 4) {
+        <div class="wizard__step-line" [class.wizard__step-line--done]="isStepDone(step + 1) || currentStep() > step"></div>
       }
-    </div>
-    @if (selectedCategory()) {
-      <p class="create__cat-label">{{ categoryLabel() }}</p>
     }
   </div>
 
-  <!-- Besked -->
-  <div class="create__section">
-    <label class="create__label">Besked (valgfri)</label>
-    <textarea
-      class="create__textarea"
-      placeholder="Skriv en kort besked til deltagerne…"
-      [(ngModel)]="message"
-      maxlength="200"
-      rows="3"
-    ></textarea>
+  <!-- Trin-label -->
+  <p class="wizard__trin-label">Trin {{ currentStep() }} af {{ totalSteps }}</p>
+
+  <!-- Indhold -->
+  <div class="wizard__content">
+
+    <!-- ── TRIN 1: Grundinfo ── -->
+    @if (currentStep() === 1) {
+      <h1 class="wizard__heading">Grundinfo</h1>
+
+      <div class="field">
+        <label class="field__label">TITEL</label>
+        <input
+          class="field__input"
+          type="text"
+          placeholder="fx pizza aften"
+          [ngModel]="title()"
+          (ngModelChange)="title.set($event)"
+          maxlength="80"
+        />
+      </div>
+
+      <div class="field">
+        <label class="field__label">KATEGORI <span class="field__hint">(kun én kan vælges)</span>
+          @if (selectedCategory()) {
+            <span class="field__hint field__hint--info">ℹ</span>
+          }
+        </label>
+        <div class="cat-search-wrap">
+          <input
+            class="field__input"
+            type="search"
+            placeholder="Søg eller vælg kategori"
+            [(ngModel)]="categorySearch"
+          />
+        </div>
+        <div class="cat-chips">
+          @for (cat of suggestedCategories(); track cat.key) {
+            <button
+              class="cat-chip"
+              [class.cat-chip--active]="selectedCategory() === cat.key"
+              (click)="toggleCategory(cat.key)"
+            >{{ cat.icon }} {{ cat.label }}</button>
+          }
+        </div>
+        <button class="cat-see-all" (click)="openAllCategories()">
+          <span>Se alle kategorier</span>
+          <span class="cat-see-all__count">{{ categories.length }}+ kategorier ›</span>
+        </button>
+      </div>
+
+      <div class="field">
+        <label class="field__label">BESKED (VALGFRI)</label>
+        <textarea
+          class="field__textarea"
+          placeholder="Skriv en kort besked til deltagerne…"
+          [(ngModel)]="message"
+          maxlength="200"
+          rows="3"
+        ></textarea>
+      </div>
+    }
+
+    <!-- ── TRIN 2: Spisested ── -->
+    @if (currentStep() === 2) {
+      <h1 class="wizard__heading">Spisested</h1>
+      <p class="wizard__sub">VÆLG SPISESTED</p>
+
+      <div class="field">
+        <input
+          class="field__input"
+          type="search"
+          placeholder="Søg spisested…"
+          [(ngModel)]="merchantSearch"
+        />
+      </div>
+
+      @if (isLoading()) {
+        <p class="state-text">Henter…</p>
+      } @else if (filteredMerchants().length === 0) {
+        <p class="state-text">Ingen spisestedder fundet</p>
+      } @else {
+        <div class="row-list">
+          @for (m of filteredMerchants(); track m.id) {
+            <div class="row"
+                 [class.row--selected]="selectedMerchant()?.id === m.id"
+                 (click)="toggleMerchant(m)">
+              <div class="row__avatar" [style.background]="m.avatarColor">{{ m.initials }}</div>
+              <div class="row__info">
+                <span class="row__name">{{ m.displayName }}</span>
+                @if (m.handle) { <span class="row__sub">{{ m.handle }}</span> }
+              </div>
+              <div class="row__radio" [class.row__radio--on]="selectedMerchant()?.id === m.id">
+                @if (selectedMerchant()?.id === m.id) {
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8"
+                       stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <p class="wizard__hint-text">Kan du ikke finde dit spisested? Spørg om de bruger <strong>PayBySharePay</strong>.</p>
+    }
+
+    <!-- ── TRIN 3: Deltagere ── -->
+    @if (currentStep() === 3) {
+      <h1 class="wizard__heading">Deltagere</h1>
+
+      <div class="field">
+        <input
+          class="field__input"
+          type="search"
+          placeholder="Søg navn…"
+          [(ngModel)]="searchTerm"
+        />
+      </div>
+
+      @if (isLoading()) {
+        <p class="state-text">Henter…</p>
+      } @else if (filtered().length === 0) {
+        <p class="state-text">Ingen deltagere fundet</p>
+      } @else {
+        <div class="row-list">
+          @for (p of filtered(); track p.id) {
+            <div class="row"
+                 [class.row--selected]="p.selected"
+                 (click)="togglePerson(p)">
+              <div class="row__avatar" [style.background]="p.avatarColor">{{ p.initials }}</div>
+              <div class="row__info">
+                <span class="row__name">{{ p.displayName }}</span>
+                @if (p.handle) { <span class="row__sub">{{ p.handle }}</span> }
+              </div>
+              <div class="row__check" [class.row__check--on]="p.selected">
+                @if (p.selected) {
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8"
+                       stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+
+    <!-- ── TRIN 4: Gennemse ── -->
+    @if (currentStep() === 4) {
+      <h1 class="wizard__heading">Gennemse</h1>
+      <p class="wizard__sub">Gennemse gruppebetaling</p>
+
+      <div class="review-card">
+        <div class="review-row">
+          <span class="review-row__icon">◇</span>
+          <span class="review-row__label">Titel</span>
+          <span class="review-row__value">{{ title() }}</span>
+        </div>
+        <div class="review-row">
+          <span class="review-row__icon">🍕</span>
+          <span class="review-row__label">Kategori</span>
+          <span class="review-row__value">
+            @if (selectedCategory()) { {{ categoryIcon() }} {{ categoryLabel() }} }
+            @else { <span class="review-row__empty">Ikke valgt</span> }
+          </span>
+        </div>
+        <div class="review-row">
+          <span class="review-row__icon">💬</span>
+          <span class="review-row__label">Besked</span>
+          <span class="review-row__value">
+            @if (message.trim()) { {{ message }} }
+            @else { <span class="review-row__empty">Ingen besked</span> }
+          </span>
+        </div>
+        <div class="review-row">
+          <span class="review-row__icon">🏪</span>
+          <span class="review-row__label">Spisested</span>
+          <span class="review-row__value">
+            @if (selectedMerchant()) { {{ selectedMerchant()!.displayName }} }
+            @else { <span class="review-row__empty">Ikke valgt</span> }
+          </span>
+        </div>
+        <div class="review-row">
+          <span class="review-row__icon">👥</span>
+          <span class="review-row__label">Deltagere</span>
+          <span class="review-row__value">{{ selectedParticipants().length }} valgt</span>
+        </div>
+      </div>
+
+      @if (selectedParticipants().length > 0) {
+        <div class="review-participants">
+          <p class="review-participants__label">Valgte deltagere</p>
+          @for (p of selectedParticipants(); track p.id) {
+            <div class="review-participant">
+              <div class="row__avatar row__avatar--sm" [style.background]="p.avatarColor">{{ p.initials }}</div>
+              <span>{{ p.displayName }}</span>
+            </div>
+          }
+        </div>
+      }
+
+      <div class="review-status">
+        <svg class="review-status__icon" viewBox="0 0 24 24" fill="none" stroke="#2ecc71" stroke-width="2.5"
+             stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        <div>
+          <p class="review-status__title">Klar til oprettelse</p>
+          <p class="review-status__sub">Alt ser godt ud. Du kan nu oprette din gruppebetaling.</p>
+        </div>
+      </div>
+
+      @if (errorMessage()) {
+        <p class="field__error">{{ errorMessage() }}</p>
+      }
+    }
+
+    <!-- Inline trin-fejl -->
+    @if (stepError()) {
+      <p class="field__error">{{ stepError() }}</p>
+    }
+
   </div>
 
-  <!-- Merchant / Spisested -->
-  <div class="create__section">
-    <label class="create__label">Vælg spisested</label>
-    @if (merchants().length === 0) {
-      <p class="create__state">Ingen spisestedder i din venneliste</p>
+  <!-- Footer med knap -->
+  <div class="wizard__footer">
+    @if (currentStep() < 4) {
+      <button class="btn-primary" (click)="goNext()">Næste</button>
     } @else {
-      <div class="create__list">
-        @for (m of merchants(); track m.id) {
-          <div class="row" [class.row--selected]="selectedMerchant()?.id === m.id" (click)="toggleMerchant(m)">
-            <div class="row__avatar" [style.background]="m.avatarColor">{{ m.initials }}</div>
-            <div class="row__info">
-              <span class="row__name">{{ m.displayName }}</span>
-              @if (m.handle) { <span class="row__sub">{{ m.handle }}</span> }
-              <span class="row__badge">Spisested</span>
-            </div>
-            <div class="row__check" [class.row__check--on]="selectedMerchant()?.id === m.id">
-              @if (selectedMerchant()?.id === m.id) {
-                <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8"
-                     stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
-              }
-            </div>
-          </div>
-        }
-      </div>
+      <button
+        class="btn-primary btn-primary--green"
+        [disabled]="!canSubmit() || isSubmitting()"
+        (click)="submit()"
+      >
+        @if (isSubmitting()) { Opretter… } @else { Opret gruppebetaling }
+      </button>
     }
-  </div>
-
-  <!-- Deltagere -->
-  <div class="create__section">
-    <label class="create__label">Tilføj deltagere</label>
-    <div class="create__search-wrap">
-      <input
-        class="create__input"
-        type="search"
-        placeholder="Søg navn…"
-        [(ngModel)]="searchTerm"
-        (ngModelChange)="onSearch()"
-      />
-    </div>
-
-    @if (isLoading()) {
-      <p class="create__state">Henter…</p>
-    } @else if (filtered().length > 0) {
-      <div class="create__list">
-        @for (p of filtered(); track p.id) {
-          <div class="row" [class.row--selected]="p.selected" (click)="togglePerson(p)">
-            <div class="row__avatar" [style.background]="p.avatarColor">{{ p.initials }}</div>
-            <div class="row__info">
-              <span class="row__name">{{ p.displayName }}</span>
-              @if (p.handle) { <span class="row__sub">{{ p.handle }}</span> }
-            </div>
-            <div class="row__check" [class.row__check--on]="p.selected">
-              @if (p.selected) {
-                <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8"
-                     stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
-              }
-            </div>
-          </div>
-        }
-      </div>
-    }
-  </div>
-
-  @if (errorMessage()) {
-    <p class="create__error">{{ errorMessage() }}</p>
-  }
-
-  <!-- Opret-knap -->
-  <div class="create__footer">
-    <button
-      class="create__submit"
-      [disabled]="!canSubmit() || isSubmitting()"
-      (click)="submit()"
-    >
-      @if (isSubmitting()) { Opretter… } @else { Opret gruppebetaling }
-    </button>
   </div>
 
 </div>
+
+<!-- ── Se alle kategorier overlay ── -->
+@if (showAllCategories()) {
+  <div class="cat-overlay" (click)="closeAllCategories()">
+    <div class="cat-panel" (click)="$event.stopPropagation()">
+      <div class="cat-panel__header">
+        <span class="cat-panel__title">Vælg kategori</span>
+        <button class="cat-panel__close" (click)="closeAllCategories()">✕</button>
+      </div>
+      <input
+        class="field__input cat-panel__search"
+        type="search"
+        placeholder="Søg kategori…"
+        [(ngModel)]="categorySearch"
+        autofocus
+      />
+      <div class="cat-panel__list">
+        @for (cat of filteredAllCategories(); track cat.key) {
+          <button
+            class="cat-panel__item"
+            [class.cat-panel__item--active]="selectedCategory() === cat.key"
+            (click)="toggleCategory(cat.key)"
+          >
+            <span class="cat-panel__item-icon">{{ cat.icon }}</span>
+            <span class="cat-panel__item-label">{{ cat.label }}</span>
+            @if (selectedCategory() === cat.key) {
+              <svg class="cat-panel__check" viewBox="0 0 24 24" fill="none" stroke="#2ecc71" stroke-width="2.8"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            }
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}
