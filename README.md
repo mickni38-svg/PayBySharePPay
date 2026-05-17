@@ -6,6 +6,10 @@
 [![Frontend](https://img.shields.io/badge/Frontend-Azure_Static_Web_Apps-blue)](https://icy-water-0750d2703.7.azurestaticapps.net)
 [![MerchantDemo](https://img.shields.io/badge/MerchantDemo-Azure_Static_Web_Apps-blue)](https://ashy-bay-0e753db03.7.azurestaticapps.net)
 
+![Opret ordre wizard flow](docs/images/wizard.png)
+
+*Opret ordre – 4-trins wizard: Grundinfo → Spisested → Deltagere → Gennemse*
+
 ---
 
 ## Hvad gør løsningen?
