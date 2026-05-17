@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Message, CreateMessageRequest } from '../models/message.model';
 
@@ -10,7 +10,22 @@ import { Message, CreateMessageRequest } from '../models/message.model';
 export class MessageService {
   private apiUrl = `${environment.apiUrl}/api/messages`;
 
+  /** Delt signal brugt af BottomNav, Home og Messages — ingen polling nødvendig */
+  readonly unreadCount = signal(0);
+
   constructor(private http: HttpClient) {}
+
+  /** Henter antal ulæste fra API og opdaterer signalet */
+  refreshUnread(participantId: number): void {
+    this.getUnreadCount(participantId).subscribe({
+      next: (count) => this.unreadCount.set(count)
+    });
+  }
+
+  /** Nulstiller badge synkront (kaldes når Messages-siden åbnes) */
+  resetUnread(): void {
+    this.unreadCount.set(0);
+  }
 
   // GET /api/messages/order/{orderId}
   getMessagesByOrder(orderId: number): Observable<Message[]> {

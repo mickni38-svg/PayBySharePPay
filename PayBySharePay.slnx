@@ -7,6 +7,10 @@
     <File Path="docs/SBYS_Group_Order_Context_Pack/03_AI_CONTEXT_READY_TO_PAY.md" />
     <File Path="docs/SBYS_Group_Order_Context_Pack/04_PROMPT_IMPLEMENT_GROUP_ORDER.md" />
   </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="docs/features.md" />
+    <File Path="docs/README.md" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/Api.PayBySharePay/Api.PayBySharePay.csproj" />
     <Project Path="src/DataStorage.PayBySharePay/DataStorage.PayBySharePay.csproj" />

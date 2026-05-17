@@ -133,8 +133,9 @@
 }
 .order-card__right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .order-card__arrow {
-  color: #6b7280; font-size: 22px; line-height: 1;
-  display: inline-block; transition: transform 0.2s;
+  color: #9ca3af; font-size: 20px; line-height: 1;
+  display: inline-block; transition: transform 0.25s ease;
+  transform: rotate(0deg);
 }
 .order-card__arrow--open { transform: rotate(90deg); }
 
