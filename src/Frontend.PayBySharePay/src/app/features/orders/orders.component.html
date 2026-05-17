@@ -69,8 +69,13 @@
             <div class="order-card__footer">
               <div class="order-card__footer-left">
                 <span class="order-card__amount">
-                  @if (vm.totalAmount > 0) { {{ vm.totalAmount | number:'1.2-2' }} kr }
-                  @else { – kr }
+                  @if (vm.isHost && vm.totalAmount > 0) {
+                    {{ vm.totalAmount | number:'1.2-2' }} kr
+                  } @else if (!vm.isHost && vm.myOwnAmount !== null) {
+                    {{ vm.myOwnAmount | number:'1.2-2' }} kr
+                  } @else {
+                    – kr
+                  }
                 </span>
                 @if (vm.isHost) {
                   <span class="order-card__progress">{{ vm.paidParticipantCount }} af {{ vm.participantCount }} har betalt</span>
@@ -117,10 +122,16 @@
                       <span class="order-detail__value">{{ vm.merchantAddress }}</span>
                     </div>
                   }
-                  @if (vm.totalAmount > 0) {
+                  @if (vm.isHost && vm.totalAmount > 0) {
                     <div class="order-detail__row">
                       <span class="order-detail__label">Samlet beløb</span>
                       <span class="order-detail__value order-detail__value--amount">{{ vm.totalAmount | number:'1.2-2' }} kr</span>
+                    </div>
+                  }
+                  @if (!vm.isHost && vm.myOwnAmount !== null) {
+                    <div class="order-detail__row">
+                      <span class="order-detail__label">Dit beløb</span>
+                      <span class="order-detail__value order-detail__value--amount">{{ vm.myOwnAmount | number:'1.2-2' }} kr</span>
                     </div>
                   }
                 </div>

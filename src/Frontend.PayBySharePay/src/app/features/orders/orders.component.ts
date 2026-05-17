@@ -27,6 +27,8 @@ interface OrderCardVM {
   participants: OrderParticipantApiDto[];
   participantOrderLines: ParticipantOrderLinesApiDto[];
   detailsLoaded: boolean;
+  /** Deltagerens eget beløb (null = ingen bestilling endnu) */
+  myOwnAmount: number | null;
 }
 
 @Component({
@@ -116,6 +118,12 @@ export class OrdersComponent implements OnInit, OnDestroy {
       isHost ? g.lines.length > 0 : g.participantId === userId && g.lines.length > 0
     ) ?? [];
 
+    // Deltagerens eget beløb baseret på egne ordrelinjer
+    const myOwnLines = cached?.participantOrderLines.find(g => g.participantId === userId);
+    const myOwnAmount = (myOwnLines?.lines?.length ?? 0) > 0
+      ? myOwnLines!.lines.reduce((sum, l) => sum + l.lineTotal, 0)
+      : null;
+
     return {
       id: o.id,
       title: o.title,
@@ -135,7 +143,8 @@ export class OrdersComponent implements OnInit, OnDestroy {
       canShowOrderLines: canShow,
       participants: nonMerchant,
       participantOrderLines: visibleLines,
-      detailsLoaded: !!cached
+      detailsLoaded: !!cached,
+      myOwnAmount
     };
   }
 
