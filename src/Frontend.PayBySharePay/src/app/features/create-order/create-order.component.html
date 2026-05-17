@@ -17,14 +17,6 @@
             {{ step }}
           }
         </div>
-        <span class="wizard__step-label">
-          @switch (step) {
-            @case (1) { Grundinfo }
-            @case (2) { Spisested }
-            @case (3) { Deltagere }
-            @case (4) { Gennemse }
-          }
-        </span>
       </div>
       @if (step < 4) {
         <div class="wizard__step-line" [class.wizard__step-line--done]="isStepDone(step + 1) || currentStep() > step"></div>
@@ -32,15 +24,11 @@
     }
   </div>
 
-  <!-- Trin-label -->
-  <p class="wizard__trin-label">Trin {{ currentStep() }} af {{ totalSteps }}</p>
-
   <!-- Indhold -->
   <div class="wizard__content">
 
     <!-- ── TRIN 1: Grundinfo ── -->
     @if (currentStep() === 1) {
-      <h1 class="wizard__heading">Grundinfo</h1>
 
       <div class="field">
         <label class="field__label">TITEL</label>
@@ -97,8 +85,6 @@
 
     <!-- ── TRIN 2: Spisested ── -->
     @if (currentStep() === 2) {
-      <h1 class="wizard__heading">Spisested</h1>
-      <p class="wizard__sub">VÆLG SPISESTED</p>
 
       <div class="field">
         <input
@@ -142,7 +128,6 @@
 
     <!-- ── TRIN 3: Deltagere ── -->
     @if (currentStep() === 3) {
-      <h1 class="wizard__heading">Deltagere</h1>
 
       <div class="field">
         <input
@@ -184,8 +169,6 @@
 
     <!-- ── TRIN 4: Gennemse ── -->
     @if (currentStep() === 4) {
-      <h1 class="wizard__heading">Gennemse</h1>
-      <p class="wizard__sub">Gennemse gruppebetaling</p>
 
       <div class="review-card">
         <div class="review-row">

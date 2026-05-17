@@ -90,6 +90,13 @@ export class OrdersComponent implements OnInit, OnDestroy {
     this.orderService.getOrdersByParticipant(this.auth.currentUserId() ?? 0).subscribe({
       next: (list) => {
         this.allOrders.set(list);
+        // Åbn alle som default og hent detaljer
+        this._expandedIds.set(new Set(list.map(o => o.id)));
+        list.forEach(o => {
+          if (!this._detailsCache().has(o.id)) {
+            this.loadDetails(o.id);
+          }
+        });
         this.isLoading.set(false);
       },
       error: () => { this.errorMessage.set('Kunne ikke hente ordrer.'); this.isLoading.set(false); }
