@@ -145,6 +145,23 @@ Se [Lokal udvikling](docs/10-lokal-udvikling.md) for fuld guide.
 
 ---
 
+## Næste skridt (prioriteret roadmap)
+
+| # | Opgave | Prioritet | Dokumentation |
+|---|---|---|---|
+| 1 | **Screenshots** – Tag screenshots lokalt og gem i `docs/images/` | Lav | [15-screenshots.md](docs/15-screenshots.md) |
+| 2 | **CI/CD pipeline** – GitHub Actions til automatisk build, test og deployment ved push til `main` | Høj | [11-azure-deployment-prod.md](docs/11-azure-deployment-prod.md) |
+| 3 | **Staging/testmiljø** – Separat Azure miljø (Static Web Apps + App Service slot + Azure SQL) til QA | Høj | [11-azure-deployment-prod.md](docs/11-azure-deployment-prod.md) |
+| 4 | **Azure Key Vault** – Flyt Jwt:Key og connection string fra App Service Settings til Key Vault med Managed Identity | Høj | [08-authentication-security.md](docs/08-authentication-security.md) |
+| 5 | **Testdækning** – Unit tests til `OrderService`, `PaymentService` og integration tests med `WebApplicationFactory` | Medium | [12-test-og-kvalitet.md](docs/12-test-og-kvalitet.md) |
+| 6 | **Custom domain** – Tilknyt `paybysharepay.dk` til Azure Static Web Apps og App Service | Medium | [11-azure-deployment-prod.md](docs/11-azure-deployment-prod.md) |
+| 7 | **Application Insights** – Aktivér telemetri og monitoring i Azure App Service | Medium | [11-azure-deployment-prod.md](docs/11-azure-deployment-prod.md) |
+| 8 | **Refresh tokens** – Implementér kortere JWT-varighed + refresh token-mekanisme | Medium | [08-authentication-security.md](docs/08-authentication-security.md) |
+| 9 | **Rate limiting** – Beskyt login-endpoint mod brute force | Lav | [08-authentication-security.md](docs/08-authentication-security.md) |
+| 10 | **Push notifikationer / real-time** – SignalR eller polling for live opdateringer | Lav | [05-frontend.md](docs/05-frontend.md) |
+
+---
+
 ## Produktion URLs
 
 | Service | URL |

@@ -145,8 +145,67 @@ Eller via Azure Portal → App Service → Log stream.
 
 ---
 
+## Næste skridt for Azure-opsætning
+
+### 1. Opret CI/CD pipeline med GitHub Actions
+
+Opret `.github/workflows/deploy.yml` med følgende flow:
+```
+push til main → dotnet build → dotnet test → ng build → swa deploy + az webapp deploy
+```
+
+Secrets der skal tilføjes i GitHub repo → Settings → Secrets:
+- `AZURE_WEBAPP_PUBLISH_PROFILE`
+- `SWA_TOKEN_FRONTEND`
+- `SWA_TOKEN_MERCHANTDEMO`
+
+---
+
+### 2. Opret staging/testmiljø
+
+```powershell
+# Opret staging deployment slot på App Service
+az webapp deployment slot create --name paybysharepay-api-win --resource-group <rg> --slot staging
+
+# Opret separate Static Web Apps til staging
+az staticwebapp create --name paybysharepay-frontend-staging --resource-group <rg> --location westeurope
+az staticwebapp create --name paybysharepay-merchant-staging --resource-group <rg> --location westeurope
+```
+
+---
+
+### 3. Flyt secrets til Azure Key Vault
+
+```powershell
+# Opret Key Vault
+az keyvault create --name paybysharepay-kv --resource-group <rg> --location westeurope
+
+# Tilføj secrets
+az keyvault secret set --vault-name paybysharepay-kv --name "JwtKey" --value "<din-jwt-noegle>"
+az keyvault secret set --vault-name paybysharepay-kv --name "DbConnectionString" --value "<connection-string>"
+
+# Aktivér Managed Identity på App Service
+az webapp identity assign --name paybysharepay-api-win --resource-group <rg>
+
+# Giv App Service adgang til Key Vault
+az keyvault set-policy --name paybysharepay-kv --object-id <identity-object-id> --secret-permissions get list
+```
+
+---
+
+### 4. Aktivér Application Insights
+
+```powershell
+az monitor app-insights component create --app paybysharepay-insights --location westeurope --resource-group <rg>
+```
+
+Tilføj herefter `APPLICATIONINSIGHTS_CONNECTION_STRING` i App Service Application Settings.
+
+---
+
 ## Se også
 
 - [Konfiguration](09-konfiguration.md)
 - [Database](07-database.md)
 - [Fejlfinding](13-fejlfinding.md)
+
