@@ -1,6 +1,8 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute, NavigationEnd } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { filter } from 'rxjs/operators';
 import { OrderService } from '../../core/services/order.service';
 import { AuthService } from '../../core/services/auth.service';
 import { OrderOverviewApiDto, OrderParticipantApiDto, OrderSummaryApiDto, ParticipantOrderLinesApiDto } from '../../core/models/order.model';
@@ -34,7 +36,7 @@ interface OrderCardVM {
   templateUrl: './orders.component.html',
   styleUrl: './orders.component.scss'
 })
-export class OrdersComponent implements OnInit {
+export class OrdersComponent implements OnInit, OnDestroy {
 
   allOrders = signal<OrderSummaryApiDto[]>([]);
   isLoading = signal(false);
@@ -52,6 +54,8 @@ export class OrdersComponent implements OnInit {
     '#00838f','#558b2f','#4527a0','#6d4c41'
   ];
 
+  private routerSub?: Subscription;
+
   constructor(
     private orderService: OrderService,
     private router: Router,
@@ -59,7 +63,21 @@ export class OrdersComponent implements OnInit {
     private route: ActivatedRoute
   ) {}
 
-  ngOnInit(): void { this.load(); }
+  ngOnInit(): void {
+    this.load();
+    this.routerSub = this.router.events.pipe(
+      filter(e => e instanceof NavigationEnd)
+    ).subscribe((e) => {
+      const nav = e as NavigationEnd;
+      if (nav.urlAfterRedirects === '/orders' || nav.urlAfterRedirects.startsWith('/orders?')) {
+        this.load();
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.routerSub?.unsubscribe();
+  }
 
   private load(): void {
     this.isLoading.set(true);

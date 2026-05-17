@@ -64,8 +64,8 @@
                 <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="card.accent" stroke-width="2" stroke-linecap="round">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                 </svg>
-                @if (unreadCount() > 0) {
-                  <span class="action-card__badge">{{ unreadCount() > 9 ? '9+' : unreadCount() }}</span>
+                @if (messageService.unreadCount() > 0) {
+                  <span class="action-card__badge">{{ messageService.unreadCount() > 9 ? '9+' : messageService.unreadCount() }}</span>
                 }
               </div>
             }

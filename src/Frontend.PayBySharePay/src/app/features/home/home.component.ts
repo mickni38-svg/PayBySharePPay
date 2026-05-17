@@ -1,8 +1,9 @@
-﻿import { Component, OnInit, signal } from '@angular/core';
-import { RouterLink, Router } from '@angular/router';
+﻿import { Component, OnInit, OnDestroy, signal } from '@angular/core';
+import { RouterLink, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Subscription } from 'rxjs';
+import { filter } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import { DirectoryService } from '../../core/services/directory.service';
 import { OrderService } from '../../core/services/order.service';
@@ -33,7 +34,7 @@ interface StatusCard {
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, OnDestroy {
   actionCards: ActionCard[] = [
     { label: 'Overblik',  subtitle: 'Se regninger',      route: '/orders',           accent: '#22C55E', iconBg: 'rgba(34,197,94,0.15)',  icon: 'chart' },
     { label: 'Opret',     subtitle: 'Ny gruppebetaling', route: '/orders/create',     accent: '#7C3AED', iconBg: 'rgba(124,58,237,0.15)', icon: 'plus'  },
@@ -43,17 +44,18 @@ export class HomeComponent implements OnInit {
 
   statusCards = signal<StatusCard[]>([]);
   persons = signal<DirectoryEntry[]>([]);
-  unreadCount = signal(0);
   selectedEmail = '';
   loginError = signal<string | null>(null);
   loginLoading = signal(false);
+
+  private routerSub?: Subscription;
 
   constructor(
     readonly auth: AuthService,
     private directory: DirectoryService,
     private orderService: OrderService,
     private activityService: ActivityService,
-    private messageService: MessageService,
+    readonly messageService: MessageService,
     private router: Router
   ) {}
 
@@ -62,12 +64,28 @@ export class HomeComponent implements OnInit {
       next: (list) => this.persons.set(list.filter(e => e.type === 'Person')),
       error: () => {}
     });
+    this.refreshData();
+
+    // Reload status og unread-count ved hvert besøg på /home
+    this.routerSub = this.router.events.pipe(
+      filter(e => e instanceof NavigationEnd)
+    ).subscribe((e) => {
+      const nav = e as NavigationEnd;
+      if (nav.urlAfterRedirects === '/home' || nav.urlAfterRedirects === '/') {
+        this.refreshData();
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.routerSub?.unsubscribe();
+  }
+
+  private refreshData(): void {
     const userId = this.auth.currentUserId();
     if (userId) {
       this.loadStatusCards(userId);
-      this.messageService.getUnreadCount(userId).subscribe({
-        next: (count) => this.unreadCount.set(count)
-      });
+      this.messageService.refreshUnread(userId);
     }
   }
 

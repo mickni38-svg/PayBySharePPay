@@ -1,10 +1,10 @@
-import { Component, OnInit, OnDestroy, signal, effect, inject } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Component, OnInit, OnDestroy, effect } from '@angular/core';
+import { RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MessageService } from '../../core/services/message.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Subscription, interval } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-bottom-nav',
@@ -43,7 +43,7 @@ import { switchMap } from 'rxjs/operators';
         </svg>
         <span>Brugere</span>
       </a>
-      <a routerLink="/messages" routerLinkActive="active" class="bottom-nav__item" (click)="clearBadge()">
+      <a routerLink="/messages" routerLinkActive="active" class="bottom-nav__item">
         <div class="bottom-nav__icon-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
@@ -51,8 +51,8 @@ import { switchMap } from 'rxjs/operators';
             <circle cx="12" cy="10" r="1" fill="currentColor"/>
             <circle cx="15" cy="10" r="1" fill="currentColor"/>
           </svg>
-          @if (unreadCount() > 0) {
-            <span class="bottom-nav__badge">{{ unreadCount() > 9 ? '9+' : unreadCount() }}</span>
+          @if (messageService.unreadCount() > 0) {
+            <span class="bottom-nav__badge">{{ messageService.unreadCount() > 9 ? '9+' : messageService.unreadCount() }}</span>
           }
         </div>
         <span>Beskeder</span>
@@ -117,20 +117,20 @@ import { switchMap } from 'rxjs/operators';
   `]
 })
 export class BottomNavComponent implements OnInit, OnDestroy {
-  unreadCount = signal(0);
   private pollSub?: Subscription;
+  private routerSub?: Subscription;
 
   constructor(
-    private messageService: MessageService,
-    private auth: AuthService
+    readonly messageService: MessageService,
+    private auth: AuthService,
+    private router: Router
   ) {
-    // Reagér med det samme når bruger logger ind/ud
     effect(() => {
       const userId = this.auth.currentUserId();
       if (userId != null) {
-        this.fetchUnread(userId);
+        this.messageService.refreshUnread(userId);
       } else {
-        this.unreadCount.set(0);
+        this.messageService.resetUnread();
       }
     });
   }
@@ -139,22 +139,23 @@ export class BottomNavComponent implements OnInit, OnDestroy {
     // Poll hvert 60. sekund
     this.pollSub = interval(60_000).subscribe(() => {
       const userId = this.auth.currentUserId();
-      if (userId != null) this.fetchUnread(userId);
+      if (userId != null) this.messageService.refreshUnread(userId);
+    });
+
+    // Nulstil badge synkront når brugeren navigerer til /messages
+    this.routerSub = this.router.events.pipe(
+      filter(e => e instanceof NavigationEnd)
+    ).subscribe((e) => {
+      const nav = e as NavigationEnd;
+      if (nav.urlAfterRedirects.startsWith('/messages')) {
+        this.messageService.resetUnread();
+      }
     });
   }
 
   ngOnDestroy(): void {
     this.pollSub?.unsubscribe();
-  }
-
-  private fetchUnread(userId: number): void {
-    this.messageService.getUnreadCount(userId).subscribe({
-      next: (count) => this.unreadCount.set(count)
-    });
-  }
-
-  clearBadge(): void {
-    this.unreadCount.set(0);
+    this.routerSub?.unsubscribe();
   }
 }
 
