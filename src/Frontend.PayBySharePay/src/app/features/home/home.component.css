@@ -120,6 +120,71 @@
   line-height: 1;
 }
 
+/* CTA – Opret ny gruppebetaling */
+.home__cta {
+  padding: 16px var(--space-page) 0;
+}
+
+.cta-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  background: rgba(124, 58, 237, 0.08);
+  border: 1px solid rgba(124, 58, 237, 0.45);
+  border-radius: 14px;
+  padding: 14px 16px;
+  text-decoration: none;
+  color: var(--text-primary, #fff);
+  transition: background 0.18s;
+}
+
+.cta-card:active {
+  background: rgba(124, 58, 237, 0.18);
+}
+
+.cta-card__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(124, 58, 237, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cta-card__icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.cta-card__text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.cta-card__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.cta-card__sub {
+  font-size: 12px;
+  color: rgba(255,255,255,0.55);
+  margin-top: 2px;
+}
+
+.cta-card__chevron {
+  width: 18px;
+  height: 18px;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
 /* Statuskort */
 .home__status {
   display: flex;

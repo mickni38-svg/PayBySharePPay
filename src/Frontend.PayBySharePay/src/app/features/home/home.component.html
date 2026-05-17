@@ -1,6 +1,24 @@
 ﻿<!-- Forside – ny dashboard -->
 <div class="home">
 
+  <!-- Fuld-bredde CTA: Opret ny gruppebetaling -->
+  <section class="home__cta">
+    <a class="cta-card" routerLink="/orders/create">
+      <div class="cta-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </div>
+      <div class="cta-card__text">
+        <span class="cta-card__title">Opret ny gruppebetaling</span>
+        <span class="cta-card__sub">Del regningen med venner</span>
+      </div>
+      <svg class="cta-card__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <polyline points="9 18 15 12 9 6"/>
+      </svg>
+    </a>
+  </section>
+
   <!-- Statuskort -->
   @if (statusCards().length > 0) {
     <section class="home__status">
@@ -49,6 +67,11 @@
             @case ('plus') {
               <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="card.accent" stroke-width="2" stroke-linecap="round">
                 <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            }
+            @case ('activity') {
+              <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="card.accent" stroke-width="2" stroke-linecap="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
               </svg>
             }
             @case ('users') {
