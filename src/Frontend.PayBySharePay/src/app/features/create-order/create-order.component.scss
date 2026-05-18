@@ -123,6 +123,11 @@
   &--info { cursor: default; }
 }
 
+.field__required {
+  color: #ef4444;
+  margin-left: 2px;
+}
+
 .field__input {
   width: 100%;
   box-sizing: border-box;
@@ -165,62 +170,6 @@
   font-size: 14px;
   margin: 8px 0 0;
   font-weight: 500;
-}
-
-// ── Kategori chips ────────────────────────────────────────────────────────────
-.cat-search-wrap {
-  margin-bottom: 8px;
-}
-
-.cat-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-
-.cat-chip {
-  padding: 7px 12px;
-  border-radius: 20px;
-  border: 1.5px solid rgba(255,255,255,0.12);
-  background: #111827;
-  color: #d1d5db;
-  font-size: 13px;
-  font-family: inherit;
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
-  white-space: nowrap;
-
-  &:active { background: #1a2236; }
-
-  &--active {
-    border-color: #2ecc71;
-    background: rgba(46,204,113,0.12);
-    color: #fff;
-  }
-}
-
-.cat-see-all {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #111827;
-  border: 1px solid #1f2937;
-  border-radius: 10px;
-  padding: 12px 14px;
-  color: #9ca3af;
-  font-size: 14px;
-  font-family: inherit;
-  cursor: pointer;
-  transition: background 0.1s;
-
-  &:active { background: #1a2236; }
-}
-
-.cat-see-all__count {
-  font-size: 12px;
-  color: #4b5563;
 }
 
 // ── Rækker (merchant / deltager) ──────────────────────────────────────────────
@@ -432,95 +381,17 @@
   }
 }
 
-// ── Se alle kategorier overlay ────────────────────────────────────────────────
-.cat-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.7);
-  z-index: 200;
-  display: flex;
-  align-items: flex-end;
+// ── Emoji input ────────────────────────────────────────────────────────────
+.field__input--emoji {
+  font-size: 22px;
+  text-align: center;
+  letter-spacing: 4px;
 }
 
-.cat-panel {
-  width: 100%;
-  max-width: 430px;
-  margin: 0 auto;
-  background: #111827;
-  border-radius: 18px 18px 0 0;
-  border: 1px solid #1f2937;
-  border-bottom: none;
-  display: flex;
-  flex-direction: column;
-  max-height: 80vh;
+.emoji-preview {
+  display: block;
+  text-align: center;
+  font-size: 40px;
+  margin-top: 8px;
+  line-height: 1;
 }
-
-.cat-panel__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 16px 8px;
-  flex-shrink: 0;
-}
-
-.cat-panel__title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #fff;
-}
-
-.cat-panel__close {
-  background: transparent;
-  border: none;
-  color: #9ca3af;
-  font-size: 18px;
-  cursor: pointer;
-  padding: 4px 8px;
-  min-height: 44px;
-}
-
-.cat-panel__search {
-  margin: 0 16px 8px;
-  width: calc(100% - 32px);
-  flex-shrink: 0;
-}
-
-.cat-panel__list {
-  overflow-y: auto;
-  flex: 1;
-  padding: 0 8px 16px;
-}
-
-.cat-panel__item {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 10px;
-  background: transparent;
-  border: none;
-  border-radius: 10px;
-  color: #d1d5db;
-  font-size: 15px;
-  font-family: inherit;
-  cursor: pointer;
-  transition: background 0.1s;
-  text-align: left;
-
-  &:active { background: #1a2236; }
-
-  &--active {
-    background: rgba(46,204,113,0.1);
-    color: #fff;
-  }
-}
-
-.cat-panel__item-icon { font-size: 20px; flex-shrink: 0; width: 28px; text-align: center; }
-.cat-panel__item-label { flex: 1; }
-
-.cat-panel__check {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-}
-

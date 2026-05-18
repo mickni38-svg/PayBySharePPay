@@ -23,31 +23,6 @@ const AVATAR_COLORS = [
   '#00838f', '#558b2f', '#4527a0', '#6d4c41'
 ];
 
-const CATEGORIES = [
-  { key: 'pizza',   icon: '🍕', label: 'Pizza' },
-  { key: 'burger',  icon: '🍔', label: 'Burger' },
-  { key: 'sushi',   icon: '🍣', label: 'Sushi' },
-  { key: 'tacos',   icon: '🌮', label: 'Tacos' },
-  { key: 'drinks',  icon: '🍺', label: 'Drikke' },
-  { key: 'ramen',   icon: '🍜', label: 'Ramen' },
-  { key: 'kebab',   icon: '🥙', label: 'Kebab' },
-  { key: 'chicken', icon: '🍗', label: 'Kylling' },
-  { key: 'salad',   icon: '🥗', label: 'Salat' },
-  { key: 'dessert', icon: '🍰', label: 'Dessert' },
-  { key: 'coffee',  icon: '☕', label: 'Kaffe' },
-  { key: 'thai',    icon: '🍛', label: 'Thai' },
-  { key: 'indian',  icon: '🫕', label: 'Indisk' },
-  { key: 'chinese', icon: '🥡', label: 'Kinesisk' },
-  { key: 'italian', icon: '🍝', label: 'Italiensk' },
-  { key: 'mexican', icon: '🌯', label: 'Mexicansk' },
-  { key: 'greek',   icon: '🫒', label: 'Græsk' },
-  { key: 'american',icon: '🥩', label: 'Amerikansk' },
-  { key: 'vegan',   icon: '🌱', label: 'Vegansk' },
-  { key: 'snacks',  icon: '🍿', label: 'Snacks' },
-  { key: 'other',   icon: '📦', label: 'Andet' },
-];
-
-const SUGGESTED_CATEGORY_KEYS = ['pizza', 'burger', 'sushi', 'tacos', 'drinks'];
 
 function toInitials(name: string): string {
   return name.split(' ').slice(0, 2).map(p => p[0]).join('').toUpperCase();
@@ -75,38 +50,8 @@ export class CreateOrderComponent implements OnInit {
 
   // ── Trin 1: Grundinfo ────────────────────────────────────────────────────
   title = signal('');
-  selectedCategory = signal<string | null>(null);
+  emoji = signal('');
   message = '';
-  categorySearch = '';
-  showAllCategories = signal(false);
-
-  categories = CATEGORIES;
-
-  suggestedCategories = computed(() => {
-    const term = this.categorySearch.toLowerCase().trim();
-    if (term) {
-      return this.categories.filter(c =>
-        c.label.toLowerCase().includes(term) || c.key.includes(term)
-      );
-    }
-    return this.categories.filter(c => SUGGESTED_CATEGORY_KEYS.includes(c.key));
-  });
-
-  filteredAllCategories = computed(() => {
-    const term = this.categorySearch.toLowerCase().trim();
-    if (!term) return this.categories;
-    return this.categories.filter(c =>
-      c.label.toLowerCase().includes(term) || c.key.includes(term)
-    );
-  });
-
-  categoryLabel = computed(() =>
-    this.categories.find(c => c.key === this.selectedCategory())?.label ?? ''
-  );
-
-  categoryIcon = computed(() =>
-    this.categories.find(c => c.key === this.selectedCategory())?.icon ?? ''
-  );
 
   // ── Trin 2: Spisested ────────────────────────────────────────────────────
   merchants = signal<MerchantVM[]>([]);
@@ -143,7 +88,7 @@ export class CreateOrderComponent implements OnInit {
   errorMessage = signal<string | null>(null);
 
   canSubmit = computed(() =>
-    this.title().trim().length > 0 && !this.isSubmitting()
+    this.title().trim().length > 0 && this.emoji().trim().length > 0 && !this.isSubmitting()
   );
 
   constructor(
@@ -196,6 +141,10 @@ export class CreateOrderComponent implements OnInit {
         this.stepError.set('Titel skal udfyldes');
         return false;
       }
+      if (!this.emoji().trim()) {
+        this.stepError.set('Vælg en emoji');
+        return false;
+      }
     }
     if (this.currentStep() === 3) {
       if (this.selectedParticipants().length === 0) {
@@ -224,22 +173,7 @@ export class CreateOrderComponent implements OnInit {
     return step < this.currentStep();
   }
 
-  // ── Kategori ──────────────────────────────────────────────────────────────
-  toggleCategory(key: string): void {
-    this.selectedCategory.update(current => current === key ? null : key);
-    this.showAllCategories.set(false);
-  }
-
-  openAllCategories(): void {
-    this.categorySearch = '';
-    this.showAllCategories.set(true);
-  }
-
-  closeAllCategories(): void {
-    this.showAllCategories.set(false);
-  }
-
-  // ── Merchant ──────────────────────────────────────────────────────────────
+  // ── Merchant
   toggleMerchant(m: MerchantVM): void {
     this.selectedMerchant.update(current => current?.id === m.id ? null : m);
   }
@@ -263,7 +197,7 @@ export class CreateOrderComponent implements OnInit {
     this.orderService.createOrder({
       createdByParticipantId: this.auth.currentUserId() ?? 0,
       title: this.title().trim(),
-      category: this.selectedCategory() ?? undefined,
+      category: this.emoji().trim() || undefined,
       message: this.message.trim() || undefined,
       merchantParticipantId: this.selectedMerchant()?.id,
       participantIds

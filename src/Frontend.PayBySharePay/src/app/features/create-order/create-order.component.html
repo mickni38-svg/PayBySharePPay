@@ -43,32 +43,18 @@
       </div>
 
       <div class="field">
-        <label class="field__label">KATEGORI <span class="field__hint">(kun én kan vælges)</span>
-          @if (selectedCategory()) {
-            <span class="field__hint field__hint--info">ℹ</span>
-          }
-        </label>
-        <div class="cat-search-wrap">
-          <input
-            class="field__input"
-            type="search"
-            placeholder="Søg eller vælg kategori"
-            [(ngModel)]="categorySearch"
-          />
-        </div>
-        <div class="cat-chips">
-          @for (cat of suggestedCategories(); track cat.key) {
-            <button
-              class="cat-chip"
-              [class.cat-chip--active]="selectedCategory() === cat.key"
-              (click)="toggleCategory(cat.key)"
-            >{{ cat.icon }} {{ cat.label }}</button>
-          }
-        </div>
-        <button class="cat-see-all" (click)="openAllCategories()">
-          <span>Se alle kategorier</span>
-          <span class="cat-see-all__count">{{ categories.length }}+ kategorier ›</span>
-        </button>
+        <label class="field__label">INDTAST EMOJI <span class="field__required">*</span></label>
+        <input
+          class="field__input field__input--emoji"
+          type="text"
+          placeholder="Tryk på 😊 på dit tastatur og vælg en emoji…"
+          [ngModel]="emoji()"
+          (ngModelChange)="emoji.set($event)"
+          maxlength="2"
+        />
+        @if (emoji()) {
+          <span class="emoji-preview">{{ emoji() }}</span>
+        }
       </div>
 
       <div class="field">
@@ -177,10 +163,10 @@
           <span class="review-row__value">{{ title() }}</span>
         </div>
         <div class="review-row">
-          <span class="review-row__icon">🍕</span>
-          <span class="review-row__label">Kategori</span>
+          <span class="review-row__icon">🏷️</span>
+          <span class="review-row__label">Emoji</span>
           <span class="review-row__value">
-            @if (selectedCategory()) { {{ categoryIcon() }} {{ categoryLabel() }} }
+            @if (emoji()) { {{ emoji() }} }
             @else { <span class="review-row__empty">Ikke valgt</span> }
           </span>
         </div>
@@ -259,39 +245,3 @@
 
 </div>
 
-<!-- ── Se alle kategorier overlay ── -->
-@if (showAllCategories()) {
-  <div class="cat-overlay" (click)="closeAllCategories()">
-    <div class="cat-panel" (click)="$event.stopPropagation()">
-      <div class="cat-panel__header">
-        <span class="cat-panel__title">Vælg kategori</span>
-        <button class="cat-panel__close" (click)="closeAllCategories()">✕</button>
-      </div>
-      <input
-        class="field__input cat-panel__search"
-        type="search"
-        placeholder="Søg kategori…"
-        [(ngModel)]="categorySearch"
-        autofocus
-      />
-      <div class="cat-panel__list">
-        @for (cat of filteredAllCategories(); track cat.key) {
-          <button
-            class="cat-panel__item"
-            [class.cat-panel__item--active]="selectedCategory() === cat.key"
-            (click)="toggleCategory(cat.key)"
-          >
-            <span class="cat-panel__item-icon">{{ cat.icon }}</span>
-            <span class="cat-panel__item-label">{{ cat.label }}</span>
-            @if (selectedCategory() === cat.key) {
-              <svg class="cat-panel__check" viewBox="0 0 24 24" fill="none" stroke="#2ecc71" stroke-width="2.8"
-                   stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            }
-          </button>
-        }
-      </div>
-    </div>
-  </div>
-}
