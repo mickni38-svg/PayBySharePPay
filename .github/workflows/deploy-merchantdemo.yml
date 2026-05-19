@@ -20,29 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
 
-      - name: Check for package.json
-        id: check_pkg
-        run: |
-          if [ -f "src/Frontend.MerchantDemo/package.json" ]; then
-            echo "has_npm=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_npm=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Installer dependencies
-        if: steps.check_pkg.outputs.has_npm == 'true'
-        working-directory: src/Frontend.MerchantDemo
-        run: npm ci
-
-      - name: Byg MerchantDemo
-        if: steps.check_pkg.outputs.has_npm == 'true'
-        working-directory: src/Frontend.MerchantDemo
-        run: npx ng build --configuration production
 
       - name: Deploy til TEST Static Web App
         if: github.event.inputs.environment == 'test'
