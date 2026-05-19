@@ -1,0 +1,61 @@
+name: Deploy MerchantDemo
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Miljø (test eller prod)'
+        required: true
+        type: choice
+        options:
+          - test
+          - prod
+
+jobs:
+  deploy:
+    name: Deploy MerchantDemo til ${{ github.event.inputs.environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Check for package.json
+        id: check_pkg
+        run: |
+          if [ -f "src/Frontend.MerchantDemo/package.json" ]; then
+            echo "has_npm=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_npm=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Installer dependencies
+        if: steps.check_pkg.outputs.has_npm == 'true'
+        working-directory: src/Frontend.MerchantDemo
+        run: npm ci
+
+      - name: Byg MerchantDemo
+        if: steps.check_pkg.outputs.has_npm == 'true'
+        working-directory: src/Frontend.MerchantDemo
+        run: npx ng build --configuration production
+
+      - name: Deploy til TEST Static Web App
+        if: github.event.inputs.environment == 'test'
+        run: |
+          npx @azure/static-web-apps-cli deploy src/Frontend.MerchantDemo \
+            --deployment-token ${{ secrets.SWA_TOKEN_MERCHANT_TEST }} \
+            --env production
+          echo "MerchantDemo deployed til: https://brave-flower-0026a7503.7.azurestaticapps.net"
+
+      - name: Deploy til PROD Static Web App
+        if: github.event.inputs.environment == 'prod'
+        run: |
+          npx @azure/static-web-apps-cli deploy src/Frontend.MerchantDemo \
+            --deployment-token ${{ secrets.SWA_TOKEN_MERCHANT_PROD }} \
+            --env production
+          echo "MerchantDemo deployed til: https://ashy-bay-0e753db03.7.azurestaticapps.net"

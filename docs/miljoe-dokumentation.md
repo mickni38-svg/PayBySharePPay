@@ -128,6 +128,55 @@ Lokalt bruges `SQLEXPRESS` på udviklermaskinen med Windows-autentifikation.
 
 ---
 
+## GitHub Actions CI/CD
+
+Workflows ligger i `.github/workflows/` og køres via GitHub Actions.
+
+### Oversigt
+
+| Workflow | Fil | Trigger | Formål |
+|---|---|---|---|
+| Build & Test | `build.yml` | Automatisk på push til `main` | Validerer .NET build, tests og Angular build |
+| Deploy API | `deploy-api.yml` | **Manuel** (workflow_dispatch) | Deployer .NET API til test eller prod |
+| Deploy Frontend | `deploy-frontend.yml` | **Manuel** (workflow_dispatch) | Deployer Angular frontend til test eller prod |
+| Deploy MerchantDemo | `deploy-merchantdemo.yml` | **Manuel** (workflow_dispatch) | Deployer MerchantDemo til test eller prod |
+
+### Sådan kører du en manuel release
+
+1. Gå til **GitHub → Actions**
+2. Vælg det ønskede workflow (fx "Deploy API")
+3. Klik **"Run workflow"**
+4. Vælg miljø: `test` eller `prod`
+5. Klik **"Run workflow"**
+
+### GitHub Secrets der skal oprettes
+
+Gå til **GitHub → Settings → Secrets and variables → Actions** og opret følgende secrets:
+
+| Secret | Beskrivelse | Værdi |
+|---|---|---|
+| `AZURE_CREDENTIALS` | Service Principal JSON til `az login` i CI | Se nedenfor |
+| `SWA_TOKEN_FRONTEND_TEST` | Deployment token til test-frontend SWA | Fra `deploy-test.ps1`: `$frontendToken` |
+| `SWA_TOKEN_FRONTEND_PROD` | Deployment token til prod-frontend SWA | Fra `deploy-prod.ps1`: `$frontendToken` |
+| `SWA_TOKEN_MERCHANT_TEST` | Deployment token til test-MerchantDemo SWA | Fra `deploy-test.ps1`: `$merchantToken` |
+| `SWA_TOKEN_MERCHANT_PROD` | Deployment token til prod-MerchantDemo SWA | Fra `deploy-prod.ps1`: `$merchantToken` |
+
+### Opret AZURE_CREDENTIALS (Service Principal)
+
+```powershell
+az ad sp create-for-rbac `
+  --name "paybysharepay-github-actions" `
+  --role contributor `
+  --scopes /subscriptions/<SUBSCRIPTION_ID>/resourceGroups/paybysharepay-rg `
+  --sdk-auth
+```
+
+Kopier hele JSON-outputtet og gem det som `AZURE_CREDENTIALS` secret i GitHub.
+
+Find dit subscription ID med: `az account show --query id -o tsv`
+
+---
+
 ## Deploy scripts
 
 Alle deploy scripts ligger i roden af repositoriet og køres fra `C:\Users\Michael\source\repos\PayBySharePPay\`.

@@ -1,36 +1,60 @@
-name: Deploy API til Azure App Service
+name: Deploy API
 
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'src/Api.PayBySharePay/**'
-      - 'src/DataStorage.PayBySharePay/**'
-      - 'src/Service.PayBySharePay/**'
-      - 'src/Tools.PayBySharePay/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Miljø (test eller prod)'
+        required: true
+        type: choice
+        options:
+          - test
+          - prod
 
 jobs:
-  build-and-deploy:
+  deploy:
+    name: Deploy .NET API til ${{ github.event.inputs.environment }}
     runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
 
     steps:
-      - name: Checkout kode
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup .NET 9
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.x'
 
-      - name: Byg og publicer API
+      - name: Publish API
         run: |
           dotnet publish src/Api.PayBySharePay/Api.PayBySharePay.csproj \
             --configuration Release \
-            --output ./publish
+            --output ./publish-output
 
-      - name: Deploy til Azure App Service
-        uses: azure/webapps-deploy@v3
+      - name: Zip output
+        run: zip -r publish-output.zip ./publish-output
+
+      - name: Azure Login
+        uses: azure/login@v2
         with:
-          app-name: paybysharepay-api
-          publish-profile: ${{ secrets.AZURE_API_PUBLISH_PROFILE }}
-          package: ./publish
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy til TEST
+        if: github.event.inputs.environment == 'test'
+        run: |
+          az webapp deploy \
+            --resource-group paybysharepay-rg \
+            --name paybysharepay-api \
+            --src-path publish-output.zip \
+            --type zip
+          echo "API deployed til: https://paybysharepay-api.azurewebsites.net"
+
+      - name: Deploy til PROD
+        if: github.event.inputs.environment == 'prod'
+        run: |
+          az webapp deploy \
+            --resource-group paybysharepay-rg \
+            --name paybysharepay-api-win \
+            --src-path publish-output.zip \
+            --type zip
+          echo "API deployed til: https://paybysharepay-api-win.azurewebsites.net"
