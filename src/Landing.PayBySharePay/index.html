@@ -41,18 +41,14 @@
     }
 
     .hero__logo-img {
-      width: 64px;
-      height: 64px;
+      width: 220px;
+      height: auto;
       object-fit: contain;
     }
 
     .hero__logo-text {
-      font-size: 32px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
+      display: none;
     }
-
-    .hero__logo-text span { color: var(--green); }
 
     .hero__tagline {
       font-size: 22px;
@@ -143,24 +139,21 @@
     }
 
     .screenshots__grid {
-      display: flex;
-      gap: 16px;
-      overflow-x: auto;
-      padding-bottom: 8px;
-      justify-content: center;
-      flex-wrap: wrap;
-      max-width: 1100px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      max-width: 900px;
       margin: 0 auto;
     }
 
     .screenshots__img {
-      height: 480px;
-      width: auto;
-      border-radius: 16px;
+      width: 100%;
+      height: auto;
+      max-height: 300px;
+      border-radius: 12px;
       border: 1px solid var(--border);
       object-fit: contain;
       background: var(--bg);
-      flex-shrink: 0;
     }
 
     /* ── HOW IT WORKS ── */
@@ -271,12 +264,13 @@
            onerror="this.style.display='none'" />
       <div class="hero__logo-text">PayBy<span>Share</span>Pay</div>
     </div>
-    <div class="hero__badge">🚀 Beta – Kom med fra starten</div>
+    <div class="hero__badge">🚧 Kommer snart – Beta er på vej!</div>
     <h1 class="hero__tagline">Del regningen med venner – nemt og ubesværet</h1>
     <p class="hero__sub">
       PayBySharePay gør det enkelt at opdele regninger ved fælles middage, udflugter og gruppebestillinger.
       Opret en ordre, inviter dine venner og lad appen holde styr på hvem der skylder hvad.
     </p>
+    <p style="margin-top:8px; font-size:14px; color:var(--green); font-weight:600;">⏳ Siden er ikke helt klar endnu – vi arbejder på sagen!</p>
   </section>
 
   <!-- FEATURES -->
@@ -320,9 +314,11 @@
   <section class="screenshots">
     <h2 class="screenshots__title">Se appen i aktion</h2>
     <div class="screenshots__grid">
-      <img class="screenshots__img" src="images/screenshot-wizard.png" alt="Opret gruppebetaling – wizard flow" />
-      <img class="screenshots__img" src="images/screenshot-order.png" alt="Ordredetaljer og betalingsstatus" />
-      <img class="screenshots__img" src="images/screenshot-home.png" alt="Forsiden med overblik" />
+      <img class="screenshots__img" src="images/forside.png" alt="Forsiden" />
+      <img class="screenshots__img" src="images/overblik.png" alt="Overblik over ordrer" />
+      <img class="screenshots__img" src="images/beskeder.png" alt="Beskeder" />
+      <img class="screenshots__img" src="images/opretordre.png" alt="Opret ordre" />
+      <img class="screenshots__img" src="images/wizard.png" alt="Wizard flow" />
     </div>
   </section>
 
@@ -363,8 +359,8 @@
 
   <!-- CTA -->
   <section class="cta">
-    <h2 class="cta__title">Klar til at prøve?</h2>
-    <p class="cta__sub">PayBySharePay er i beta. Opret dig og vær med fra starten.</p>
+    <h2 class="cta__title">🚧 Snart klar!</h2>
+    <p class="cta__sub">PayBySharePay er ikke helt klar endnu – men beta er på vej.<br>Hold øje her og vær med fra starten.</p>
     <p class="cta__note">Ingen app-download nødvendig – fungerer direkte i din browser.</p>
   </section>
 
