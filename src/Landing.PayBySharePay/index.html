@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PayBySharePay – Del regningen nemt</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0e1a;
+      --surface: #111827;
+      --border: #1f2937;
+      --green: #2ecc71;
+      --purple: #7c3aed;
+      --text: #f9fafb;
+      --muted: #9ca3af;
+      --font: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.6;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      text-align: center;
+      padding: 64px 24px 48px;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .hero__logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .hero__logo-img {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+    }
+
+    .hero__logo-text {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .hero__logo-text span { color: var(--green); }
+
+    .hero__tagline {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      line-height: 1.3;
+    }
+
+    .hero__sub {
+      font-size: 16px;
+      color: var(--muted);
+      max-width: 520px;
+      margin: 0 auto 36px;
+    }
+
+    .hero__badge {
+      display: inline-block;
+      background: rgba(46,204,113,0.12);
+      border: 1px solid rgba(46,204,113,0.35);
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 20px;
+      padding: 6px 16px;
+      margin-bottom: 40px;
+    }
+
+    /* ── FEATURES ── */
+    .features {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 24px 64px;
+    }
+
+    .features__title {
+      text-align: center;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-size: 12px;
+      margin-bottom: 32px;
+    }
+
+    .features__grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px 20px;
+    }
+
+    .feature-card__icon {
+      font-size: 28px;
+      margin-bottom: 12px;
+    }
+
+    .feature-card__title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .feature-card__desc {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    /* ── SCREENSHOTS ── */
+    .screenshots {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 48px 24px;
+    }
+
+    .screenshots__title {
+      text-align: center;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 32px;
+    }
+
+    .screenshots__grid {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .screenshots__img {
+      height: 480px;
+      width: auto;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      object-fit: contain;
+      background: var(--bg);
+      flex-shrink: 0;
+    }
+
+    /* ── HOW IT WORKS ── */
+    .how {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 64px 24px;
+      text-align: center;
+    }
+
+    .how__title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 32px;
+    }
+
+    .how__steps {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      text-align: left;
+    }
+
+    .how__step {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 20px;
+    }
+
+    .how__step-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(46,204,113,0.15);
+      border: 1.5px solid var(--green);
+      color: var(--green);
+      font-weight: 800;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .how__step-text strong {
+      display: block;
+      font-size: 15px;
+      margin-bottom: 3px;
+    }
+
+    .how__step-text span {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ── CTA ── */
+    .cta {
+      text-align: center;
+      padding: 48px 24px 80px;
+      background: linear-gradient(180deg, transparent, rgba(46,204,113,0.04));
+    }
+
+    .cta__title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .cta__sub {
+      font-size: 15px;
+      color: var(--muted);
+      margin-bottom: 28px;
+    }
+
+    .cta__note {
+      font-size: 12px;
+      color: #4b5563;
+      margin-top: 16px;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      text-align: center;
+      padding: 24px;
+      font-size: 12px;
+      color: #4b5563;
+    }
+
+    @media (max-width: 600px) {
+      .hero__tagline { font-size: 18px; }
+      .screenshots__img { height: 320px; }
+      .hero__logo-text { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero__logo">
+      <img class="hero__logo-img" src="images/logo.png" alt="PayBySharePay logo"
+           onerror="this.style.display='none'" />
+      <div class="hero__logo-text">PayBy<span>Share</span>Pay</div>
+    </div>
+    <div class="hero__badge">🚀 Beta – Kom med fra starten</div>
+    <h1 class="hero__tagline">Del regningen med venner – nemt og ubesværet</h1>
+    <p class="hero__sub">
+      PayBySharePay gør det enkelt at opdele regninger ved fælles middage, udflugter og gruppebestillinger.
+      Opret en ordre, inviter dine venner og lad appen holde styr på hvem der skylder hvad.
+    </p>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features">
+    <p class="features__title">Hvad kan PayBySharePay?</p>
+    <div class="features__grid">
+      <div class="feature-card">
+        <div class="feature-card__icon">🍕</div>
+        <div class="feature-card__title">Gruppebestillinger</div>
+        <div class="feature-card__desc">Opret en fælles ordre til en restaurant eller et arrangement og del udgifterne automatisk.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card__icon">👥</div>
+        <div class="feature-card__title">Inviter deltagere</div>
+        <div class="feature-card__desc">Find og tilføj venner direkte i appen. Alle inviterede kan se og bekræfte deres andel.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card__icon">💬</div>
+        <div class="feature-card__title">Beskeder & påmindelser</div>
+        <div class="feature-card__desc">Send beskeder til deltagerne og udsend automatiske påmindelser til dem der endnu ikke har betalt.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card__icon">📊</div>
+        <div class="feature-card__title">Overblik over ordrer</div>
+        <div class="feature-card__desc">Se alle dine aktive og afsluttede gruppebetalinger på ét sted – både som vært og deltager.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card__icon">🔔</div>
+        <div class="feature-card__title">Aktivitetsfeed</div>
+        <div class="feature-card__desc">Hold dig opdateret med hvad der sker i dine grupper – betalinger, bekræftelser og opdateringer.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card__icon">🏪</div>
+        <div class="feature-card__title">Tilknyt spisested</div>
+        <div class="feature-card__desc">Knyt din ordre til et specifikt spisested så alle ved præcis hvor og hvad der bestilles.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREENSHOTS -->
+  <section class="screenshots">
+    <h2 class="screenshots__title">Se appen i aktion</h2>
+    <div class="screenshots__grid">
+      <img class="screenshots__img" src="images/screenshot-wizard.png" alt="Opret gruppebetaling – wizard flow" />
+      <img class="screenshots__img" src="images/screenshot-order.png" alt="Ordredetaljer og betalingsstatus" />
+      <img class="screenshots__img" src="images/screenshot-home.png" alt="Forsiden med overblik" />
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how">
+    <h2 class="how__title">Sådan virker det</h2>
+    <div class="how__steps">
+      <div class="how__step">
+        <div class="how__step-num">1</div>
+        <div class="how__step-text">
+          <strong>Opret en gruppebetaling</strong>
+          <span>Giv ordren en titel, vælg en emoji og tilknyt et spisested.</span>
+        </div>
+      </div>
+      <div class="how__step">
+        <div class="how__step-num">2</div>
+        <div class="how__step-text">
+          <strong>Inviter dine venner</strong>
+          <span>Søg efter dine venner i appen og tilføj dem som deltagere.</span>
+        </div>
+      </div>
+      <div class="how__step">
+        <div class="how__step-num">3</div>
+        <div class="how__step-text">
+          <strong>Alle bekræfter og bestiller</strong>
+          <span>Hver deltager tilføjer sin bestilling og bekræfter sin andel.</span>
+        </div>
+      </div>
+      <div class="how__step">
+        <div class="how__step-num">4</div>
+        <div class="how__step-text">
+          <strong>Betal din andel</strong>
+          <span>Alle betaler deres del – appen holder styr på hvem der mangler.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <h2 class="cta__title">Klar til at prøve?</h2>
+    <p class="cta__sub">PayBySharePay er i beta. Opret dig og vær med fra starten.</p>
+    <p class="cta__note">Ingen app-download nødvendig – fungerer direkte i din browser.</p>
+  </section>
+
+  <footer>
+    &copy; 2026 PayBySharePay &nbsp;·&nbsp; paybysharepay.dk
+  </footer>
+
+</body>
+</html>
