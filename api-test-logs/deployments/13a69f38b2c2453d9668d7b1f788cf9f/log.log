@@ -1,0 +1,70 @@
+2026-05-19T12:09:57.9274150Z,Updating submodules.,cf22569c-d6e5-4479-aa5b-dd52815fe497,0
+2026-05-19T12:09:57.9742956Z,Preparing deployment for commit id '13a69f38b2'.,9e41f344-8be6-4744-b55e-b74efda7c299,0
+2026-05-19T12:09:58.0211590Z,Running build. Project type: OneDeploy,a35855e8-8d18-4108-a278-e828458f8623,0
+2026-05-19T12:09:58.0367905Z,Copying the manifest,80969b11-3cb3-4d7e-82bd-acc27b76734d,0
+2026-05-19T12:09:58.0524085Z,Clean deploying to C:\home\site\wwwroot,9a0e21de-dadb-4add-837f-34bbbf40de1d,0
+2026-05-19T12:09:58.0680344Z,Generating deployment script.,7b181bfa-7f5d-4d15-b7c4-54e2697a5066,0
+	2026-05-19T12:09:58.1149153Z,Using the following command to generate deployment script: 'azure site deploymentscript -y --no-dot-deployment -r "C:\local\Temp\zipdeploy\extracted" -o "C:\home\site\deployments\tools" --basic --sitePath "C:\local\Temp\zipdeploy\extracted"'.,,0
+	2026-05-19T12:09:58.2555316Z,Generating deployment script for Web Site,,0
+	2026-05-19T12:09:58.2711567Z,Generated deployment script files,,0
+2026-05-19T12:09:58.2867866Z,Running deployment command...,8230bd30-0860-4191-9273-c458584bd0ff,0
+	2026-05-19T12:09:58.2867866Z,Command: "C:\home\site\deployments\tools\deploy.cmd",,0
+	2026-05-19T12:09:58.3961571Z,Handling Basic Web Site deployment.,,0
+	2026-05-19T12:09:58.5211533Z,Creating app_offline.htm,,0
+	2026-05-19T12:09:58.5367774Z,KuduSync.NET from: 'C:\local\Temp\zipdeploy\extracted' to: 'C:\home\site\wwwroot',,0
+	2026-05-19T12:09:58.5367774Z,Deleting file: 'hostingstart.html',,0
+	2026-05-19T12:09:58.5524019Z,Copying file: 'Api.PayBySharePay.deps.json',,0
+	2026-05-19T12:09:58.5524019Z,Copying file: 'Api.PayBySharePay.dll',,0
+	2026-05-19T12:09:58.5524019Z,Copying file: 'Api.PayBySharePay.exe',,0
+	2026-05-19T12:09:58.5680272Z,Copying file: 'Api.PayBySharePay.pdb',,0
+	2026-05-19T12:09:58.5680272Z,Copying file: 'Api.PayBySharePay.runtimeconfig.json',,0
+	2026-05-19T12:09:58.5680272Z,Copying file: 'Api.PayBySharePay.staticwebassets.endpoints.json',,0
+	2026-05-19T12:09:58.5836512Z,Copying file: 'appsettings.Development.json',,0
+	2026-05-19T12:09:58.5836512Z,Copying file: 'appsettings.json',,0
+	2026-05-19T12:09:58.5992816Z,Copying file: 'appsettings.Production.json',,0
+	2026-05-19T12:09:58.5992816Z,Copying file: 'Azure.Core.dll',,0
+	2026-05-19T12:09:58.5992816Z,Copying file: 'Azure.Identity.dll',,0
+	2026-05-19T12:09:58.6156639Z,Copying file: 'DataStorage.PayBySharePay.dll',,0
+	2026-05-19T12:09:58.6156639Z,Copying file: 'DataStorage.PayBySharePay.pdb',,0
+	2026-05-19T12:09:58.6156639Z,Copying file: 'Microsoft.AspNetCore.Authentication.JwtBearer.dll',,0
+	2026-05-19T12:09:58.6312713Z,Copying file: 'Microsoft.AspNetCore.OpenApi.dll',,0
+	2026-05-19T12:09:58.6312713Z,Copying file: 'Microsoft.Bcl.AsyncInterfaces.dll',,0
+	2026-05-19T12:09:58.6312713Z,Copying file: 'Microsoft.Data.SqlClient.dll',,0
+	2026-05-19T12:09:58.6469135Z,Copying file: 'Microsoft.EntityFrameworkCore.Abstractions.dll',,0
+	2026-05-19T12:09:58.6469135Z,Copying file: 'Microsoft.EntityFrameworkCore.dll',,0
+	2026-05-19T12:09:58.6625390Z,Copying file: 'Microsoft.EntityFrameworkCore.Relational.dll',,0
+	2026-05-19T12:09:58.6625390Z,Copying file: 'Microsoft.EntityFrameworkCore.SqlServer.dll',,0
+	2026-05-19T12:09:58.6625390Z,Copying file: 'Microsoft.Extensions.Caching.Abstractions.dll',,0
+	2026-05-19T12:09:58.6781662Z,Copying file: 'Microsoft.Extensions.Caching.Memory.dll',,0
+	2026-05-19T12:09:58.6781662Z,Copying file: 'Microsoft.Extensions.Configuration.Abstractions.dll',,0
+	2026-05-19T12:09:58.6781662Z,Copying file: 'Microsoft.Extensions.DependencyInjection.Abstractions.dll',,0
+	2026-05-19T12:09:58.6937899Z,Copying file: 'Microsoft.Extensions.DependencyInjection.dll',,0
+	2026-05-19T12:09:58.6937899Z,Copying file: 'Microsoft.Extensions.Logging.Abstractions.dll',,0
+	2026-05-19T12:09:58.7094130Z,Copying file: 'Microsoft.Extensions.Logging.dll',,0
+	2026-05-19T12:09:58.7094130Z,Copying file: 'Microsoft.Extensions.Options.dll',,0
+	2026-05-19T12:09:58.7094130Z,Copying file: 'Microsoft.Extensions.Primitives.dll',,0
+	2026-05-19T12:09:58.7250374Z,Copying file: 'Microsoft.Identity.Client.dll',,0
+	2026-05-19T12:09:58.7250374Z,Copying file: 'Microsoft.Identity.Client.Extensions.Msal.dll',,0
+	2026-05-19T12:09:58.7250374Z,Copying file: 'Microsoft.IdentityModel.Abstractions.dll',,0
+	2026-05-19T12:09:58.7406623Z,Copying file: 'Microsoft.IdentityModel.JsonWebTokens.dll',,0
+	2026-05-19T12:09:58.7406623Z,Copying file: 'Microsoft.IdentityModel.Logging.dll',,0
+	2026-05-19T12:09:58.7562906Z,Copying file: 'Microsoft.IdentityModel.Protocols.dll',,0
+	2026-05-19T12:09:58.7562906Z,Copying file: 'Microsoft.IdentityModel.Protocols.OpenIdConnect.dll',,0
+	2026-05-19T12:09:58.7562906Z,Copying file: 'Microsoft.IdentityModel.Tokens.dll',,0
+	2026-05-19T12:09:58.7719093Z,Copying file: 'Microsoft.OpenApi.dll',,0
+	2026-05-19T12:09:58.7719093Z,Copying file: 'Microsoft.SqlServer.Server.dll',,0
+	2026-05-19T12:09:58.7719093Z,Copying file: 'Service.PayBySharePay.dll',,0
+	2026-05-19T12:09:58.7875362Z,Copying file: 'Service.PayBySharePay.pdb',,0
+	2026-05-19T12:09:58.7875362Z,Copying file: 'Swashbuckle.AspNetCore.Swagger.dll',,0
+	2026-05-19T12:09:58.7875362Z,Copying file: 'Swashbuckle.AspNetCore.SwaggerGen.dll',,0
+	2026-05-19T12:09:58.8031609Z,Copying file: 'Swashbuckle.AspNetCore.SwaggerUI.dll',,0
+	2026-05-19T12:09:58.8031609Z,Copying file: 'System.ClientModel.dll',,0
+	2026-05-19T12:09:58.8187859Z,Copying file: 'System.Configuration.ConfigurationManager.dll',,0
+	2026-05-19T12:09:58.8187859Z,Omitting next output lines...,,0
+	2026-05-19T12:09:58.8187859Z,Finished successfully.,,0
+2026-05-19T12:09:58.8344101Z,Build completed succesfully.,ea476371-e45a-484c-8ab5-3698033eb9f7,0
+2026-05-19T12:09:58.8656661Z,Running post deployment command(s)...,80d20f15-d53e-4c1f-819d-d7243ad69a6c,0
+2026-05-19T12:09:58.8812848Z,Requesting site restart,d76a6ecf-c953-45eb-bd06-23cb2961c7e6,0
+2026-05-19T12:09:58.8969092Z,Requesting site restart. Attempt #1,6fa4dae3-032c-4cb0-97b9-a54a4d857a05,0
+2026-05-19T12:09:59.2094045Z,Successfully requested a restart. Attempt #1,245693c3-8168-4826-bb2f-f53b82d21ebf,0
+2026-05-19T12:09:59.2250362Z,Deployment successful.,90ad03f5-3cd1-4a16-9750-f15f7c971307,0
