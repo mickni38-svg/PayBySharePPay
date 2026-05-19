@@ -123,6 +123,93 @@
       color: var(--muted);
     }
 
+    /* ── CONCEPT ── */
+    .concept {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 24px 64px;
+    }
+
+    .concept__title {
+      text-align: center;
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .concept__sub {
+      text-align: center;
+      font-size: 15px;
+      color: var(--muted);
+      margin-bottom: 36px;
+    }
+
+    .concept__flow {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0;
+      position: relative;
+    }
+
+    .concept__step {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px 20px;
+      margin: 6px;
+      position: relative;
+    }
+
+    .concept__step--host {
+      border-color: var(--green);
+      background: rgba(46,204,113,0.06);
+    }
+
+    .concept__step-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .concept__step-label--host {
+      color: var(--green);
+    }
+
+    .concept__step-icon {
+      font-size: 28px;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .concept__step-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .concept__step-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .concept__note {
+      margin-top: 24px;
+      background: rgba(46,204,113,0.08);
+      border: 1px solid rgba(46,204,113,0.3);
+      border-radius: 12px;
+      padding: 18px 24px;
+      text-align: center;
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .concept__note strong { color: var(--green); }
+
     /* ── SCREENSHOTS ── */
     .screenshots {
       background: var(--surface);
@@ -268,7 +355,7 @@
     <h1 class="hero__tagline">Del regningen med venner – nemt og ubesværet</h1>
     <p class="hero__sub">
       PayBySharePay gør det enkelt at opdele regninger ved fælles middage, udflugter og gruppebestillinger.
-      Opret en ordre, inviter dine venner og lad appen holde styr på hvem der skylder hvad.
+      Hver deltager betaler sin andel i appen – og først når <strong style="color:var(--green)">hosten trykker "Betal for ordre"</strong>, gennemføres den samlede betaling til spisestedet.
     </p>
     <p style="margin-top:8px; font-size:14px; color:var(--green); font-weight:600;">⏳ Siden er ikke helt klar endnu – vi arbejder på sagen!</p>
   </section>
@@ -310,6 +397,35 @@
     </div>
   </section>
 
+  <!-- CONCEPT: BETALINGSMODEL -->
+  <section class="concept">
+    <h2 class="concept__title">💡 Sådan fungerer betalingen</h2>
+    <p class="concept__sub">PayBySharePay bruger en unik model: alle betaler hver for sig – men betalingen til spisestedet sker først når hosten godkender.</p>
+    <div class="concept__flow">
+      <div class="concept__step">
+        <span class="concept__step-label">Trin 1 – Deltagere</span>
+        <span class="concept__step-icon">👥</span>
+        <div class="concept__step-title">Hver deltager betaler sin andel</div>
+        <div class="concept__step-desc">Alle i gruppen bekræfter og betaler præcis det de skylder – deres egen del af regningen. Ingen mere, ingen mindre.</div>
+      </div>
+      <div class="concept__step">
+        <span class="concept__step-label">Trin 2 – Appen</span>
+        <span class="concept__step-icon">📊</span>
+        <div class="concept__step-title">Appen samler alle betalinger</div>
+        <div class="concept__step-desc">PayBySharePay holder styr på hvem der har betalt og hvem der mangler. Hosten kan sende påmindelser direkte i appen.</div>
+      </div>
+      <div class="concept__step concept__step--host">
+        <span class="concept__step-label concept__step-label--host">Trin 3 – Host ✦ Nøglehandling</span>
+        <span class="concept__step-icon">🟢</span>
+        <div class="concept__step-title">Host trykker "Betal for ordre"</div>
+        <div class="concept__step-desc">Først når hosten aktivt godkender og trykker <em>"Betal for ordre"</em>, gennemføres den samlede betaling til spisestedet. Ingen betaling sker uden hostens godkendelse.</div>
+      </div>
+    </div>
+    <div class="concept__note">
+      🔒 <strong>Tryghed for alle parter:</strong> Deltagerne betaler kun deres andel. Spisestedet modtager én samlet betaling. Og intet gennemføres før <strong>hosten godkender</strong> – så ingen penge forsvinder uden kontrol.
+    </div>
+  </section>
+
   <!-- SCREENSHOTS -->
   <section class="screenshots">
     <h2 class="screenshots__title">Se appen i aktion</h2>
@@ -343,15 +459,15 @@
       <div class="how__step">
         <div class="how__step-num">3</div>
         <div class="how__step-text">
-          <strong>Alle bekræfter og bestiller</strong>
-          <span>Hver deltager tilføjer sin bestilling og bekræfter sin andel.</span>
+          <strong>Alle bekræfter og betaler sin andel</strong>
+          <span>Hver deltager tilføjer sin bestilling og betaler præcis sin del – uafhængigt af de andre.</span>
         </div>
       </div>
       <div class="how__step">
         <div class="how__step-num">4</div>
         <div class="how__step-text">
-          <strong>Betal din andel</strong>
-          <span>Alle betaler deres del – appen holder styr på hvem der mangler.</span>
+          <strong>Host trykker "Betal for ordre" – og først da sker betalingen</strong>
+          <span>Når alle har betalt, godkender hosten ordren med ét tryk. Det er dette tryk der sender den samlede betaling til spisestedet. Ingen betaling gennemføres uden hostens godkendelse.</span>
         </div>
       </div>
     </div>
