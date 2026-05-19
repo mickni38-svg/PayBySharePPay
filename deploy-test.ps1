@@ -14,8 +14,8 @@ $root = $PSScriptRoot
 # ── TEST tokens & navne (udfyld disse efter oprettelse i Azure) ───────────────
 $frontendToken    = "c983d46899f341dbad098bb0ad4f251c8b13150782045daecea5beca01d2ca3707-dda790ba-ab14-4d17-8b73-281db93b571600309050d01c1003"
 $merchantToken    = "c56b5ab225d28fe06caf5d075acadb199951d514136db9c001180363f2f129b607-2386f39d-4f8b-464d-920c-5f16b66bd24a00316290026a7503"
-$apiResourceGroup = "paybysharepay-test-rg"      # ret til dit test resource group navn
-$apiAppName       = "paybysharepay-api-test"      # ret til dit test App Service navn
+$apiResourceGroup = "paybysharepay-rg"
+$apiAppName       = "paybysharepay-api"
 
 Write-Host ""
 Write-Host "======================================" -ForegroundColor Magenta

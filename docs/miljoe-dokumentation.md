@@ -47,7 +47,7 @@ Begge miljøer kører på den samme Azure resource group `paybysharepay-rg` i re
 | Database (prod) | Azure SQL Database | `PayBySharePay` |
 | Database (test) | Azure SQL Database | `PayBySharePay-Test` |
 | API (prod) | App Service (Windows) | `paybysharepay-api-win` |
-| API (test) | App Service (Linux) | `paybysharepay-api` |
+| API (test) | App Service (Windows) | `paybysharepay-api` |
 | Frontend | Static Web App | `paybysharepay-frontend` |
 | Merchant Demo | Static Web App | `paybysharepay-merchant-demo` |
 | Landing Page | Static Web App | `paybysharepay-landing` |
