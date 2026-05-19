@@ -13,7 +13,7 @@ $ErrorActionPreference = "Stop"
 $root = $PSScriptRoot
 
 # ── Landing page token (udfyld efter oprettelse i Azure) ─────────────────────
-$landingToken = "<INDSÆT_LANDING_PAGE_DEPLOYMENT_TOKEN>"
+$landingToken = "9583436123cd5a2d9283d021e0252cadd4b7ba7b03561771f3f36d671b4e68ce07-a4dbc2f2-d798-43c4-b031-bbe979d87497003282006a8d2c03"
 
 Write-Host ""
 Write-Host "======================================" -ForegroundColor Cyan
@@ -38,5 +38,5 @@ Write-Host ""
 Write-Host "======================================" -ForegroundColor Green
 Write-Host " LANDING PAGE DEPLOY FAERDIG!" -ForegroundColor Green
 Write-Host "======================================" -ForegroundColor Green
-Write-Host "Landing page: https://paybysharepay.dk" -ForegroundColor Green
+Write-Host "Landing page: https://victorious-smoke-06a8d2c03.7.azurestaticapps.net (paybysharepay.dk)" -ForegroundColor Green
 Write-Host ""

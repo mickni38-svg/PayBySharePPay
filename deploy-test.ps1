@@ -12,8 +12,8 @@ $ErrorActionPreference = "Stop"
 $root = $PSScriptRoot
 
 # ── TEST tokens & navne (udfyld disse efter oprettelse i Azure) ───────────────
-$frontendToken    = "<INDSÆT_FRONTEND_TEST_DEPLOYMENT_TOKEN>"
-$merchantToken    = "<INDSÆT_MERCHANT_TEST_DEPLOYMENT_TOKEN>"
+$frontendToken    = "c983d46899f341dbad098bb0ad4f251c8b13150782045daecea5beca01d2ca3707-dda790ba-ab14-4d17-8b73-281db93b571600309050d01c1003"
+$merchantToken    = "c56b5ab225d28fe06caf5d075acadb199951d514136db9c001180363f2f129b607-2386f39d-4f8b-464d-920c-5f16b66bd24a00316290026a7503"
 $apiResourceGroup = "paybysharepay-test-rg"      # ret til dit test resource group navn
 $apiAppName       = "paybysharepay-api-test"      # ret til dit test App Service navn
 
@@ -71,7 +71,7 @@ Write-Host ""
 Write-Host "======================================" -ForegroundColor Green
 Write-Host " TEST DEPLOY FAERDIG!" -ForegroundColor Green
 Write-Host "======================================" -ForegroundColor Green
-Write-Host "Frontend (TEST):      https://<din-test-swa-url>.azurestaticapps.net" -ForegroundColor Green
-Write-Host "MerchantDemo (TEST):  https://<din-test-merchant-swa-url>.azurestaticapps.net" -ForegroundColor Green
+Write-Host "Frontend (TEST):      https://purple-coast-0d01c1003.7.azurestaticapps.net" -ForegroundColor Green
+Write-Host "MerchantDemo (TEST):  https://brave-flower-0026a7503.7.azurestaticapps.net" -ForegroundColor Green
 Write-Host "API (TEST):           https://$apiAppName.azurewebsites.net" -ForegroundColor Green
 Write-Host ""

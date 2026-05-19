@@ -151,10 +151,10 @@ Dette deployer til det eksisterende produktionsmiljø som paybysharepay.dk **ikk
 - **MerchantDemo SWA:** `ashy-bay-0e753db03.7.azurestaticapps.net`
 - **API App Service:** `paybysharepay-api-win` (resource group: `paybysharepay-rg`)
 
-### Test (skal oprettes – se ovenfor)
-- **Frontend SWA:** `paybysharepay-frontend-test` (resource group: `paybysharepay-test-rg`)
-- **MerchantDemo SWA:** `paybysharepay-merchant-test` (resource group: `paybysharepay-test-rg`)
-- **API App Service:** `paybysharepay-api-test` (resource group: `paybysharepay-test-rg`)
+### Test (oprettet)
+- **Frontend SWA:** `purple-coast-0d01c1003.7.azurestaticapps.net` (resource group: `paybysharepay-test-rg`)
+- **MerchantDemo SWA:** `brave-flower-0026a7503.7.azurestaticapps.net` (resource group: `paybysharepay-test-rg`)
+- **API App Service:** `paybysharepay-api-test.azurewebsites.net` (resource group: `paybysharepay-test-rg`)
 
-### Landing Page (skal oprettes – se ovenfor)
-- **Landing SWA:** `paybysharepay-landing` → peger på `paybysharepay.dk`
+### Landing Page (oprettet)
+- **Landing SWA:** `victorious-smoke-06a8d2c03.7.azurestaticapps.net` → skal pege på `paybysharepay.dk`
