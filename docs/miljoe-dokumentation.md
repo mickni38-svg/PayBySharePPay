@@ -23,6 +23,8 @@ Begge miljøer kører på den samme Azure resource group `paybysharepay-rg` i re
 | API (.NET 9) | Azure App Service: `paybysharepay-api` | https://paybysharepay-api.azurewebsites.net |
 | Database | Azure SQL: `PayBySharePay-Test` på server `paybysharepay-server` | paybysharepay-server.database.windows.net |
 
+> **Vigtigt:** Angular-frontend til test bygges med `--configuration test`, som bruger `environment.test.ts` og peger på test-API `paybysharepay-api.azurewebsites.net`.
+
 ### Produktion
 
 | Komponent | Ressource | URL |

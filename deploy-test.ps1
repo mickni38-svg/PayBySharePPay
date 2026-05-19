@@ -30,10 +30,10 @@ if ($frontendToken -like "*INDSÆT*" -or $merchantToken -like "*INDSÆT*") {
 	exit 1
 }
 
-Write-Host "Trin 1/6 - Bygger Angular (production)..." -ForegroundColor Cyan
+Write-Host "Trin 1/6 - Bygger Angular (test)..." -ForegroundColor Cyan
 Set-Location "$root\src\Frontend.PayBySharePay"
 npm ci --silent
-npx ng build --configuration production
+npx ng build --configuration test
 if ($LASTEXITCODE -ne 0) { Write-Host "Angular build fejlede!" -ForegroundColor Red; exit 1 }
 
 Write-Host "Trin 2/6 - Deployer Angular til Azure Static Web Apps (TEST)..." -ForegroundColor Cyan
