@@ -124,6 +124,13 @@ if (!app.Environment.IsDevelopment())
 app.UseAuthentication();
 app.UseAuthorization();
 
+
 app.MapControllers();
+
+// Redirect root til Swagger UI på Azure
+app.MapGet("/", context => {
+    context.Response.Redirect("/swagger");
+    return Task.CompletedTask;
+});
 
 app.Run();
