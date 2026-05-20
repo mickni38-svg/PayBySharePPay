@@ -21,13 +21,13 @@ jobs:
           dotnet-version: '9.x'
 
       - name: Restore
-        run: dotnet restore PayBySharePay.sln
+        run: dotnet restore ./PayBySharePay.sln
 
       - name: Build
-        run: dotnet build PayBySharePay.sln --configuration Release --no-restore
+        run: dotnet build ./PayBySharePay.sln --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test PayBySharePay.sln --configuration Release --no-build --verbosity normal
+        run: dotnet test ./PayBySharePay.sln --configuration Release --no-build --verbosity normal
 
   build-frontend:
     name: Build Angular Frontend
