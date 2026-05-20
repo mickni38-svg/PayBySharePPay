@@ -10,7 +10,7 @@ env:
   API_APP_NAME: paybysharepay-api
 
 jobs:
-  deploy-frontend:
+  deploy-all:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -31,18 +31,8 @@ jobs:
       - name: Deploy Angular to Azure Static Web Apps (TEST)
         run: npx @azure/static-web-apps-cli deploy ./dist/Frontend.PayBySharePay --deployment-token $FRONTEND_TOKEN --env production
 
-  deploy-merchantdemo:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
       - name: Deploy MerchantDemo to Azure Static Web Apps (TEST)
         run: npx @azure/static-web-apps-cli deploy ./src/Frontend.MerchantDemo --deployment-token $MERCHANT_TOKEN --env production
-
-  deploy-api:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
       - name: Setup .NET 9
         uses: actions/setup-dotnet@v4
