@@ -27,12 +27,12 @@ builder.Services.AddCors(options =>
                   "http://localhost:8081", "https://localhost:8081",
                   // Prod frontend
                   "https://icy-water-0750d2703.7.azurestaticapps.net",
-                  "https://ashy-bay-0e753db03.7.azurestaticapps.net",
+                  "https://ashy-bay-0e753db03.7.azurestaticapps.net",//merchant-demo
                   "https://paybysharepay.dk",
                   "https://www.paybysharepay.dk",
                   // Test frontend
                   "https://purple-coast-0d01c1003.7.azurestaticapps.net",
-                  "https://brave-flower-0026a7503.7.azurestaticapps.net"
+                  "https://brave-flower-0026a7503.7.azurestaticapps.net"//merchant-demo
               )
               .AllowAnyHeader()
               .AllowAnyMethod();
