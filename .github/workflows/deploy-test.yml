@@ -1,0 +1,65 @@
+name: Deploy All Projects to TEST
+
+on:
+  workflow_dispatch:
+
+env:
+  FRONTEND_TOKEN: ${{ secrets.SWA_TOKEN_FRONTEND_TEST }}
+  MERCHANT_TOKEN: ${{ secrets.SWA_TOKEN_MERCHANT_TEST }}
+  API_RESOURCE_GROUP: paybysharepay-rg
+  API_APP_NAME: paybysharepay-api
+
+jobs:
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: src/Frontend.PayBySharePay
+        run: npm ci
+
+      - name: Build Angular (test)
+        working-directory: src/Frontend.PayBySharePay
+        run: npx ng build --configuration test
+
+      - name: Deploy Angular to Azure Static Web Apps (TEST)
+        run: npx @azure/static-web-apps-cli deploy ./dist/frontend.paybysharepay --deployment-token $FRONTEND_TOKEN --env production
+
+  deploy-merchantdemo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy MerchantDemo to Azure Static Web Apps (TEST)
+        run: npx @azure/static-web-apps-cli deploy ./src/Frontend.MerchantDemo --deployment-token $MERCHANT_TOKEN --env production
+
+  deploy-api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.x'
+
+      - name: Publish .NET API
+        run: dotnet publish src/Api.PayBySharePay/Api.PayBySharePay.csproj --configuration Release --output ./publish-output
+
+      - name: Zip publish output
+        run: zip -r publish-output.zip ./* 
+        working-directory: ./publish-output
+
+      - name: Azure CLI login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy API to Azure App Service (TEST)
+        run: az webapp deploy --resource-group $API_RESOURCE_GROUP --name $API_APP_NAME --src-path ./publish-output/publish-output.zip --type zip
