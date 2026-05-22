@@ -24,9 +24,14 @@ jobs:
         working-directory: src/Frontend.PayBySharePay
         run: npm ci
 
+
       - name: Build Angular (test)
         working-directory: src/Frontend.PayBySharePay
         run: npx ng build --configuration test
+
+      - name: List dist folder contents
+        working-directory: src/Frontend.PayBySharePay
+        run: ls -l ./dist
 
       - name: Deploy Angular to Azure Static Web Apps (TEST)
         working-directory: src/Frontend.PayBySharePay
