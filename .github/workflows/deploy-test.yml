@@ -29,7 +29,8 @@ jobs:
         run: npx ng build --configuration test
 
       - name: Deploy Angular to Azure Static Web Apps (TEST)
-        run: npx @azure/static-web-apps-cli deploy src/Frontend.PayBySharePay/dist/Frontend.PayBySharePay --deployment-token $FRONTEND_TOKEN --env production
+        working-directory: src/Frontend.PayBySharePay
+        run: npx @azure/static-web-apps-cli deploy ./dist/Frontend.PayBySharePay --deployment-token $FRONTEND_TOKEN --env production
 
       - name: Deploy MerchantDemo to Azure Static Web Apps (TEST)
         run: npx @azure/static-web-apps-cli deploy ./src/Frontend.MerchantDemo --deployment-token $MERCHANT_TOKEN --env production
