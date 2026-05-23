@@ -108,13 +108,6 @@ builder.Services.AddServiceLayer();
 
 var app = builder.Build();
 
-// Kør migrations automatisk ved opstart (sikrer DB er opdateret på Azure)
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<PayBySharePayDbContext>();
-    db.Database.Migrate();
-}
-
 app.UseSwagger();
 app.UseSwaggerUI(options =>
 {
