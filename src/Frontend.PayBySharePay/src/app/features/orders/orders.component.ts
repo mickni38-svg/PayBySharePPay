@@ -21,7 +21,6 @@ interface OrderCardVM {
   participantCount: number;
   paidParticipantCount: number;
   canPayTotalOrder: boolean;
-  canPayOwnShare: boolean;
   allPaid: boolean;
   canShowOrderLines: boolean;
   participants: OrderParticipantApiDto[];
@@ -156,8 +155,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
       participantCount: nonMerchant.length,
       paidParticipantCount: paidCount,
       canPayTotalOrder: isHost,
-      canPayOwnShare: !isHost && (myPart?.status === 'Invited' || myPart?.status === 'Accepted'),
-      allPaid: nonMerchant.length > 0 && paidCount === nonMerchant.length,
+      allPaid:
       canShowOrderLines: canShow,
       participants: nonMerchant,
       participantOrderLines: visibleLines,
@@ -271,11 +269,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
     alert(`Betal ordre #${id} til spisestedet — implementeres i næste step`);
   }
 
-  payShare(id: number): void {
-    alert(`Betal din andel for ordre #${id} — implementeres i næste step`);
-  }
-
-  goCreate(): void { this.router.navigate(['/orders/create']); }
+  goCreate
 
   statusLabel(s: string): string {
     const map: Record<string, string> = {
