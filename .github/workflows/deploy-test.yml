@@ -60,15 +60,8 @@ jobs:
       - name: Deploy API to Azure App Service (TEST)
         run: az webapp deploy --resource-group $API_RESOURCE_GROUP --name $API_APP_NAME --src-path ./publish-output/publish-output.zip --type zip
 
-      - name: Install go-sqlcmd
-        run: |
-          SQLCMD_VERSION="1.8.2"
-          curl -sSL "https://github.com/microsoft/go-sqlcmd/releases/download/v${SQLCMD_VERSION}/sqlcmd-linux-amd64.tar.bz2" -o sqlcmd.tar.bz2
-          tar -xjf sqlcmd.tar.bz2 sqlcmd
-          sudo mv sqlcmd /usr/local/bin/sqlcmd-go
-          sqlcmd-go --version
-
       - name: Run database migrations (Azure AD token)
-        run: |
-          TOKEN=$(az account get-access-token --resource https://database.windows.net --query accessToken -o tsv)
-          sqlcmd-go -S paybysharepay-server.database.windows.net -d PayBySharePay-Test --access-token "$TOKEN" -i migrate-test.sql
+        uses: azure/sql-action@v2
+        with:
+          connection-string: 'Server=paybysharepay-server.database.windows.net;Database=PayBySharePay-Test;Authentication=Active Directory Default;Encrypt=True;'
+          path: migrate-test.sql
