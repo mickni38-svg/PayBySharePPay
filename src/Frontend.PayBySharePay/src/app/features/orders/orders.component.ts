@@ -155,7 +155,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
       participantCount: nonMerchant.length,
       paidParticipantCount: paidCount,
       canPayTotalOrder: isHost,
-      allPaid:
+      allPaid: nonMerchant.length > 0 && paidCount === nonMerchant.length,
       canShowOrderLines: canShow,
       participants: nonMerchant,
       participantOrderLines: visibleLines,
@@ -187,7 +187,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
         o.participants.some(p => p.participantId === userId))
       .map(o => this.buildVM(o));
     if (this.filterPending()) {
-      list = list.filter(vm => vm.canPayOwnShare);
+      list = list.filter(vm => !vm.allPaid);
     }
     return list;
   });
@@ -269,9 +269,9 @@ export class OrdersComponent implements OnInit, OnDestroy {
     alert(`Betal ordre #${id} til spisestedet — implementeres i næste step`);
   }
 
-  goCreate
+  goCreate(): void { this.router.navigate(['/orders/create']); }
 
-  statusLabel(s: string): string {
+  statusLabel
     const map: Record<string, string> = {
       Collecting: 'Samler',
       WaitingForPayment: 'Afventer betaling',
