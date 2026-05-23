@@ -35,10 +35,10 @@ jobs:
 
       - name: Deploy Angular to Azure Static Web Apps (TEST)
         working-directory: src/Frontend.PayBySharePay
-        run: npx @azure/static-web-apps-cli deploy ./dist/frontend.paybysharepay --deployment-token $FRONTEND_TOKEN --env production
+        run: npx @azure/static-web-apps-cli deploy ./dist/frontend.paybysharepay --deployment-token $FRONTEND_TOKEN --env default
 
       - name: Deploy MerchantDemo to Azure Static Web Apps (TEST)
-        run: npx @azure/static-web-apps-cli deploy ./src/Frontend.MerchantDemo --deployment-token $MERCHANT_TOKEN --env production
+        run: npx @azure/static-web-apps-cli deploy ./src/Frontend.MerchantDemo --deployment-token $MERCHANT_TOKEN --env default
 
       - name: Setup .NET 9
         uses: actions/setup-dotnet@v4
@@ -62,12 +62,13 @@ jobs:
 
       - name: Install go-sqlcmd
         run: |
-          curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
-          sudo add-apt-repository "$(wget -qO- https://packages.microsoft.com/config/ubuntu/22.04/prod.list)"
-          sudo apt-get update -qq
-          sudo apt-get install -y sqlcmd
+          SQLCMD_VERSION="1.8.2"
+          curl -sSL "https://github.com/microsoft/go-sqlcmd/releases/download/v${SQLCMD_VERSION}/sqlcmd-linux-amd64.tar.gz" -o sqlcmd.tar.gz
+          tar -xzf sqlcmd.tar.gz sqlcmd
+          sudo mv sqlcmd /usr/local/bin/sqlcmd-go
+          sqlcmd-go --version
 
       - name: Run database migrations (Azure AD token)
         run: |
           TOKEN=$(az account get-access-token --resource https://database.windows.net --query accessToken -o tsv)
-          sqlcmd -S paybysharepay-server.database.windows.net -d PayBySharePay-Test --token "$TOKEN" -i migrate-test.sql
+          sqlcmd-go -S paybysharepay-server.database.windows.net -d PayBySharePay-Test --token "$TOKEN" -i migrate-test.sql
