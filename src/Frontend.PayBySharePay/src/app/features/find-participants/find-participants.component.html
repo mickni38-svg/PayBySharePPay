@@ -45,6 +45,26 @@
         }
       }
 
+      @if (friendMerchants().length > 0) {
+        <p class="find__section-heading">Spisesteder</p>
+        @for (e of friendMerchants(); track e.id) {
+          <div class="row" [class.row--selected]="e.selected" (click)="toggleSelect(e)">
+            <div class="row__avatar" [style.background]="e.avatarColor">
+              <span class="row__initials">{{ e.initials }}</span>
+            </div>
+            <div class="row__info">
+              <span class="row__name">{{ e.displayName }}</span>
+              <span class="row__badge badge badge--orange">SPISESTED</span>
+            </div>
+            <div class="row__check" [class.row__check--on]="e.selected">
+              @if (e.selected) {
+                <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              }
+            </div>
+          </div>
+        }
+      }
+
     } @else if (isLoading()) {
       <p class="find__state">Henter...</p>
     } @else if (errorMessage()) {

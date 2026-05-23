@@ -98,11 +98,27 @@ public class OrderService : IOrderService
         var allDrafts = order.MerchantOrderDrafts.ToList();
         var draft = allDrafts.FirstOrDefault(); // bruges kun til totalAmount/status
 
-        // Betalingsstatus pr. deltager – brug OrderParticipant.Status = "Paid"
+        // Betalingsstatus pr. deltager – tjek både OrderParticipant.Status og Payments tabel
+        var paidViaPayments = order.Payments
+            .Where(p => p.Status == "Completed")
+            .Select(p => p.ParticipantId)
+            .ToHashSet();
         var paidParticipantIds = order.OrderParticipants
             .Where(op => op.Status == "Paid")
             .Select(op => op.ParticipantId)
             .ToHashSet();
+        // Merge begge kilder
+        paidParticipantIds.UnionWith(paidViaPayments);
+
+        // Synkroniser OrderParticipant.Status hvis betaling er registreret men status ikke opdateret
+        foreach (var op in order.OrderParticipants.Where(op => paidViaPayments.Contains(op.ParticipantId) && op.Status != "Paid"))
+        {
+            op.Status = "Paid";
+        }
+        if (order.OrderParticipants.Any(op => paidViaPayments.Contains(op.ParticipantId) && op.Status == "Paid"))
+        {
+            await _orderRepository.SaveChangesAsync();
+        }
 
         // Byg ordrelinjer pr. deltager
         var participantOrderLines = new List<ParticipantOrderLinesDto>();
