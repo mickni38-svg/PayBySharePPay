@@ -225,18 +225,14 @@
   const merchantId = parseInt(params.get('merchantId')) || null;
   const participantToken = params.get('participantToken') || null;
 
-  // API base URL – vælg automatisk baseret på hostname (ignorer evt. &api= i URL)
+  // API base URL – vælg automatisk baseret på hostname
   // Lokal: localhost / 127.0.0.1
-  // TEST:  ashy-bay-0e753db03.7.azurestaticapps.net
-  // PROD:  alt andet (fx paybysharepay.azurestaticapps.net / eget domæne)
+  // TEST:  brave-flower-0026a7503.7.azurestaticapps.net
   const hostname = window.location.hostname;
   const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
-  const isTest  = !isLocal && hostname.includes('brave-flower-0026a7503');
   const API_BASE = isLocal
     ? 'http://localhost:5071'
-    : isTest
-      ? 'https://paybysharepay-api.azurewebsites.net'
-      : 'https://paybysharepay-api-win.azurewebsites.net';
+    : 'https://paybysharepay-api.azurewebsites.net';
 
   document.getElementById('groupLabel').textContent =
     orderId ? `Ordre #${orderId}` : 'Mangler orderId i URL (brug ?orderId=X&merchantId=Y&participantToken=Z)';

@@ -1,21 +1,12 @@
-name: Deploy Frontend
+name: Deploy Frontend til TEST
 
 on:
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Miljø (test eller prod)'
-        required: true
-        type: choice
-        options:
-          - test
-          - prod
 
 jobs:
   deploy:
-    name: Deploy Angular Frontend til ${{ github.event.inputs.environment }}
+    name: Deploy Angular Frontend til TEST
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }}
 
     steps:
       - uses: actions/checkout@v4
@@ -32,29 +23,13 @@ jobs:
         run: npm ci
 
       - name: Byg Angular (TEST)
-        if: github.event.inputs.environment == 'test'
         working-directory: src/Frontend.PayBySharePay
         run: npx ng build --configuration test
 
-      - name: Byg Angular (PROD)
-        if: github.event.inputs.environment == 'prod'
-        working-directory: src/Frontend.PayBySharePay
-        run: npx ng build --configuration production
-
       - name: Deploy til TEST Static Web App
-        if: github.event.inputs.environment == 'test'
         working-directory: src/Frontend.PayBySharePay
         run: |
           npx @azure/static-web-apps-cli deploy ./dist/frontend.paybysharepay \
             --deployment-token ${{ secrets.SWA_TOKEN_FRONTEND_TEST }} \
             --env production
           echo "Frontend deployed til: https://purple-coast-0d01c1003.7.azurestaticapps.net"
-
-      - name: Deploy til PROD Static Web App
-        if: github.event.inputs.environment == 'prod'
-        working-directory: src/Frontend.PayBySharePay
-        run: |
-          npx @azure/static-web-apps-cli deploy ./dist/frontend.paybysharepay \
-            --deployment-token ${{ secrets.SWA_TOKEN_FRONTEND_PROD }} \
-            --env production
-          echo "Frontend deployed til: https://icy-water-0750d2703.7.azurestaticapps.net"

@@ -1,0 +1,68 @@
+2026-05-23T21:21:34.9284180Z,Updating submodules.,470b8add-a905-4091-8d45-bb838c4dab3f,0
+2026-05-23T21:21:34.9596621Z,Preparing deployment for commit id 'a29ca51d4f'.,2f6822c3-574e-4e55-862e-cc2f9ecc23d6,0
+2026-05-23T21:21:35.0065350Z,Running build. Project type: OneDeploy,7657b3be-625e-45c7-99a6-74606ba2d395,0
+2026-05-23T21:21:35.0221648Z,Copying the manifest,f6bc3961-b705-4bf7-9847-501124f09fb8,0
+2026-05-23T21:21:35.0377851Z,Clean deploying to C:\home\site\wwwroot,2c771924-7427-4f30-9728-dac91e7a3f09,0
+2026-05-23T21:21:35.0534101Z,Generating deployment script.,1eed892a-ede4-49c9-9606-af714b8451ba,0
+	2026-05-23T21:21:35.1002868Z,Using cached version of deployment script (command: 'azure -y --no-dot-deployment -r "C:\local\Temp\zipdeploy\extracted" -o "C:\home\site\deployments\tools" --basic --sitePath "C:\local\Temp\zipdeploy\extracted"').,,0
+2026-05-23T21:21:35.1315355Z,Running deployment command...,bcdbee03-8f41-457c-b6b6-36ec41b38def,0
+	2026-05-23T21:21:35.1315355Z,Command: "C:\home\site\deployments\tools\deploy.cmd",,0
+	2026-05-23T21:21:35.2565351Z,Handling Basic Web Site deployment.,,0
+	2026-05-23T21:21:35.6940545Z,Creating app_offline.htm,,0
+	2026-05-23T21:21:35.7096604Z,KuduSync.NET from: 'C:\local\Temp\zipdeploy\extracted' to: 'C:\home\site\wwwroot',,0
+	2026-05-23T21:21:35.7096604Z,Deleting file: 'logs\stdout_20260523211709_4308.log',,0
+	2026-05-23T21:21:35.7096604Z,Deleting file: 'logs\stdout_20260523211744_6664.log',,0
+	2026-05-23T21:21:35.7252825Z,Deleting file: 'logs\stdout_20260523212035_9060.log',,0
+	2026-05-23T21:21:35.7252825Z,Deleting file: 'logs\stdout_20260523212049_10276.log',,0
+	2026-05-23T21:21:35.7409072Z,Deleting directory: 'logs',,0
+	2026-05-23T21:21:35.7409072Z,Deleting file: 'Api.PayBySharePay',,0
+	2026-05-23T21:21:35.7409072Z,Copying file: 'Api.PayBySharePay.deps.json',,0
+	2026-05-23T21:21:35.7565325Z,Copying file: 'Api.PayBySharePay.dll',,0
+	2026-05-23T21:21:35.7565325Z,Copying file: 'Api.PayBySharePay.exe',,0
+	2026-05-23T21:21:35.7565325Z,Copying file: 'Api.PayBySharePay.pdb',,0
+	2026-05-23T21:21:35.7721573Z,Copying file: 'Api.PayBySharePay.runtimeconfig.json',,0
+	2026-05-23T21:21:35.7721573Z,Copying file: 'Api.PayBySharePay.staticwebassets.endpoints.json',,0
+	2026-05-23T21:21:35.7877817Z,Copying file: 'appsettings.Development.json',,0
+	2026-05-23T21:21:35.7877817Z,Copying file: 'appsettings.json',,0
+	2026-05-23T21:21:35.7877817Z,Copying file: 'appsettings.Production.json',,0
+	2026-05-23T21:21:35.8034063Z,Copying file: 'appsettings.Test.json',,0
+	2026-05-23T21:21:35.8190325Z,Copying file: 'Azure.Core.dll',,0
+	2026-05-23T21:21:35.8190325Z,Copying file: 'Azure.Identity.dll',,0
+	2026-05-23T21:21:35.8190325Z,Copying file: 'DataStorage.PayBySharePay.dll',,0
+	2026-05-23T21:21:35.8346575Z,Copying file: 'DataStorage.PayBySharePay.pdb',,0
+	2026-05-23T21:21:35.8346575Z,Copying file: 'Microsoft.AspNetCore.Authentication.JwtBearer.dll',,0
+	2026-05-23T21:21:35.8502824Z,Copying file: 'Microsoft.AspNetCore.OpenApi.dll',,0
+	2026-05-23T21:21:35.8502824Z,Copying file: 'Microsoft.Bcl.AsyncInterfaces.dll',,0
+	2026-05-23T21:21:35.8659109Z,Copying file: 'Microsoft.Data.SqlClient.dll',,0
+	2026-05-23T21:21:35.8659109Z,Copying file: 'Microsoft.EntityFrameworkCore.Abstractions.dll',,0
+	2026-05-23T21:21:35.8659109Z,Copying file: 'Microsoft.EntityFrameworkCore.dll',,0
+	2026-05-23T21:21:35.8815323Z,Copying file: 'Microsoft.EntityFrameworkCore.Relational.dll',,0
+	2026-05-23T21:21:35.8815323Z,Copying file: 'Microsoft.EntityFrameworkCore.SqlServer.dll',,0
+	2026-05-23T21:21:35.8971569Z,Copying file: 'Microsoft.Extensions.Caching.Abstractions.dll',,0
+	2026-05-23T21:21:35.9127832Z,Copying file: 'Microsoft.Extensions.Caching.Memory.dll',,0
+	2026-05-23T21:21:35.9127832Z,Copying file: 'Microsoft.Extensions.Configuration.Abstractions.dll',,0
+	2026-05-23T21:21:35.9127832Z,Copying file: 'Microsoft.Extensions.DependencyInjection.Abstractions.dll',,0
+	2026-05-23T21:21:35.9284065Z,Copying file: 'Microsoft.Extensions.DependencyInjection.dll',,0
+	2026-05-23T21:21:35.9284065Z,Copying file: 'Microsoft.Extensions.Diagnostics.Abstractions.dll',,0
+	2026-05-23T21:21:35.9440312Z,Copying file: 'Microsoft.Extensions.FileProviders.Abstractions.dll',,0
+	2026-05-23T21:21:35.9440312Z,Copying file: 'Microsoft.Extensions.Hosting.Abstractions.dll',,0
+	2026-05-23T21:21:35.9596560Z,Copying file: 'Microsoft.Extensions.Logging.Abstractions.dll',,0
+	2026-05-23T21:21:35.9596560Z,Copying file: 'Microsoft.Extensions.Logging.dll',,0
+	2026-05-23T21:21:35.9752813Z,Copying file: 'Microsoft.Extensions.Options.dll',,0
+	2026-05-23T21:21:35.9752813Z,Copying file: 'Microsoft.Extensions.Primitives.dll',,0
+	2026-05-23T21:21:35.9752813Z,Copying file: 'Microsoft.Identity.Client.dll',,0
+	2026-05-23T21:21:35.9909063Z,Copying file: 'Microsoft.Identity.Client.Extensions.Msal.dll',,0
+	2026-05-23T21:21:35.9909063Z,Copying file: 'Microsoft.IdentityModel.Abstractions.dll',,0
+	2026-05-23T21:21:36.0065321Z,Copying file: 'Microsoft.IdentityModel.JsonWebTokens.dll',,0
+	2026-05-23T21:21:36.0065321Z,Copying file: 'Microsoft.IdentityModel.Logging.dll',,0
+	2026-05-23T21:21:36.0065321Z,Copying file: 'Microsoft.IdentityModel.Protocols.dll',,0
+	2026-05-23T21:21:36.0221564Z,Copying file: 'Microsoft.IdentityModel.Protocols.OpenIdConnect.dll',,0
+	2026-05-23T21:21:36.0221564Z,Copying file: 'Microsoft.IdentityModel.Tokens.dll',,0
+	2026-05-23T21:21:36.0221564Z,Omitting next output lines...,,0
+	2026-05-23T21:21:37.8502751Z,Finished successfully.,,0
+2026-05-23T21:21:37.8659006Z,Build completed succesfully.,6923405c-afe5-489b-a09b-4889585535c8,0
+2026-05-23T21:21:37.8815246Z,Running post deployment command(s)...,55a93795-2a3b-4e41-acd9-cddecd4d1d30,0
+2026-05-23T21:21:37.9127752Z,Requesting site restart,bdfd3859-1e94-4888-b3ed-1a97de31adf1,0
+2026-05-23T21:21:37.9284018Z,Requesting site restart. Attempt #1,0777c6c2-3b75-4acc-98de-b63c0059850c,0
+2026-05-23T21:21:38.2409044Z,Successfully requested a restart. Attempt #1,1cf6eac3-1909-4032-a810-f5f65706d329,0
+2026-05-23T21:21:38.2721485Z,Deployment successful.,19d6fd6e-4de1-4995-9ac8-794d61f46424,0

@@ -1,0 +1,27 @@
+2026-05-23T20:45:12.1667725Z,Updating submodules.,05ea1a37-decf-4261-9e20-8f5bb4bed301,0
+2026-05-23T20:45:12.1980228Z,Preparing deployment for commit id '074b555181'.,77bebb30-4c63-4bfa-8039-998d7338e805,0
+2026-05-23T20:45:12.2448971Z,Running build. Project type: OneDeploy,cf610ca4-8aa1-4f38-a15a-1f387558d8de,0
+2026-05-23T20:45:12.2605205Z,Copying the manifest,95ebac4b-f2c5-4ec2-b75f-6cddd1bd5ec7,0
+2026-05-23T20:45:12.2761468Z,Clean deploying to C:\home\site\wwwroot,3b33f57c-ef59-485d-ab7a-6f8502f666fb,0
+2026-05-23T20:45:12.3073966Z,Generating deployment script.,30af5605-b45f-4f34-a7e7-7c39aed88874,0
+	2026-05-23T20:45:12.3542718Z,Using cached version of deployment script (command: 'azure -y --no-dot-deployment -r "C:\local\Temp\zipdeploy\extracted" -o "C:\home\site\deployments\tools" --basic --sitePath "C:\local\Temp\zipdeploy\extracted"').,,0
+2026-05-23T20:45:12.3855235Z,Running deployment command...,bf929aa2-ea0b-4da6-8fde-b5ce92674593,0
+	2026-05-23T20:45:12.3855235Z,Command: "C:\home\site\deployments\tools\deploy.cmd",,0
+	2026-05-23T20:45:12.5105219Z,Handling Basic Web Site deployment.,,0
+	2026-05-23T20:45:12.6355197Z,Creating app_offline.htm,,0
+	2026-05-23T20:45:12.6355197Z,KuduSync.NET from: 'C:\local\Temp\zipdeploy\extracted' to: 'C:\home\site\wwwroot',,0
+	2026-05-23T20:45:12.6511473Z,Deleting file: 'logs\stdout_20260523204408_836.log',,0
+	2026-05-23T20:45:12.6511473Z,Deleting directory: 'logs',,0
+	2026-05-23T20:45:12.6667714Z,Copying file: 'Api.PayBySharePay.dll',,0
+	2026-05-23T20:45:12.6667714Z,Copying file: 'Api.PayBySharePay.exe',,0
+	2026-05-23T20:45:12.6667714Z,Copying file: 'Api.PayBySharePay.pdb',,0
+	2026-05-23T20:45:12.6823948Z,Copying file: 'appsettings.Test.json',,0
+	2026-05-23T20:45:12.6823948Z,Copying file: 'web.config',,0
+	2026-05-23T20:45:12.6823948Z,Deleting app_offline.htm,,0
+	2026-05-23T20:45:12.6980195Z,Finished successfully.,,0
+2026-05-23T20:45:12.7136450Z,Build completed succesfully.,8f1dab9a-08a2-42ee-8a64-07956d7d6dee,0
+2026-05-23T20:45:12.7292699Z,Running post deployment command(s)...,3d20d80c-1b3b-4405-859f-cf9a2ce80bda,0
+2026-05-23T20:45:12.7448967Z,Requesting site restart,0b09e3d4-7f73-46c1-8eb0-8038ea273c7e,0
+2026-05-23T20:45:12.7761483Z,Requesting site restart. Attempt #1,b7e00494-aaac-4878-b0c7-a88ca152aed5,0
+2026-05-23T20:45:13.0730197Z,Successfully requested a restart. Attempt #1,554dc238-b03a-4fbb-8959-1df0581aa68e,0
+2026-05-23T20:45:13.0886442Z,Deployment successful.,7e187474-c235-407c-9c29-96eab2aba5fd,0

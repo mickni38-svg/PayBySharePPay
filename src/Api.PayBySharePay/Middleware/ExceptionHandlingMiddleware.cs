@@ -43,7 +43,7 @@ public class ExceptionHandlingMiddleware
             _logger.LogError(ex, "Uventet fejl");
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;
             context.Response.ContentType = "application/json";
-            await context.Response.WriteAsJsonAsync(new { error = "Der opstod en uventet fejl." });
+            await context.Response.WriteAsJsonAsync(new { error = "Der opstod en uventet fejl.", detail = ex.Message, type = ex.GetType().Name });
         }
     }
 }

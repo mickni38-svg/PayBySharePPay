@@ -1,21 +1,12 @@
-name: Deploy API
+name: Deploy API til TEST
 
 on:
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Miljø (test eller prod)'
-        required: true
-        type: choice
-        options:
-          - test
-          - prod
 
 jobs:
   deploy:
-    name: Deploy .NET API til ${{ github.event.inputs.environment }}
+    name: Deploy .NET API til TEST
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }}
 
     steps:
       - uses: actions/checkout@v4
@@ -40,7 +31,6 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Deploy til TEST
-        if: github.event.inputs.environment == 'test'
         run: |
           az webapp deploy \
             --resource-group paybysharepay-rg \
@@ -48,13 +38,3 @@ jobs:
             --src-path publish-output.zip \
             --type zip
           echo "API deployed til: https://paybysharepay-api.azurewebsites.net"
-
-      - name: Deploy til PROD
-        if: github.event.inputs.environment == 'prod'
-        run: |
-          az webapp deploy \
-            --resource-group paybysharepay-rg \
-            --name paybysharepay-api-win \
-            --src-path publish-output.zip \
-            --type zip
-          echo "API deployed til: https://paybysharepay-api-win.azurewebsites.net"
