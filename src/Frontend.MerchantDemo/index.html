@@ -225,8 +225,13 @@
   const merchantId = parseInt(params.get('merchantId')) || null;
   const participantToken = params.get('participantToken') || null;
 
-  // API base URL – skift til prod hvis nødvendigt
-  const API_BASE = params.get('api') || 'https://paybysharepay-api-win.azurewebsites.net';
+  // API base URL – vælg automatisk baseret på hostname hvis ikke angivet i URL
+  const TEST_HOSTS = ['brave-flower-0026a7503.7.azurestaticapps.net', 'localhost'];
+  const isTest = TEST_HOSTS.some(h => window.location.hostname.includes(h));
+  const DEFAULT_API = isTest
+    ? 'https://paybysharepay-api.azurewebsites.net'
+    : 'https://paybysharepay-api-win.azurewebsites.net';
+  const API_BASE = params.get('api') || DEFAULT_API;
 
   document.getElementById('groupLabel').textContent =
     orderId ? `Ordre #${orderId}` : 'Mangler orderId i URL (brug ?orderId=X&merchantId=Y&participantToken=Z)';
