@@ -157,9 +157,8 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.loginError.set(null);
     this.auth.login(this.selectedEmail).subscribe({
       next: () => {
-        this.loginLoading.set(false);
-        const userId = this.auth.currentUserId();
-        if (userId) this.loadStatusCards(userId);
+        // Hard reload sikrer at alle komponenter starter fresh med login-state
+        window.location.reload();
       },
       error: () => {
         this.loginError.set('Login fejlede – prøv igen.');
