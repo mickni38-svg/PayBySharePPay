@@ -226,9 +226,13 @@
   const participantToken = params.get('participantToken') || null;
 
   // API base URL – vælg automatisk baseret på hostname (ignorer evt. &api= i URL)
-  const TEST_HOSTS = ['brave-flower-0026a7503.7.azurestaticapps.net', 'localhost'];
-  const isTest = TEST_HOSTS.some(h => window.location.hostname.includes(h));
-  const API_BASE = isTest
+  // Lokal: localhost / 127.0.0.1
+  // TEST:  ashy-bay-0e753db03.7.azurestaticapps.net
+  // PROD:  alt andet (fx paybysharepay.azurestaticapps.net / eget domæne)
+  const hostname = window.location.hostname;
+  const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
+  const isTest  = !isLocal && hostname.includes('ashy-bay-0e753db03');
+  const API_BASE = (isLocal || isTest)
     ? 'https://paybysharepay-api.azurewebsites.net'
     : 'https://paybysharepay-api-win.azurewebsites.net';
 
