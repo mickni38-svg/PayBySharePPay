@@ -27,7 +27,10 @@ export class LoginComponent {
     this.error.set(null);
 
     this.auth.login(this.email).subscribe({
-      next: () => this.router.navigate(['/home']),
+      next: () => {
+        // Hard reload sikrer at alle komponenter starter fresh med login-state
+        window.location.href = '/home';
+      },
       error: (err) => {
         this.error.set(
           err.status === 401 || err.status === 404
