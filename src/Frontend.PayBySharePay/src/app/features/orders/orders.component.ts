@@ -43,7 +43,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
   allOrders = signal<OrderSummaryApiDto[]>([]);
   isLoading = signal(false);
   errorMessage = signal<string | null>(null);
-  activeTab = signal<'host' | 'participant'>('host');
+  activeTab = signal<'active' | 'completed'>('active');
   filterPending = signal(false);
 
   // Cache af ordredetaljer hentet fra API
@@ -181,11 +181,26 @@ export class OrdersComponent implements OnInit, OnDestroy {
     return list;
   });
 
-  activeOrders = computed(() =>
-    this.activeTab() === 'host' ? this.hostOrders() : this.participantOrders()
+  private readonly COMPLETED_STATUSES = ['Completed', 'Cancelled'];
+
+  allVMs = computed(() => {
+    this._detailsCache();
+    return [...this.hostOrders(), ...this.participantOrders()];
+  });
+
+  inProgressOrders = computed(() =>
+    this.allVMs().filter(vm => !this.COMPLETED_STATUSES.includes(vm.status))
   );
 
-  setTab(tab: 'host' | 'participant'): void {
+  completedOrders = computed(() =>
+    this.allVMs().filter(vm => this.COMPLETED_STATUSES.includes(vm.status))
+  );
+
+  activeOrders = computed(() =>
+    this.activeTab() === 'active' ? this.inProgressOrders() : this.completedOrders()
+  );
+
+  setTab(tab: 'active' | 'completed'): void {
     this.activeTab.set(tab);
   }
 

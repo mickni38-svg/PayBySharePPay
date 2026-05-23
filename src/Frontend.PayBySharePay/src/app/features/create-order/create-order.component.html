@@ -230,17 +230,22 @@
 
   <!-- Footer med knap -->
   <div class="wizard__footer">
-    @if (currentStep() < 4) {
-      <button class="btn-primary" (click)="goNext()">Næste</button>
-    } @else {
-      <button
-        class="btn-primary btn-primary--green"
-        [disabled]="!canSubmit() || isSubmitting()"
-        (click)="submit()"
-      >
-        @if (isSubmitting()) { Opretter… } @else { Opret gruppebetaling }
-      </button>
-    }
+    <div class="wizard__footer__actions">
+      @if (currentStep() > 1) {
+        <button class="btn-back" (click)="goBack()" aria-label="Tilbage">←</button>
+      }
+      @if (currentStep() < 4) {
+        <button class="btn-primary" (click)="goNext()">Næste</button>
+      } @else {
+        <button
+          class="btn-primary btn-primary--green"
+          [disabled]="!canSubmit() || isSubmitting()"
+          (click)="submit()"
+        >
+          @if (isSubmitting()) { Opretter… } @else { Opret gruppebetaling }
+        </button>
+      }
+    </div>
   </div>
 
 </div>

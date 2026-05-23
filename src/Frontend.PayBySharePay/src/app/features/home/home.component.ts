@@ -9,6 +9,8 @@ import { DirectoryService } from '../../core/services/directory.service';
 import { OrderService } from '../../core/services/order.service';
 import { ActivityService } from '../../core/services/activity.service';
 import { MessageService } from '../../core/services/message.service';
+import { DevService } from '../../core/services/dev.service';
+import { FriendService } from '../../core/services/friend.service';
 import { DirectoryEntry } from '../../core/models/directory.model';
 import { computePendingSummary } from '../../core/models/order.model';
 
@@ -36,17 +38,20 @@ interface StatusCard {
 })
 export class HomeComponent implements OnInit, OnDestroy {
   actionCards: ActionCard[] = [
-    { label: 'Overblik',    subtitle: 'Se regninger',       route: '/orders',           accent: '#22C55E', iconBg: 'rgba(34,197,94,0.15)',  icon: 'chart'     },
-    { label: 'Beskeder',    subtitle: 'Dine beskeder',      route: '/messages',          accent: '#F59E0B', iconBg: 'rgba(245,158,11,0.15)', icon: 'chat'      },
-    { label: 'Brugere',     subtitle: 'Find personer',      route: '/find-participants', accent: '#06B6D4', iconBg: 'rgba(6,182,212,0.15)',  icon: 'users'     },
+    { label: 'Overblik',    subtitle: 'Se igangværende gruppebetalinger', route: '/orders',           accent: '#22C55E', iconBg: 'rgba(34,197,94,0.15)',  icon: 'chart'     },
+    { label: 'Beskeder',    subtitle: 'Se dine anmodninger',             route: '/messages',          accent: '#F59E0B', iconBg: 'rgba(245,158,11,0.15)', icon: 'chat'      },
+    { label: 'Deltagere',   subtitle: 'Find og tilføj venner',           route: '/find-participants', accent: '#06B6D4', iconBg: 'rgba(6,182,212,0.15)',  icon: 'users'     },
     { label: 'Aktiviteter', subtitle: 'Se dine aktiviteter',route: '/activity',          accent: '#7C3AED', iconBg: 'rgba(124,58,237,0.15)', icon: 'activity'  },
   ];
 
   statusCards = signal<StatusCard[]>([]);
   persons = signal<DirectoryEntry[]>([]);
+  friendCount = signal<number | null>(null);
   selectedEmail = '';
   loginError = signal<string | null>(null);
   loginLoading = signal(false);
+  resetLoading = signal(false);
+  resetMessage = signal<string | null>(null);
 
   private routerSub?: Subscription;
 
@@ -56,6 +61,8 @@ export class HomeComponent implements OnInit, OnDestroy {
     private orderService: OrderService,
     private activityService: ActivityService,
     readonly messageService: MessageService,
+    private friendService: FriendService,
+    private devService: DevService,
     private router: Router
   ) {}
 
@@ -86,6 +93,10 @@ export class HomeComponent implements OnInit, OnDestroy {
     if (userId) {
       this.loadStatusCards(userId);
       this.messageService.refreshUnread(userId);
+      this.friendService.getFriends(userId).subscribe({
+        next: (list) => this.friendCount.set(list.length),
+        error: () => this.friendCount.set(0)
+      });
     }
   }
 
@@ -120,6 +131,24 @@ export class HomeComponent implements OnInit, OnDestroy {
     } else {
       this.router.navigate(['/activity']);
     }
+  }
+
+  devReset(): void {
+    if (!confirm('Er du sikker? Dette sletter ALLE ordre og beskeder i databasen.')) return;
+    this.resetLoading.set(true);
+    this.resetMessage.set(null);
+    this.devService.resetData().subscribe({
+      next: () => {
+        this.resetLoading.set(false);
+        this.resetMessage.set('✅ Alle ordre og beskeder er slettet.');
+        this.refreshData();
+        setTimeout(() => this.resetMessage.set(null), 4000);
+      },
+      error: () => {
+        this.resetLoading.set(false);
+        this.resetMessage.set('❌ Fejl ved sletning – prøv igen.');
+      }
+    });
   }
 
   devLogin(): void {

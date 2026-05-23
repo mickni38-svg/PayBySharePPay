@@ -11,7 +11,11 @@
       </div>
       <div class="cta-card__text">
         <span class="cta-card__title">Opret ny gruppebetaling</span>
-        <span class="cta-card__sub">Del regningen med venner</span>
+        @if (friendCount() === 0) {
+          <span class="cta-card__sub cta-card__sub--warn">Tilføj venner inden du kan indgå i en gruppebetaling</span>
+        } @else {
+          <span class="cta-card__sub">Del regningen med venner</span>
+        }
       </div>
       <svg class="cta-card__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
         <polyline points="9 18 15 12 9 6"/>
@@ -56,46 +60,52 @@
   <section class="home__cards">
     @for (card of actionCards; track card.route) {
       <a class="action-card" [routerLink]="card.route" [style.--card-accent]="card.accent">
-        <div class="action-card__icon" [style.background]="card.iconBg">
-          @switch (card.icon) {
-            @case ('chart') {
-              <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="card.accent" stroke-width="2" stroke-linecap="round">
-                <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
-                <line x1="6" y1="20" x2="6" y2="14"/>
-              </svg>
-            }
-            @case ('plus') {
-              <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="card.accent" stroke-width="2" stroke-linecap="round">
-                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-              </svg>
-            }
-            @case ('activity') {
-              <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="card.accent" stroke-width="2" stroke-linecap="round">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-              </svg>
-            }
-            @case ('users') {
-              <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="card.accent" stroke-width="2" stroke-linecap="round">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-              </svg>
-            }
-            @case ('chat') {
-              <div style="position:relative;display:inline-flex;">
+        <div class="action-card__top">
+          <div class="action-card__icon" [style.background]="card.iconBg">
+            @switch (card.icon) {
+              @case ('chart') {
                 <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="card.accent" stroke-width="2" stroke-linecap="round">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+                  <line x1="6" y1="20" x2="6" y2="14"/>
                 </svg>
-                @if (messageService.unreadCount() > 0) {
-                  <span class="action-card__badge">{{ messageService.unreadCount() > 9 ? '9+' : messageService.unreadCount() }}</span>
-                }
-              </div>
+              }
+              @case ('plus') {
+                <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="card.accent" stroke-width="2" stroke-linecap="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              }
+              @case ('activity') {
+                <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="card.accent" stroke-width="2" stroke-linecap="round">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+              }
+              @case ('users') {
+                <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="card.accent" stroke-width="2" stroke-linecap="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+              }
+              @case ('chat') {
+                <div style="position:relative;display:inline-flex;">
+                  <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="card.accent" stroke-width="2" stroke-linecap="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                  @if (messageService.unreadCount() > 0) {
+                    <span class="action-card__badge">{{ messageService.unreadCount() > 9 ? '9+' : messageService.unreadCount() }}</span>
+                  }
+                </div>
+              }
             }
+          </div>
+          @if (card.icon === 'users' && friendCount() === 0) {
+            <span class="action-card__sub action-card__sub--warn">Tilføj venner inden du kan indgå i en gruppebetaling</span>
+          } @else {
+            <span class="action-card__sub">{{ card.subtitle }}</span>
           }
         </div>
         <span class="action-card__label">{{ card.label }}</span>
-        <span class="action-card__sub">{{ card.subtitle }}</span>
       </a>
     }
   </section>
@@ -125,6 +135,15 @@
         {{ loginLoading() ? 'Logger ind…' : 'Log ind' }}
       </button>
       <a class="dev-panel__link" routerLink="/register">Opret dig som bruger</a>
+    }
+
+    <div class="dev-panel__divider"></div>
+    <button class="dev-panel__btn dev-panel__btn--danger" (click)="devReset()"
+            [disabled]="resetLoading()">
+      {{ resetLoading() ? 'Sletter…' : '🗑 Slet alle ordre og beskeder' }}
+    </button>
+    @if (resetMessage()) {
+      <p class="dev-panel__reset-msg">{{ resetMessage() }}</p>
     }
   </section>
 

@@ -37,8 +37,10 @@ function avatarColor(name: string): string {
 export class FindParticipantsComponent implements OnInit {
   searchTerm = '';
   entries = signal<DirectoryEntryVM[]>([]);
-  activeTab = signal<'persons' | 'merchants'>('persons');
+  friendEntries = signal<DirectoryEntryVM[]>([]);
+  activeTab = signal<'friends' | 'persons' | 'merchants'>('friends');
   isLoading = signal(false);
+  isFriendsLoading = signal(false);
   errorMessage = signal<string | null>(null);
 
   filtered = computed(() => {
@@ -53,16 +55,20 @@ export class FindParticipantsComponent implements OnInit {
 
   filteredByTab = computed(() => {
     const tab = this.activeTab();
+    if (tab === 'friends') return this.friendEntries();
     return this.filtered().filter(e =>
       tab === 'merchants' ? e.type === 'Merchant' : e.type === 'Person'
     );
   });
 
+  friendPersons = computed(() => this.friendEntries().filter(e => e.type === 'Person'));
+  friendMerchants = computed(() => this.friendEntries().filter(e => e.type === 'Merchant'));
+
   selectedCount = computed(() =>
     this.entries().filter(e => e.selected).length
   );
 
-  setTab(tab: 'persons' | 'merchants'): void {
+  setTab(tab: 'friends' | 'persons' | 'merchants'): void {
     this.activeTab.set(tab);
   }
 
@@ -74,6 +80,29 @@ export class FindParticipantsComponent implements OnInit {
 
   ngOnInit(): void {
     this.load('');
+    this.loadFriends();
+  }
+
+  private loadFriends(): void {
+    const currentUserId = this.auth.currentUserId();
+    if (!currentUserId) return;
+    this.isFriendsLoading.set(true);
+    this.friendService.getFriends(currentUserId).subscribe({
+      next: (list) => {
+        this.friendEntries.set(
+          list.map(e => ({
+            ...e,
+            initials: toInitials(e.displayName),
+            avatarColor: avatarColor(e.displayName),
+            selected: false
+          }))
+        );
+        this.isFriendsLoading.set(false);
+      },
+      error: () => {
+        this.isFriendsLoading.set(false);
+      }
+    });
   }
 
   private load(query: string): void {

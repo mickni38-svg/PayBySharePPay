@@ -162,6 +162,13 @@ export class CreateOrderComponent implements OnInit {
     }
   }
 
+  goBack(): void {
+    if (this.currentStep() > 1) {
+      this.stepError.set(null);
+      this.currentStep.update(s => s - 1);
+    }
+  }
+
   goToStep(step: number): void {
     if (step < this.currentStep()) {
       this.stepError.set(null);

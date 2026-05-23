@@ -16,11 +16,11 @@
 
     <!-- Faner -->
     <div class="orders__tabs">
-      <button class="tab-btn" [class.tab-btn--active]="activeTab() === 'host'" (click)="setTab('host')">
-        Mine ordre (som vært)
+      <button class="tab-btn" [class.tab-btn--active]="activeTab() === 'active'" (click)="setTab('active')">
+        Igangværende ordre
       </button>
-      <button class="tab-btn" [class.tab-btn--active]="activeTab() === 'participant'" (click)="setTab('participant')">
-        Deltager i
+      <button class="tab-btn" [class.tab-btn--active]="activeTab() === 'completed'" (click)="setTab('completed')">
+        Afsluttede
       </button>
     </div>
 
@@ -136,6 +136,27 @@
                     <div class="order-detail__row">
                       <span class="order-detail__label">Dit beløb</span>
                       <span class="order-detail__value order-detail__value--amount">{{ vm.myOwnAmount | number:'1.2-2' }} kr</span>
+                    </div>
+                  }
+                </div>
+
+                <!-- Deltagere -->
+                <div class="order-lines-section">
+                  <p class="order-lines-section__heading">Deltagere</p>
+                  @for (p of vm.participants; track p.participantId) {
+                    <div class="participant-row">
+                      <div class="participant-lines__avatar" [style.background]="avatarColor(p.name)">
+                        {{ initials(p.name) }}
+                      </div>
+                      <span class="participant-row__name">
+                        {{ p.name }}
+                        @if (isCurrentUser(p.participantId)) { <span class="participant-lines__you">(dig)</span> }
+                      </span>
+                      <span class="participant-row__status"
+                            [class.participant-row__status--paid]="p.status === 'Paid'"
+                            [class.participant-row__status--invited]="p.status === 'Invited'">
+                        {{ p.status === 'Paid' ? 'Betalt' : p.status === 'Invited' ? 'Afventer' : p.status }}
+                      </span>
                     </div>
                   }
                 </div>

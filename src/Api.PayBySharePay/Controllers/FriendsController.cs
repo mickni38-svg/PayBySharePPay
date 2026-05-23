@@ -16,6 +16,14 @@ public class FriendsController : ControllerBase
         _participantService = participantService;
     }
 
+    [HttpGet("{participantId:int}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetFriends(int participantId)
+    {
+        var friends = await _participantService.GetFriendsAsync(participantId);
+        return Ok(friends);
+    }
+
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

@@ -350,9 +350,32 @@
   padding: 10px 16px 12px;
   background: linear-gradient(to top, #0a0e1a 70%, transparent);
   box-sizing: border-box;
+
+  &__actions {
+    display: flex;
+    gap: 10px;
+  }
+}
+
+.btn-back {
+  flex: 0 0 52px;
+  height: 52px;
+  background: #1a1a2e;
+  color: #9ca3af;
+  border: 1px solid #2d3748;
+  border-radius: 12px;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+
+  &:active { background: #252545; }
 }
 
 .btn-primary {
+  flex: 1;
   width: 100%;
   background: #1a3a6e;
   color: #fff;
@@ -383,9 +406,9 @@
 
 // ── Emoji input ────────────────────────────────────────────────────────────
 .field__input--emoji {
-  font-size: 22px;
-  text-align: center;
-  letter-spacing: 4px;
+  font-size: 15px;
+  text-align: left;
+  letter-spacing: normal;
 }
 
 .emoji-preview {

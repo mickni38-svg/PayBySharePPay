@@ -285,6 +285,41 @@
   font-weight: 400;
   margin-left: 2px;
 }
+
+.participant-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-border);
+
+  &:last-child { border-bottom: none; }
+}
+
+.participant-row__name {
+  flex: 1;
+  font-size: 14px;
+  color: var(--color-text-primary);
+}
+
+.participant-row__status {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.06);
+  color: var(--color-text-muted);
+
+  &--paid {
+    background: rgba(34,197,94,0.12);
+    color: #22c55e;
+  }
+
+  &--invited {
+    background: rgba(245,158,11,0.12);
+    color: #f59e0b;
+  }
+}
 .participant-lines__paid-badge {
   margin-left: auto;
   flex-shrink: 0;

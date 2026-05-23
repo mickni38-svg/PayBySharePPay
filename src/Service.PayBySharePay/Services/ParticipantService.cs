@@ -24,6 +24,12 @@ public class ParticipantService : IParticipantService
         return participants.Select(MapToDto);
     }
 
+    public async Task<IEnumerable<ParticipantDto>> GetFriendsAsync(int participantId)
+    {
+        var friends = await _friendRelationRepository.GetFriendsOfAsync(participantId);
+        return friends.Select(MapToDto);
+    }
+
     public async Task<ParticipantDto> CreatePersonAsync(CreatePersonDto dto)
     {
         if (string.IsNullOrWhiteSpace(dto.Name))
