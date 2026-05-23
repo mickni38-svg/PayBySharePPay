@@ -88,7 +88,10 @@ export class CreateOrderComponent implements OnInit {
   errorMessage = signal<string | null>(null);
 
   canSubmit = computed(() =>
-    this.title().trim().length > 0 && this.emoji().trim().length > 0 && !this.isSubmitting()
+    this.title().trim().length > 0 &&
+    this.emoji().trim().length > 0 &&
+    this.selectedMerchant() !== null &&
+    !this.isSubmitting()
   );
 
   constructor(
@@ -146,6 +149,12 @@ export class CreateOrderComponent implements OnInit {
         return false;
       }
     }
+    if (this.currentStep() === 2) {
+      if (!this.selectedMerchant()) {
+        this.stepError.set('Du skal vælge et spisested for at oprette en gruppebetaling.');
+        return false;
+      }
+    }
     if (this.currentStep() === 3) {
       if (this.selectedParticipants().length === 0) {
         this.stepError.set('Vælg mindst én deltager');
@@ -194,7 +203,16 @@ export class CreateOrderComponent implements OnInit {
 
   // ── Submit ────────────────────────────────────────────────────────────────
   submit(): void {
-    if (!this.canSubmit()) return;
+    this.stepError.set(null);
+    if (!this.title().trim() || !this.emoji().trim()) {
+      this.stepError.set('Udfyld venligst titel og kategori.');
+      return;
+    }
+    if (!this.selectedMerchant()) {
+      this.stepError.set('Du skal vælge et spisested for at oprette en gruppebetaling.');
+      return;
+    }
+    if (this.isSubmitting()) return;
 
     this.isSubmitting.set(true);
     this.errorMessage.set(null);

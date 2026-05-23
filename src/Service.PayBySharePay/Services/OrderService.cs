@@ -68,42 +68,23 @@ public class OrderService : IOrderService
         await _orderRepository.AddAsync(order);
         await _orderRepository.SaveChangesAsync();
 
-        // Send notifikation til alle inviterede deltagere (ikke host/creator selv)
-        var invitedParticipants = order.OrderParticipants
-            .Where(op => op.ParticipantId != dto.CreatedByParticipantId)
-            .ToList();
-
+        // Send notifikation (besked) til alle deltagere hvis merchant er valgt
         if (merchant?.GroupOrderUrl != null)
         {
-            // Merchant har en bestillingsside – send link til hver deltager
-            foreach (var op in invitedParticipants)
+            foreach (var op in order.OrderParticipants.ToList())
             {
+                // Inkludér ikke &api= i linket – merchant demo vælger selv korrekt API baseret på sit hostname
                 var participantLink = $"{merchant.GroupOrderUrl}?orderId={order.Id}&merchantId={merchant.Id}&participantToken={op.ParticipantToken}";
                 order.Messages.Add(new Message
                 {
                     OrderId = order.Id,
                     ParticipantId = op.ParticipantId,
-                    Content = $"🍽️ {creator.Name} har inviteret dig til gruppebetaling hos {merchant.CompanyName ?? merchant.Name}. Bestil din mad her: {participantLink}"
+                    Content = $"Bestil din mad hos {merchant.CompanyName ?? merchant.Name}: {participantLink}"
                 });
             }
-        }
-        else
-        {
-            // Ingen merchant-URL – send en generel invitation
-            var orderTitle = string.IsNullOrWhiteSpace(dto.Title) ? dto.Category : dto.Title;
-            foreach (var op in invitedParticipants)
-            {
-                order.Messages.Add(new Message
-                {
-                    OrderId = order.Id,
-                    ParticipantId = op.ParticipantId,
-                    Content = $"🍽️ {creator.Name} har inviteret dig til gruppebetaling: \"{orderTitle}\". Åbn appen for at se detaljer."
-                });
-            }
-        }
 
-        if (invitedParticipants.Count > 0)
             await _orderRepository.SaveChangesAsync();
+        }
 
         return MapToDto(order);
     }
