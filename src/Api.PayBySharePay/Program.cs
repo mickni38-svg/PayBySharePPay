@@ -2,8 +2,10 @@ using System.Text;
 using Api.PayBySharePay.Auth;
 using Api.PayBySharePay.Middleware;
 using Api.PayBySharePay.Services;
+using DataStorage.PayBySharePay.Context;
 using DataStorage.PayBySharePay.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Service.PayBySharePay.Extensions;
@@ -105,6 +107,13 @@ builder.Services.AddDataStorage(connectionString);
 builder.Services.AddServiceLayer();
 
 var app = builder.Build();
+
+// Kør migrations automatisk ved opstart (sikrer DB er opdateret på Azure)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<PayBySharePayDbContext>();
+    db.Database.Migrate();
+}
 
 app.UseSwagger();
 app.UseSwaggerUI(options =>

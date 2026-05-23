@@ -60,6 +60,10 @@ Write-Host "Trin 5/6 - Pakker til zip..." -ForegroundColor Cyan
 Compress-Archive -Path "./publish-output/*" -DestinationPath "./publish-output.zip" -Force
 
 Write-Host "Trin 6/6 - Deployer API til Azure App Service (TEST)..." -ForegroundColor Cyan
+az webapp config appsettings set `
+	--resource-group $apiResourceGroup `
+	--name $apiAppName `
+	--settings ASPNETCORE_ENVIRONMENT=Test | Out-Null
 az webapp deploy `
 	--resource-group $apiResourceGroup `
 	--name $apiAppName `
