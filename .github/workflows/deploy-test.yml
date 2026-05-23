@@ -59,9 +59,3 @@ jobs:
 
       - name: Deploy API to Azure App Service (TEST)
         run: az webapp deploy --resource-group $API_RESOURCE_GROUP --name $API_APP_NAME --src-path ./publish-output/publish-output.zip --type zip
-
-      - name: Run database migrations (Azure AD token)
-        uses: azure/sql-action@v2
-        with:
-          connection-string: 'Server=paybysharepay-server.database.windows.net;Database=PayBySharePay-Test;Authentication=Active Directory Default;Encrypt=True;'
-          path: migrate-test.sql
