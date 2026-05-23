@@ -74,7 +74,7 @@
               <div class="order-card__footer-left">
                 <span class="order-card__amount">
                   @if (vm.isHost) {
-                    {{ vm.paidAmount | number:'1.2-2' }} kr
+                    {{ vm.totalOrderedAmount | number:'1.2-2' }} kr
                   } @else if (vm.myOwnAmount !== null) {
                     {{ vm.myOwnAmount | number:'1.2-2' }} kr
                   } @else {
@@ -128,9 +128,15 @@
                   }
                   @if (vm.isHost) {
                     <div class="order-detail__row">
-                      <span class="order-detail__label">Samlet betalt</span>
-                      <span class="order-detail__value order-detail__value--amount">{{ vm.paidAmount | number:'1.2-2' }} kr</span>
+                      <span class="order-detail__label">Samlet bestilt</span>
+                      <span class="order-detail__value order-detail__value--amount">{{ vm.totalOrderedAmount | number:'1.2-2' }} kr</span>
                     </div>
+                    @if (vm.paidAmount > 0) {
+                      <div class="order-detail__row">
+                        <span class="order-detail__label">Heraf betalt</span>
+                        <span class="order-detail__value order-detail__value--amount">{{ vm.paidAmount | number:'1.2-2' }} kr</span>
+                      </div>
+                    }
                   }
                   @if (!vm.isHost && vm.myOwnAmount !== null) {
                     <div class="order-detail__row">

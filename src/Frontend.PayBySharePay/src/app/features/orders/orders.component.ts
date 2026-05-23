@@ -31,6 +31,8 @@ interface OrderCardVM {
   myOwnAmount: number | null;
   /** Sum af betalte deltageres ordrelinjer (til host-visning) */
   paidAmount: number;
+  /** Sum af alle ordrelinjer uanset betalingsstatus */
+  totalOrderedAmount: number;
 }
 
 @Component({
@@ -131,9 +133,13 @@ export class OrdersComponent implements OnInit, OnDestroy {
       ? myOwnLines!.lines.reduce((sum, l) => sum + l.lineTotal, 0)
       : null;
 
-    // Beløb der er betalt: sum af ordrelinjer for deltagere med hasPaid = true (fra cached detaljer)
+    // Beløb der er betalt: sum af ordrelinjer for deltagere med hasPaid = true
     const paidAmount = cached?.participantOrderLines
       .filter(g => g.hasPaid)
+      .reduce((sum, g) => sum + g.lines.reduce((s, l) => s + l.lineTotal, 0), 0) ?? 0;
+
+    // Samlet bestilt beløb: sum af alle ordrelinjer uanset betalingsstatus
+    const totalOrderedAmount = cached?.participantOrderLines
       .reduce((sum, g) => sum + g.lines.reduce((s, l) => s + l.lineTotal, 0), 0) ?? 0;
 
     return {
@@ -157,7 +163,8 @@ export class OrdersComponent implements OnInit, OnDestroy {
       participantOrderLines: visibleLines,
       detailsLoaded: !!cached,
       myOwnAmount,
-      paidAmount
+      paidAmount,
+      totalOrderedAmount
     };
   }
 
