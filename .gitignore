@@ -8,6 +8,8 @@
 publish-output/
 publish-output.zip
 publish-linux/
+publish-debug/
+publish-debug.zip
 publish-linux.zip
 publish-win/
 publish-win.zip
