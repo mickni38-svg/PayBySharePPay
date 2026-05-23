@@ -68,29 +68,33 @@ public class OrderService : IOrderService
         await _orderRepository.AddAsync(order);
         await _orderRepository.SaveChangesAsync();
 
-        // Send notifikation til alle inviterede deltagere (ikke host/creator selv)
-        var invitedParticipants = order.OrderParticipants
-            .Where(op => op.ParticipantId != dto.CreatedByParticipantId)
-            .ToList();
-
+        // Send notifikation med bestillingslink til ALLE deltagere inkl. host
         if (merchant?.GroupOrderUrl != null)
         {
-            // Merchant har en bestillingsside – send link til hver deltager
-            foreach (var op in invitedParticipants)
+            foreach (var op in order.OrderParticipants.ToList())
             {
                 var participantLink = $"{merchant.GroupOrderUrl}?orderId={order.Id}&merchantId={merchant.Id}&participantToken={op.ParticipantToken}";
+                var isHost = op.ParticipantId == dto.CreatedByParticipantId;
+                var msgText = isHost
+                    ? $"🍽️ Du har oprettet en gruppebetaling hos {merchant.CompanyName ?? merchant.Name}. Bestil din mad her: {participantLink}"
+                    : $"🍽️ {creator.Name} har inviteret dig til gruppebetaling hos {merchant.CompanyName ?? merchant.Name}. Bestil din mad her: {participantLink}";
+
                 order.Messages.Add(new Message
                 {
                     OrderId = order.Id,
                     ParticipantId = op.ParticipantId,
-                    Content = $"🍽️ {creator.Name} har inviteret dig til gruppebetaling hos {merchant.CompanyName ?? merchant.Name}. Bestil din mad her: {participantLink}"
+                    Content = msgText
                 });
             }
+            await _orderRepository.SaveChangesAsync();
         }
         else
         {
-            // Ingen merchant-URL – send en generel invitation
+            // Ingen merchant-URL – send generel invitation til inviterede deltagere
             var orderTitle = string.IsNullOrWhiteSpace(dto.Title) ? dto.Category : dto.Title;
+            var invitedParticipants = order.OrderParticipants
+                .Where(op => op.ParticipantId != dto.CreatedByParticipantId)
+                .ToList();
             foreach (var op in invitedParticipants)
             {
                 order.Messages.Add(new Message
@@ -100,10 +104,9 @@ public class OrderService : IOrderService
                     Content = $"🍽️ {creator.Name} har inviteret dig til gruppebetaling: \"{orderTitle}\". Åbn appen for at se detaljer."
                 });
             }
+            if (invitedParticipants.Count > 0)
+                await _orderRepository.SaveChangesAsync();
         }
-
-        if (invitedParticipants.Count > 0)
-            await _orderRepository.SaveChangesAsync();
 
         return MapToDto(order);
     }
