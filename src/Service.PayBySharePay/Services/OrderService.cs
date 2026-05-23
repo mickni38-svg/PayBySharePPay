@@ -69,11 +69,14 @@ public class OrderService : IOrderService
         await _orderRepository.SaveChangesAsync();
 
         // Send notifikation med bestillingslink til ALLE deltagere inkl. host
-        if (merchant?.GroupOrderUrl != null)
+        if (merchant != null)
         {
+            // Brug merchant's GroupOrderUrl – eller konstruér et MerchantDemo-link som fallback
+            var baseUrl = merchant.GroupOrderUrl ?? "https://paybysharepay-merchant.azurewebsites.net";
+
             foreach (var op in order.OrderParticipants.ToList())
             {
-                var participantLink = $"{merchant.GroupOrderUrl}?orderId={order.Id}&merchantId={merchant.Id}&participantToken={op.ParticipantToken}";
+                var participantLink = $"{baseUrl}?orderId={order.Id}&merchantId={merchant.Id}&participantToken={op.ParticipantToken}";
                 var isHost = op.ParticipantId == dto.CreatedByParticipantId;
                 var msgText = isHost
                     ? $"🍽️ Du har oprettet en gruppebetaling hos {merchant.CompanyName ?? merchant.Name}. Bestil din mad her: {participantLink}"
@@ -90,7 +93,7 @@ public class OrderService : IOrderService
         }
         else
         {
-            // Ingen merchant-URL – send generel invitation til inviterede deltagere
+            // Ingen merchant valgt – send generel invitation til inviterede deltagere
             var orderTitle = string.IsNullOrWhiteSpace(dto.Title) ? dto.Category : dto.Title;
             var invitedParticipants = order.OrderParticipants
                 .Where(op => op.ParticipantId != dto.CreatedByParticipantId)

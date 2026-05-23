@@ -1,4 +1,5 @@
 using DataStorage.PayBySharePay.Context;
+using DataStorage.PayBySharePay.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -31,5 +32,23 @@ public class DevController : ControllerBase
 
         await _context.SaveChangesAsync();
         return NoContent();
+    }
+
+    /// <summary>
+    /// TEST ONLY – sætter GroupOrderUrl på alle merchants der mangler det.
+    /// </summary>
+    [HttpPost("seed-merchant-urls")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> SeedMerchantUrls([FromQuery] string merchantDemoUrl = "https://ashy-bay-0e753db03.7.azurestaticapps.net")
+    {
+        var merchants = await _context.Participants
+            .Where(p => p.Type == ParticipantType.Merchant && p.GroupOrderUrl == null)
+            .ToListAsync();
+
+        foreach (var m in merchants)
+            m.GroupOrderUrl = merchantDemoUrl;
+
+        await _context.SaveChangesAsync();
+        return Ok(new { updated = merchants.Count, url = merchantDemoUrl });
     }
 }
