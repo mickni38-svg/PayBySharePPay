@@ -271,7 +271,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
 
   goCreate(): void { this.router.navigate(['/orders/create']); }
 
-  statusLabel
+  statusLabel(s: string): string {
     const map: Record<string, string> = {
       Collecting: 'Samler',
       WaitingForPayment: 'Afventer betaling',
