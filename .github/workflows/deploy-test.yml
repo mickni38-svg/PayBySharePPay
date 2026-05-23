@@ -59,3 +59,11 @@ jobs:
 
       - name: Deploy API to Azure App Service (TEST)
         run: az webapp deploy --resource-group $API_RESOURCE_GROUP --name $API_APP_NAME --src-path ./publish-output/publish-output.zip --type zip
+
+      - name: Run database migrations (idempotent SQL script)
+        run: |
+          sqlcmd -S paybysharepay-server.database.windows.net \
+                 -d PayBySharePay-Test \
+                 -U "${{ secrets.SQL_ADMIN_USER }}" \
+                 -P "${{ secrets.SQL_ADMIN_PASSWORD }}" \
+                 -i migrate-test.sql
