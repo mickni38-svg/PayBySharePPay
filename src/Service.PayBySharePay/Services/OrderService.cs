@@ -78,14 +78,15 @@ public class OrderService : IOrderService
         {
             // Brug merchant's GroupOrderUrl – eller konstruér et MerchantDemo-link fra konfiguration
             var baseUrl = merchant.GroupOrderUrl ?? _merchantDemoUrl;
+            var ordreNavn = string.IsNullOrWhiteSpace(order.Title) ? order.Category ?? "gruppebetaling" : order.Title;
 
             foreach (var op in order.OrderParticipants.ToList())
             {
                 var participantLink = $"{baseUrl}?orderId={order.Id}&merchantId={merchant.Id}&participantToken={op.ParticipantToken}";
                 var isHost = op.ParticipantId == dto.CreatedByParticipantId;
                 var msgText = isHost
-                    ? $"🍽️ Du har oprettet en gruppebetaling hos {merchant.CompanyName ?? merchant.Name}. Bestil din mad her: {participantLink}"
-                    : $"🍽️ {creator.Name} har inviteret dig til gruppebetaling hos {merchant.CompanyName ?? merchant.Name}. Bestil din mad her: {participantLink}";
+                    ? $"🍽️ Du har oprettet '{ordreNavn}' hos {merchant.CompanyName ?? merchant.Name}. Bestil din mad her: {participantLink}"
+                    : $"🍽️ {creator.Name} har inviteret dig til '{ordreNavn}' hos {merchant.CompanyName ?? merchant.Name}. Bestil din mad her: {participantLink}";
 
                 order.Messages.Add(new Message
                 {
