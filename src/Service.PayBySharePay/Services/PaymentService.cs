@@ -10,15 +10,18 @@ public class PaymentService : IPaymentService
     private readonly IPaymentRepository _paymentRepository;
     private readonly IParticipantRepository _participantRepository;
     private readonly IOrderRepository _orderRepository;
+    private readonly IMessageService _messageService;
 
     public PaymentService(
         IPaymentRepository paymentRepository,
         IParticipantRepository participantRepository,
-        IOrderRepository orderRepository)
+        IOrderRepository orderRepository,
+        IMessageService messageService)
     {
         _paymentRepository = paymentRepository;
         _participantRepository = participantRepository;
         _orderRepository = orderRepository;
+        _messageService = messageService;
     }
 
     public async Task<PaymentDto> RegisterPaymentAsync(RegisterPaymentDto dto)
@@ -42,6 +45,27 @@ public class PaymentService : IPaymentService
 
         await _paymentRepository.AddAsync(payment);
         await _paymentRepository.SaveChangesAsync();
+
+        // Opdater deltagerens status til Paid
+        var orderParticipant = order.OrderParticipants
+            .FirstOrDefault(op => op.ParticipantId == dto.ParticipantId);
+        if (orderParticipant != null)
+        {
+            orderParticipant.Status = "Paid";
+            await _orderRepository.SaveChangesAsync();
+        }
+
+        // Send notifikation til host (besked i ordrechatten)
+        var hostParticipantId = order.CreatedByParticipantId;
+        if (hostParticipantId != dto.ParticipantId)
+        {
+            await _messageService.CreateMessageAsync(new CreateMessageDto
+            {
+                OrderId = dto.OrderId,
+                ParticipantId = dto.ParticipantId,
+                Content = $"✅ {participant.Name} har betalt {dto.Amount:N2} kr."
+            });
+        }
 
         return new PaymentDto
         {

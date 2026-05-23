@@ -73,9 +73,9 @@
             <div class="order-card__footer">
               <div class="order-card__footer-left">
                 <span class="order-card__amount">
-                  @if (vm.isHost && vm.totalAmount > 0) {
-                    {{ vm.totalAmount | number:'1.2-2' }} kr
-                  } @else if (!vm.isHost && vm.myOwnAmount !== null) {
+                  @if (vm.isHost) {
+                    {{ vm.paidAmount | number:'1.2-2' }} kr
+                  } @else if (vm.myOwnAmount !== null) {
                     {{ vm.myOwnAmount | number:'1.2-2' }} kr
                   } @else {
                     – kr
@@ -126,10 +126,10 @@
                       <span class="order-detail__value">{{ vm.merchantAddress }}</span>
                     </div>
                   }
-                  @if (vm.isHost && vm.totalAmount > 0) {
+                  @if (vm.isHost) {
                     <div class="order-detail__row">
-                      <span class="order-detail__label">Samlet beløb</span>
-                      <span class="order-detail__value order-detail__value--amount">{{ vm.totalAmount | number:'1.2-2' }} kr</span>
+                      <span class="order-detail__label">Samlet betalt</span>
+                      <span class="order-detail__value order-detail__value--amount">{{ vm.paidAmount | number:'1.2-2' }} kr</span>
                     </div>
                   }
                   @if (!vm.isHost && vm.myOwnAmount !== null) {
@@ -140,44 +140,29 @@
                   }
                 </div>
 
-                <!-- Deltagere -->
-                <div class="order-lines-section">
-                  <p class="order-lines-section__heading">Deltagere</p>
-                  @for (p of vm.participants; track p.participantId) {
-                    <div class="participant-row">
-                      <div class="participant-lines__avatar" [style.background]="avatarColor(p.name)">
-                        {{ initials(p.name) }}
-                      </div>
-                      <span class="participant-row__name">
-                        {{ p.name }}
-                        @if (isCurrentUser(p.participantId)) { <span class="participant-lines__you">(dig)</span> }
-                      </span>
-                      <span class="participant-row__status"
-                            [class.participant-row__status--paid]="p.status === 'Paid'"
-                            [class.participant-row__status--invited]="p.status === 'Invited'">
-                        {{ p.status === 'Paid' ? 'Betalt' : p.status === 'Invited' ? 'Afventer' : p.status }}
-                      </span>
-                    </div>
-                  }
-                </div>
-
                 <!-- Bestillinger -->
                 <div class="order-lines-section">
                   <p class="order-lines-section__heading">Bestillinger</p>
                   @if (vm.detailsLoaded) {
-                    @if (vm.participantOrderLines.length > 0) {
-                      @for (group of vm.participantOrderLines; track group.participantId) {
-                        <div class="participant-lines">
-                          <div class="participant-lines__header">
-                            <div class="participant-lines__avatar" [style.background]="avatarColor(group.participantName)">
-                              {{ initials(group.participantName) }}
-                            </div>
-                            <span class="participant-lines__name">
-                              {{ group.participantName }}
-                              @if (isCurrentUser(group.participantId)) { <span class="participant-lines__you">(dig)</span> }
-                            </span>
-                            <span class="badge badge--paid participant-lines__paid-badge">Betalt</span>
+                    @for (p of vm.participants; track p.participantId) {
+                      @let group = getParticipantLines(vm, p.participantId);
+                      <div class="participant-lines">
+                        <div class="participant-lines__header">
+                          <div class="participant-lines__avatar" [style.background]="avatarColor(p.name)">
+                            {{ initials(p.name) }}
                           </div>
+                          <span class="participant-lines__name">
+                            {{ p.name }}
+                            @if (isCurrentUser(p.participantId)) { <span class="participant-lines__you">(dig)</span> }
+                          </span>
+                          <span class="badge participant-lines__paid-badge"
+                                [class.badge--paid]="p.status === 'Paid'"
+                                [class.badge--ready]="p.status === 'OrderSubmitted'"
+                                [class.badge--pending]="p.status === 'Invited'">
+                            {{ p.status === 'Paid' ? 'Betalt' : p.status === 'Invited' ? 'Afventer' : p.status === 'OrderSubmitted' ? 'Har bestilt' : p.status }}
+                          </span>
+                        </div>
+                        @if (group && group.lines.length > 0) {
                           @for (line of group.lines; track line.lineId) {
                             <div class="order-line">
                               <span class="order-line__bullet">•</span>
@@ -186,12 +171,10 @@
                               <span class="order-line__price">{{ line.lineTotal | number:'1.2-2' }} kr</span>
                             </div>
                           }
-                        </div>
-                      }
-                    } @else {
-                      <p class="order-lines-section__pending">
-                        Bestillinger vises først når betaling er registreret.
-                      </p>
+                        } @else {
+                          <p class="order-lines-section__pending">Har ikke bestilt endnu.</p>
+                        }
+                      </div>
                     }
                   } @else {
                     <p class="order-lines-section__pending">

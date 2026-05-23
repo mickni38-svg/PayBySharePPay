@@ -64,8 +64,15 @@ export class FindParticipantsComponent implements OnInit {
   friendPersons = computed(() => this.friendEntries().filter(e => e.type === 'Person'));
   friendMerchants = computed(() => this.friendEntries().filter(e => e.type === 'Merchant'));
 
+  merchantTabEntries = computed(() => {
+    const friendMerchantIds = new Set(this.friendMerchants().map(e => e.id));
+    const otherMerchants = this.filtered().filter(e => e.type === 'Merchant' && !friendMerchantIds.has(e.id));
+    return otherMerchants;
+  });
+
   selectedCount = computed(() =>
-    this.entries().filter(e => e.selected).length
+    this.entries().filter(e => e.selected).length +
+    this.friendEntries().filter(e => e.selected).length
   );
 
   setTab(tab: 'friends' | 'persons' | 'merchants'): void {
@@ -133,9 +140,17 @@ export class FindParticipantsComponent implements OnInit {
   }
 
   toggleSelect(e: DirectoryEntryVM): void {
-    this.entries.update(list =>
-      list.map(item => item.id === e.id ? { ...item, selected: !item.selected } : item)
-    );
+    // Check if this entry is in friendEntries
+    const inFriends = this.friendEntries().some(f => f.id === e.id);
+    if (inFriends) {
+      this.friendEntries.update(list =>
+        list.map(item => item.id === e.id ? { ...item, selected: !item.selected } : item)
+      );
+    } else {
+      this.entries.update(list =>
+        list.map(item => item.id === e.id ? { ...item, selected: !item.selected } : item)
+      );
+    }
   }
 
   addSelected(): void {

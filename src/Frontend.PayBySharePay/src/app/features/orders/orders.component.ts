@@ -29,6 +29,8 @@ interface OrderCardVM {
   detailsLoaded: boolean;
   /** Deltagerens eget beløb (null = ingen bestilling endnu) */
   myOwnAmount: number | null;
+  /** Sum af betalte deltageres ordrelinjer (til host-visning) */
+  paidAmount: number;
 }
 
 @Component({
@@ -118,18 +120,21 @@ export class OrdersComponent implements OnInit, OnDestroy {
     // canShowOrderLines: vis linjer så snart de er tilgængelige (bestilling indsendt)
     const anyoneHasLines = cached?.participantOrderLines.some(g => g.lines.length > 0) ?? false;
     const myLines = cached?.participantOrderLines.find(g => g.participantId === userId);
-    const canShow = isHost ? anyoneHasLines : (myLines?.lines?.length ?? 0) > 0;
+    const canShow = anyoneHasLines || (myLines?.lines?.length ?? 0) > 0;
 
-    // Filtrer ordrelinjer: vært ser alle med linjer, deltager kun egne
-    const visibleLines = cached?.participantOrderLines.filter(g =>
-      isHost ? g.lines.length > 0 : g.participantId === userId && g.lines.length > 0
-    ) ?? [];
+    // Alle deltagere ser alles ordrelinjer (kun dem med linjer)
+    const visibleLines = cached?.participantOrderLines.filter(g => g.lines.length > 0) ?? [];
 
     // Deltagerens eget beløb baseret på egne ordrelinjer
     const myOwnLines = cached?.participantOrderLines.find(g => g.participantId === userId);
     const myOwnAmount = (myOwnLines?.lines?.length ?? 0) > 0
       ? myOwnLines!.lines.reduce((sum, l) => sum + l.lineTotal, 0)
       : null;
+
+    // Beløb der er betalt: sum af ordrelinjer for deltagere med hasPaid = true (fra cached detaljer)
+    const paidAmount = cached?.participantOrderLines
+      .filter(g => g.hasPaid)
+      .reduce((sum, g) => sum + g.lines.reduce((s, l) => s + l.lineTotal, 0), 0) ?? 0;
 
     return {
       id: o.id,
@@ -144,14 +149,15 @@ export class OrdersComponent implements OnInit, OnDestroy {
       merchantAddress: cached?.merchantAddress,
       participantCount: nonMerchant.length,
       paidParticipantCount: paidCount,
-      canPayTotalOrder: isHost && (isPending || paidCount === nonMerchant.length),
+      canPayTotalOrder: isHost,
       canPayOwnShare: !isHost && (myPart?.status === 'Invited' || myPart?.status === 'Accepted'),
       allPaid: nonMerchant.length > 0 && paidCount === nonMerchant.length,
       canShowOrderLines: canShow,
       participants: nonMerchant,
       participantOrderLines: visibleLines,
       detailsLoaded: !!cached,
-      myOwnAmount
+      myOwnAmount,
+      paidAmount
     };
   }
 
@@ -324,6 +330,10 @@ export class OrdersComponent implements OnInit, OnDestroy {
 
   isCurrentUser(participantId: number): boolean {
     return participantId === (this.auth.currentUserId() ?? -1);
+  }
+
+  getParticipantLines(vm: OrderCardVM, participantId: number) {
+    return vm.participantOrderLines.find(g => g.participantId === participantId) ?? null;
   }
 }
 

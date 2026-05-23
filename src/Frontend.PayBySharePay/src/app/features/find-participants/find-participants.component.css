@@ -1,4 +1,4 @@
-﻿:host { display: block; }
+﻿:host { display: block; overflow-x: hidden; }
 
 .find {
   background: var(--color-bg);
@@ -6,6 +6,7 @@
   padding-bottom: 90px;
   font-family: var(--font-family);
   color: var(--color-text-primary);
+  overflow-x: hidden;
 }
 
 .find__header {

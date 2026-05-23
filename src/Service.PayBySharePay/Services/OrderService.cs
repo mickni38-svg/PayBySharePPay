@@ -100,10 +100,10 @@ public class OrderService : IOrderService
         var allDrafts = order.MerchantOrderDrafts.ToList();
         var draft = allDrafts.FirstOrDefault(); // bruges kun til totalAmount/status
 
-        // Betalingsstatus pr. deltager
-        var paidParticipantIds = order.Payments
-            .Where(p => p.Status == "Completed")
-            .Select(p => p.ParticipantId)
+        // Betalingsstatus pr. deltager – brug OrderParticipant.Status = "Paid"
+        var paidParticipantIds = order.OrderParticipants
+            .Where(op => op.Status == "Paid")
+            .Select(op => op.ParticipantId)
             .ToHashSet();
 
         // Byg ordrelinjer pr. deltager

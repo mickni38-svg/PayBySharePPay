@@ -17,7 +17,7 @@
       <p class="find__state">Henter venner...</p>
     } @else if (activeTab() === 'friends') {
 
-      @if (friendPersons().length === 0 && friendMerchants().length === 0) {
+      @if (friendPersons().length === 0) {
         <p class="find__state">Ingen venner endnu.</p>
       }
 
@@ -45,8 +45,18 @@
         }
       }
 
+    } @else if (isLoading()) {
+      <p class="find__state">Henter...</p>
+    } @else if (errorMessage()) {
+      <p class="find__state find__state--error">{{ errorMessage() }}</p>
+    } @else if (activeTab() === 'merchants') {
+
+      @if (friendMerchants().length === 0 && merchantTabEntries().length === 0) {
+        <p class="find__state">Ingen spisesteder fundet.</p>
+      }
+
       @if (friendMerchants().length > 0) {
-        <p class="find__section-heading">Spisesteder</p>
+        <p class="find__section-heading">Venner</p>
         @for (e of friendMerchants(); track e.id) {
           <div class="row" [class.row--selected]="e.selected" (click)="toggleSelect(e)">
             <div class="row__avatar" [style.background]="e.avatarColor">
@@ -65,10 +75,28 @@
         }
       }
 
-    } @else if (isLoading()) {
-      <p class="find__state">Henter...</p>
-    } @else if (errorMessage()) {
-      <p class="find__state find__state--error">{{ errorMessage() }}</p>
+      @if (merchantTabEntries().length > 0) {
+        @if (friendMerchants().length > 0) {
+          <p class="find__section-heading">Andre</p>
+        }
+        @for (e of merchantTabEntries(); track e.id) {
+          <div class="row" [class.row--selected]="e.selected" (click)="toggleSelect(e)">
+            <div class="row__avatar" [style.background]="e.avatarColor">
+              <span class="row__initials">{{ e.initials }}</span>
+            </div>
+            <div class="row__info">
+              <span class="row__name">{{ e.displayName }}</span>
+              <span class="row__badge badge badge--orange">SPISESTED</span>
+            </div>
+            <div class="row__check" [class.row__check--on]="e.selected">
+              @if (e.selected) {
+                <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              }
+            </div>
+          </div>
+        }
+      }
+
     } @else if (filteredByTab().length === 0) {
       <p class="find__state">Ingen resultater fundet.</p>
     } @else {
@@ -79,9 +107,7 @@
           </div>
           <div class="row__info">
             <span class="row__name">{{ e.displayName }}</span>
-            @if (e.type === 'Merchant') {
-              <span class="row__badge badge badge--orange">SPISESTED</span>
-            } @else if (e.subtitle) {
+            @if (e.subtitle) {
               <span class="row__sub">{{ e.subtitle }}</span>
             } @else if (e.handle) {
               <span class="row__sub">{{ e.handle }}</span>
