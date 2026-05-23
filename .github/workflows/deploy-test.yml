@@ -63,8 +63,8 @@ jobs:
       - name: Install go-sqlcmd
         run: |
           SQLCMD_VERSION="1.8.2"
-          curl -sSL "https://github.com/microsoft/go-sqlcmd/releases/download/v${SQLCMD_VERSION}/sqlcmd-linux-amd64.tar.gz" -o sqlcmd.tar.gz
-          tar -xzf sqlcmd.tar.gz sqlcmd
+          curl -sSL "https://github.com/microsoft/go-sqlcmd/releases/download/v${SQLCMD_VERSION}/sqlcmd-linux-amd64.tar.bz2" -o sqlcmd.tar.bz2
+          tar -xjf sqlcmd.tar.bz2 sqlcmd
           sudo mv sqlcmd /usr/local/bin/sqlcmd-go
           sqlcmd-go --version
 
