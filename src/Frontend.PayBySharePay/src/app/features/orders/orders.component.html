@@ -24,6 +24,10 @@
       </button>
     </div>
 
+    @if (payError()) {
+      <div class="orders__pay-error">⚠️ {{ payError() }}</div>
+    }
+
 
 
     <!-- Ordeliste -->
@@ -82,15 +86,15 @@
                   }
                 </span>
                 @if (vm.isHost) {
-                  <span class="order-card__progress">{{ vm.paidParticipantCount }} af {{ vm.participantCount }} har betalt</span>
+                  <span class="order-card__progress">{{ vm.paidParticipantCount }} af {{ vm.participantCount }} har bestilt</span>
                 }
                 </div>
               <div class="order-card__footer-action">
-                @if (vm.canPayTotalOrder) {
+                @if (vm.canPayTotalOrder && !COMPLETED_STATUSES.includes(vm.status)) {
                   <button class="btn btn--primary btn--sm"
-                    [disabled]="!vm.allPaid"
-                    [class.btn--disabled]="!vm.allPaid"
-                    (click)="payOrder(vm.id)">Betal nu</button>
+                    [disabled]="!vm.allPaid || payingOrderId() === vm.id"
+                    [class.btn--disabled]="!vm.allPaid || payingOrderId() === vm.id"
+                    (click)="payOrder(vm)">{{ payingOrderId() === vm.id ? 'Betaler…' : 'Betal nu' }}</button>
                 }
               </div>
             </div>

@@ -14,6 +14,7 @@ public static class ServiceLayerExtensions
         services.AddScoped<IPaymentService, PaymentService>();
         services.AddScoped<IMessageService, MessageService>();
         services.AddScoped<IMerchantOrderService, MerchantOrderService>();
+        services.AddScoped<IExternalPaymentService, ExternalPaymentService>();
 
         return services;
     }

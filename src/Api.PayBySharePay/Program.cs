@@ -10,6 +10,9 @@ using Service.PayBySharePay.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Indlæs miljøspecifik konfiguration (fx appsettings.Test.json) hvis den findes
+builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true);
+
 builder.Services.AddControllers();
 
 if (builder.Environment.IsDevelopment())

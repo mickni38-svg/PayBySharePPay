@@ -26,7 +26,7 @@
   <!-- Statuskort -->
   @if (statusCards().length > 0) {
     <section class="home__status">
-      @for (card of statusCards(); track card.type) {
+      @for (card of statusCards(); track card.type + (card.orderId ?? '')) {
         <button class="status-card status-card--{{ card.type }}" (click)="onStatusCardClick(card)">
           <div class="status-card__icon">
             @if (card.type === 'pending') {
@@ -35,6 +35,10 @@
                 <circle cx="9" cy="7" r="4"/>
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
                 <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            } @else if (card.type === 'allPaid') {
+              <svg viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2" stroke-linecap="round">
+                <polyline points="20 6 9 17 4 12"/>
               </svg>
             } @else {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -48,9 +52,13 @@
               <span class="status-card__sub">{{ card.subtitle }}</span>
             }
           </div>
-          <svg class="status-card__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <polyline points="9 18 15 12 9 6"/>
-          </svg>
+          @if (card.type === 'allPaid') {
+            <span class="status-card__dismiss" (click)="dismissAllPaidCard($event, card)">Fjern</span>
+          } @else {
+            <svg class="status-card__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          }
         </button>
       }
     </section>
@@ -64,10 +72,15 @@
           <div class="action-card__icon" [style.background]="card.iconBg">
             @switch (card.icon) {
               @case ('chart') {
-                <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="card.accent" stroke-width="2" stroke-linecap="round">
-                  <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
-                  <line x1="6" y1="20" x2="6" y2="14"/>
-                </svg>
+                <div style="position:relative;display:inline-flex;">
+                  <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="card.accent" stroke-width="2" stroke-linecap="round">
+                    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+                    <line x1="6" y1="20" x2="6" y2="14"/>
+                  </svg>
+                  @if (readyToPayCount() > 0) {
+                    <span class="action-card__badge">{{ readyToPayCount() > 9 ? '9+' : readyToPayCount() }}</span>
+                  }
+                </div>
               }
               @case ('plus') {
                 <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="card.accent" stroke-width="2" stroke-linecap="round">

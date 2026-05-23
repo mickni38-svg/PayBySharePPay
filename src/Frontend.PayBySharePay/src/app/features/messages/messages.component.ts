@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, NavigationEnd } from '@angular/router';
+import { Router, NavigationEnd, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
@@ -11,7 +11,7 @@ import { Message } from '../../core/models/message.model';
 @Component({
   selector: 'app-messages',
   standalone: true,
-  imports: [CommonModule, EmptyStateComponent],
+  imports: [CommonModule, EmptyStateComponent, RouterLink],
   templateUrl: './messages.component.html',
   styleUrl: './messages.component.scss'
 })
@@ -68,6 +68,17 @@ export class MessagesComponent implements OnInit, OnDestroy {
   extractUrl(content: string): string | null {
     const match = content.match(/https?:\/\/\S+/);
     return match ? match[0] : null;
+  }
+
+  /** Returnerer den interne sti (/orders) hvis URL'en peger på samme origin, ellers null */
+  internalPath(url: string): string | null {
+    try {
+      const parsed = new URL(url);
+      if (parsed.origin === window.location.origin) {
+        return parsed.pathname + parsed.search + parsed.hash;
+      }
+    } catch {}
+    return null;
   }
 
   /** Returnerer beskeden uden URL-delen */

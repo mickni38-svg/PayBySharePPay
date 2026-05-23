@@ -20,9 +20,15 @@
             <div class="messages__item-body">
               <p class="messages__item-text">{{ textWithoutUrl(msg.content) }}</p>
               @if (extractUrl(msg.content); as url) {
-                <a [href]="url" target="_blank" class="messages__item-link">
-                  👆 Klik her for at bestille
-                </a>
+                @if (internalPath(url); as path) {
+                  <a [routerLink]="path" class="messages__item-link">
+                    👆 Gå til Overblik
+                  </a>
+                } @else {
+                  <a [href]="url" target="_blank" rel="noopener" class="messages__item-link">
+                    👆 Klik her for at bestille
+                  </a>
+                }
               }
               <span class="messages__item-time">{{ msg.createdAt | date:'d. MMM HH:mm' }}</span>
             </div>

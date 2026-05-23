@@ -162,11 +162,9 @@ export function computePendingSummary(
   const pendingOrders: PendingOrder[] = [];
 
   for (const order of hostOrders) {
-    const pendingStatuses = ['Invited', 'Accepted'];
-    const activePendingStatuses = order.status === 'Ready' ? ['Invited', 'Accepted'] : ['Invited'];
-
+    // Kun 'Invited' tæller som afventende — OrderSubmitted og Paid er færdige
     const pendingPs = order.participants.filter(
-      p => p.type !== 'Merchant' && activePendingStatuses.includes(p.status)
+      p => p.type !== 'Merchant' && p.status === 'Invited'
     );
 
     if (pendingPs.length === 0) continue;

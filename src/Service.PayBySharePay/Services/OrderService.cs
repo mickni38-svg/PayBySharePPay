@@ -1,5 +1,6 @@
 using DataStorage.PayBySharePay.Entities;
 using DataStorage.PayBySharePay.Repositories;
+using Microsoft.Extensions.Configuration;
 using Service.PayBySharePay.DTOs;
 using Service.PayBySharePay.Interfaces;
 
@@ -9,11 +10,15 @@ public class OrderService : IOrderService
 {
     private readonly IOrderRepository _orderRepository;
     private readonly IParticipantRepository _participantRepository;
+    private readonly string _merchantDemoUrl;
+    private readonly string _frontendUrl;
 
-    public OrderService(IOrderRepository orderRepository, IParticipantRepository participantRepository)
+    public OrderService(IOrderRepository orderRepository, IParticipantRepository participantRepository, IConfiguration configuration)
     {
         _orderRepository = orderRepository;
         _participantRepository = participantRepository;
+        _merchantDemoUrl = configuration["AppSettings:MerchantDemoUrl"] ?? "http://localhost:8081";
+        _frontendUrl = configuration["AppSettings:FrontendUrl"] ?? "http://localhost:4200";
     }
 
     public async Task<OrderDto> CreateOrderAsync(CreateOrderDto dto)
@@ -71,8 +76,8 @@ public class OrderService : IOrderService
         // Send notifikation med bestillingslink til ALLE deltagere inkl. host
         if (merchant != null)
         {
-            // Brug merchant's GroupOrderUrl – eller konstruér et MerchantDemo-link som fallback
-            var baseUrl = merchant.GroupOrderUrl ?? "https://paybysharepay-merchant.azurewebsites.net";
+            // Brug merchant's GroupOrderUrl – eller konstruér et MerchantDemo-link fra konfiguration
+            var baseUrl = merchant.GroupOrderUrl ?? _merchantDemoUrl;
 
             foreach (var op in order.OrderParticipants.ToList())
             {
@@ -327,6 +332,17 @@ public class OrderService : IOrderService
         if (allSubmitted)
         {
             order.Status = "ReadyToPay";
+
+            // Send notifikation til host med link til Overblik
+            var ordreTitle = string.IsNullOrWhiteSpace(order.Title) ? order.Category ?? "ordre" : order.Title;
+            var overblikLink = $"{_frontendUrl}/orders";
+            order.Messages.Add(new Message
+            {
+                OrderId = order.Id,
+                ParticipantId = order.CreatedByParticipantId,
+                Content = $"✅ Alle deltagere har bestilt til '{ordreTitle}'. Du kan nu gennemføre betalingen: {overblikLink}"
+            });
+
             await _orderRepository.SaveChangesAsync();
         }
     }

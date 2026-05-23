@@ -37,5 +37,13 @@ export class OrderService {
   getOrderOverview(id: number): Observable<OrderOverviewApiDto> {
     return this.http.get<OrderOverviewApiDto>(`${this.apiUrl}/${id}/overview`);
   }
+
+  /** POST /api/orders/{id}/pay – host initierer betaling via eksternt betalings-API */
+  payOrder(orderId: number, requestingParticipantId: number, amount: number): Observable<{ orderId: number; status: string; paymentReference: string }> {
+    return this.http.post<{ orderId: number; status: string; paymentReference: string }>(
+      `${this.apiUrl}/${orderId}/pay`,
+      { requestingParticipantId, amount, currency: 'DKK' }
+    );
+  }
 }
 

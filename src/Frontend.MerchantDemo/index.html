@@ -232,9 +232,11 @@
   const hostname = window.location.hostname;
   const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
   const isTest  = !isLocal && hostname.includes('ashy-bay-0e753db03');
-  const API_BASE = (isLocal || isTest)
-    ? 'https://paybysharepay-api.azurewebsites.net'
-    : 'https://paybysharepay-api-win.azurewebsites.net';
+  const API_BASE = isLocal
+    ? 'http://localhost:5071'
+    : isTest
+      ? 'https://paybysharepay-api.azurewebsites.net'
+      : 'https://paybysharepay-api-win.azurewebsites.net';
 
   document.getElementById('groupLabel').textContent =
     orderId ? `Ordre #${orderId}` : 'Mangler orderId i URL (brug ?orderId=X&merchantId=Y&participantToken=Z)';

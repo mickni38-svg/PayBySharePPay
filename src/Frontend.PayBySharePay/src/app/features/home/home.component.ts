@@ -24,9 +24,10 @@ interface ActionCard {
 }
 
 interface StatusCard {
-  type: 'pending' | 'activity';
+  type: 'pending' | 'allPaid' | 'activity';
   title: string;
   subtitle: string;
+  orderId?: number;
 }
 
 @Component({
@@ -45,6 +46,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   ];
 
   statusCards = signal<StatusCard[]>([]);
+  dismissedAllPaidIds = signal<Set<number>>(new Set());
+  readyToPayCount = signal<number>(0);
   persons = signal<DirectoryEntry[]>([]);
   friendCount = signal<number | null>(null);
   selectedEmail = '';
@@ -117,7 +120,32 @@ export class HomeComponent implements OnInit, OnDestroy {
           });
         }
 
+        // Tilføj kort for host-ordrer hvor alle har betalt (og ikke dismissed)
+        const dismissed = this.dismissedAllPaidIds();
+        const allPaidOrders = orders.filter(o =>
+          o.createdByParticipantId === userId &&
+          o.status !== 'Completed' && o.status !== 'Cancelled' &&
+          !dismissed.has(o.id) &&
+          o.participants.filter(p => p.type !== 'Merchant').length > 0 &&
+          o.participants.filter(p => p.type !== 'Merchant').every(p => p.status === 'Paid')
+        );
+        for (const o of allPaidOrders) {
+          cards.push({
+            type: 'allPaid',
+            title: `✅ Alle har betalt – ${o.title}`,
+            subtitle: 'Ordren er sendt til spisestedet',
+            orderId: o.id
+          });
+        }
+
         this.statusCards.set(cards);
+
+        // Tæl ordrer der venter på host-betaling
+        const readyToPay = orders.filter(o =>
+          o.createdByParticipantId === userId &&
+          o.status === 'ReadyToPay'
+        );
+        this.readyToPayCount.set(readyToPay.length);
       },
       error: () => {
         this.statusCards.set([]);
@@ -128,9 +156,20 @@ export class HomeComponent implements OnInit, OnDestroy {
   onStatusCardClick(card: StatusCard): void {
     if (card.type === 'pending') {
       this.router.navigate(['/pending-participants']);
+    } else if (card.type === 'allPaid') {
+      this.router.navigate(['/orders']);
     } else {
       this.router.navigate(['/activity']);
     }
+  }
+
+  dismissAllPaidCard(event: Event, card: StatusCard): void {
+    event.stopPropagation();
+    if (card.orderId == null) return;
+    const next = new Set(this.dismissedAllPaidIds());
+    next.add(card.orderId);
+    this.dismissedAllPaidIds.set(next);
+    this.statusCards.set(this.statusCards().filter(c => c.orderId !== card.orderId));
   }
 
   devReset(): void {

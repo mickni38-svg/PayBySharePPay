@@ -48,6 +48,8 @@ export class OrdersComponent implements OnInit, OnDestroy {
   errorMessage = signal<string | null>(null);
   activeTab = signal<'active' | 'completed'>('active');
   filterPending = signal(false);
+  payingOrderId = signal<number | null>(null);
+  payError = signal<string | null>(null);
 
   // Cache af ordredetaljer hentet fra API
   private _detailsCache = signal<Map<number, OrderOverviewApiDto>>(new Map());
@@ -93,8 +95,11 @@ export class OrdersComponent implements OnInit, OnDestroy {
     this.orderService.getOrdersByParticipant(this.auth.currentUserId() ?? 0).subscribe({
       next: (list) => {
         this.allOrders.set(list);
-        // Åbn alle som default og hent detaljer
-        this._expandedIds.set(new Set(list.map(o => o.id)));
+        // Kun åbn igangværende ordre som default (ikke afsluttede)
+        const activeIds = list
+          .filter(o => !this.COMPLETED_STATUSES.includes(o.status))
+          .map(o => o.id);
+        this._expandedIds.set(new Set(activeIds));
         list.forEach(o => {
           if (!this._detailsCache().has(o.id)) {
             this.loadDetails(o.id);
@@ -110,9 +115,12 @@ export class OrdersComponent implements OnInit, OnDestroy {
     const userId = this.auth.currentUserId() ?? 0;
     const isHost = o.createdByParticipantId === userId;
     const nonMerchant = o.participants.filter(p => p.type !== 'Merchant');
-    const paidCount = nonMerchant.filter(p => p.status === 'Paid').length;
-    const isPending = o.status === 'Collecting' || o.status === 'WaitingForPayment' ||
-      nonMerchant.some(p => p.status === 'Invited');
+    // Tæl deltagere der har bestilt (OrderSubmitted) eller betalt (Paid)
+    const submittedStatuses = ['OrderSubmitted', 'Paid'];
+    const paidCount = nonMerchant.filter(p => submittedStatuses.includes(p.status)).length;
+    // Alle har bestilt når ordre er ReadyToPay eller Completed
+    const allPaid = o.status === 'ReadyToPay' || o.status === 'Completed' ||
+      (nonMerchant.length > 0 && nonMerchant.every(p => submittedStatuses.includes(p.status)));
     const myPart = o.participants.find(p => p.participantId === userId);
 
     // Hent detaljer fra cache hvis tilgængeligt
@@ -155,7 +163,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
       participantCount: nonMerchant.length,
       paidParticipantCount: paidCount,
       canPayTotalOrder: isHost,
-      allPaid: nonMerchant.length > 0 && paidCount === nonMerchant.length,
+      allPaid,
       canShowOrderLines: canShow,
       participants: nonMerchant,
       participantOrderLines: visibleLines,
@@ -192,7 +200,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
     return list;
   });
 
-  private readonly COMPLETED_STATUSES = ['Completed', 'Cancelled'];
+  readonly COMPLETED_STATUSES = ['Completed', 'Cancelled'];
 
   allVMs = computed(() => {
     this._detailsCache();
@@ -265,8 +273,28 @@ export class OrdersComponent implements OnInit, OnDestroy {
     return this._loadingIds().has(id);
   }
 
-  payOrder(id: number): void {
-    alert(`Betal ordre #${id} til spisestedet — implementeres i næste step`);
+  payOrder(vm: { id: number; totalOrderedAmount: number }): void {
+    const userId = this.auth.currentUserId();
+    if (!userId) return;
+    this.payingOrderId.set(vm.id);
+    this.payError.set(null);
+
+    this.orderService.payOrder(vm.id, userId, vm.totalOrderedAmount).subscribe({
+      next: (result) => {
+        this.payingOrderId.set(null);
+        // Flyt til Afsluttede fane og genindlæs
+        this.activeTab.set('completed');
+        this.load();
+      },
+      error: (err) => {
+        this.payingOrderId.set(null);
+        this.payError.set(
+          err.status === 402 ? 'Betaling afvist — prøv igen.' :
+          err.status === 403 ? 'Kun værten kan betale.' :
+          'Noget gik galt under betalingen.'
+        );
+      }
+    });
   }
 
   goCreate(): void { this.router.navigate(['/orders/create']); }
