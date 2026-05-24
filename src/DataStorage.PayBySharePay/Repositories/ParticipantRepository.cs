@@ -42,6 +42,14 @@ public class ParticipantRepository : IParticipantRepository
         return await _context.Participants.FindAsync(id);
     }
 
+    public async Task<Participant?> GetByEmailAsync(string email)
+    {
+        return await _context.Participants
+            .FirstOrDefaultAsync(p => p.Email != null &&
+                p.Email.ToLower() == email.ToLower() &&
+                p.Type == ParticipantType.Person);
+    }
+
     public async Task<Participant> AddAsync(Participant participant)
     {
         _context.Participants.Add(participant);

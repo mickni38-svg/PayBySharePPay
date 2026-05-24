@@ -8,4 +8,6 @@ public class ParticipantDto
     public string? Email { get; set; }
     public string? Phone { get; set; }
     public string? CompanyName { get; set; }
+    /// <remarks>Udfyldes kun internt ved login-validering – eksponeres aldrig i API-svar.</remarks>
+    public string? PasswordHash { get; set; }
 }

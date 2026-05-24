@@ -20,6 +20,10 @@ export class RegisterComponent {
   personName = '';
   personEmail = '';
   personPhone = '';
+  personPassword = '';
+  personPasswordConfirm = '';
+
+  personPasswordMismatch = signal(false);
 
   // Merchant
   merchantName = '';
@@ -48,10 +52,17 @@ export class RegisterComponent {
     this.error.set(null);
 
     if (this.tab() === 'person') {
+      if (this.personPassword !== this.personPasswordConfirm) {
+        this.personPasswordMismatch.set(true);
+        this.loading.set(false);
+        return;
+      }
+      this.personPasswordMismatch.set(false);
       this.auth.register({
         name: this.personName,
         email: this.personEmail,
-        phone: this.personPhone || undefined
+        phone: this.personPhone || undefined,
+        password: this.personPassword
       }).subscribe({
         next: () => this.router.navigate(['/home']),
         error: (err) => {

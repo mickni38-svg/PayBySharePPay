@@ -11,6 +11,9 @@ public class RegisterPersonRequest
     public string Email { get; set; } = string.Empty;
 
     public string? Phone { get; set; }
+
+    [Required, MinLength(6)]
+    public string Password { get; set; } = string.Empty;
 }
 
 public class RegisterMerchantRequest

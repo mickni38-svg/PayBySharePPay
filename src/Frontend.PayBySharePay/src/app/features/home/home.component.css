@@ -59,6 +59,81 @@
   padding: 16px var(--space-page) var(--space-section);
 }
 
+.home__cards--spaced {
+  padding-bottom: 24px;
+}
+
+/* Bruger login / opret bruger sektion */
+.home__user-auth {
+  margin: 0 var(--space-page) 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.user-auth__logged {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.user-auth__name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.user-auth__btn {
+  width: 100%;
+  display: block;
+  text-align: center;
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 48px;
+  transition: background 0.15s, opacity 0.15s;
+  text-decoration: none;
+  border: none;
+}
+
+.user-auth__btn--primary {
+  background: var(--color-primary, #7C3AED);
+  color: #fff;
+}
+
+.user-auth__btn--primary:active { opacity: 0.85; }
+
+.user-auth__btn--out {
+  width: auto;
+  background: transparent;
+  color: var(--color-danger);
+  border: 1px solid rgba(239,68,68,0.3);
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: unset;
+}
+
+.user-auth__link {
+  display: block;
+  text-align: center;
+  font-size: 13px;
+  color: var(--color-primary, #7C3AED);
+  text-decoration: none;
+  padding: 4px 0;
+}
+
+.user-auth__link:active { opacity: 0.7; }
+
 .action-card {
   display: flex;
   flex-direction: column;

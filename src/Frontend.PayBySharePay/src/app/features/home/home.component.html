@@ -65,7 +65,7 @@
   }
 
   <!-- 2x2 Action cards -->
-  <section class="home__cards">
+  <section class="home__cards home__cards--spaced">
     @for (card of actionCards; track card.route) {
       <a class="action-card" [routerLink]="card.route" [style.--card-accent]="card.accent">
         <div class="action-card__top">
@@ -120,6 +120,19 @@
         </div>
         <span class="action-card__label">{{ card.label }}</span>
       </a>
+    }
+  </section>
+
+  <!-- Bruger login / opret bruger -->
+  <section class="home__user-auth">
+    @if (auth.isLoggedIn()) {
+      <div class="user-auth__logged">
+        <span class="user-auth__name">{{ auth.currentUserName() }}</span>
+        <button class="user-auth__btn user-auth__btn--out" (click)="auth.logout()">Log ud</button>
+      </div>
+    } @else {
+      <a class="user-auth__btn user-auth__btn--primary" routerLink="/login">Log ind</a>
+      <a class="user-auth__link" routerLink="/register">Opret dig som bruger</a>
     }
   </section>
 
