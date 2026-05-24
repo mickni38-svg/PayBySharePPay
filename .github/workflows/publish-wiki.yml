@@ -1,0 +1,38 @@
+name: Publicér dokumentation til GitHub Wiki
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Home.md'
+
+permissions:
+  contents: write
+
+jobs:
+  publish-wiki:
+    name: Push Home.md til GitHub Wiki
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout kode
+        uses: actions/checkout@v4
+
+      - name: Klon Wiki-repo
+        run: |
+          git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.wiki.git wiki-repo
+
+      - name: Kopier Home.md til Wiki
+        run: |
+          cp Home.md wiki-repo/Home.md
+
+      - name: Commit og push til Wiki
+        run: |
+          cd wiki-repo
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Home.md
+          git diff --cached --quiet && echo "Ingen ændringer" && exit 0
+          git commit -m "Opdater dokumentation fra main-branch [$(date -u +'%Y-%m-%d %H:%M UTC')]"
+          git push
