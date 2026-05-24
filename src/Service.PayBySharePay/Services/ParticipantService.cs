@@ -1,3 +1,4 @@
+using BCrypt.Net;
 using DataStorage.PayBySharePay.Entities;
 using DataStorage.PayBySharePay.Repositories;
 using Service.PayBySharePay.DTOs;
@@ -40,7 +41,10 @@ public class ParticipantService : IParticipantService
             Type = ParticipantType.Person,
             Name = dto.Name.Trim(),
             Email = dto.Email,
-            Phone = dto.Phone
+            Phone = dto.Phone,
+            PasswordHash = string.IsNullOrWhiteSpace(dto.Password)
+                ? null
+                : BCrypt.Net.BCrypt.HashPassword(dto.Password)
         };
 
         await _participantRepository.AddAsync(participant);
@@ -101,6 +105,15 @@ public class ParticipantService : IParticipantService
         await _friendRelationRepository.SaveChangesAsync();
     }
 
+    public async Task<ParticipantDto?> GetByEmailAsync(string email)
+    {
+        var participant = await _participantRepository.GetByEmailAsync(email);
+        return participant is null ? null : MapToDto(participant);
+    }
+
+    public bool VerifyPassword(string password, string passwordHash)
+        => BCrypt.Net.BCrypt.Verify(password, passwordHash);
+
     private static ParticipantDto MapToDto(Participant p) => new()
     {
         Id = p.Id,
@@ -108,6 +121,7 @@ public class ParticipantService : IParticipantService
         Name = p.Name,
         Email = p.Email,
         Phone = p.Phone,
-        CompanyName = p.CompanyName
+        CompanyName = p.CompanyName,
+        PasswordHash = p.PasswordHash
     };
 }

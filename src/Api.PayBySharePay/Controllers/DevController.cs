@@ -39,7 +39,7 @@ public class DevController : ControllerBase
     /// </summary>
     [HttpPost("seed-merchant-urls")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> SeedMerchantUrls([FromQuery] string merchantDemoUrl = "https://ashy-bay-0e753db03.7.azurestaticapps.net")
+    public async Task<IActionResult> SeedMerchantUrls([FromQuery] string merchantDemoUrl = "https://brave-flower-0026a7503.7.azurestaticapps.net/" )
     {
         var merchants = await _context.Participants
             .Where(p => p.Type == ParticipantType.Merchant && p.GroupOrderUrl == null)

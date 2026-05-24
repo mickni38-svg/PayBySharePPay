@@ -44,6 +44,20 @@
         <input class="form-input" type="tel" [(ngModel)]="personPhone" name="personPhone"
                placeholder="+45 12 34 56 78" />
       </div>
+      <div class="form-group">
+        <label class="form-label">Adgangskode *</label>
+        <input class="form-input" type="password" [(ngModel)]="personPassword" name="personPassword"
+               placeholder="Mindst 6 tegn" required minlength="6" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Gentag adgangskode *</label>
+        <input class="form-input" [class.form-input--error]="personPasswordMismatch()"
+               type="password" [(ngModel)]="personPasswordConfirm" name="personPasswordConfirm"
+               placeholder="Gentag adgangskode" required />
+        @if (personPasswordMismatch()) {
+          <span class="form-hint form-hint--error">Adgangskoderne stemmer ikke overens.</span>
+        }
+      </div>
     }
 
     <!-- === MERCHANT FORM === -->
@@ -93,7 +107,7 @@
     }
 
     <button class="btn-primary register__submit" type="submit"
-            [disabled]="loading() || (tab() === 'person' && (!personName || !personEmail)) || (tab() === 'merchant' && (!merchantName || !merchantCompany))">
+            [disabled]="loading() || (tab() === 'person' && (!personName || !personEmail || !personPassword || personPasswordMismatch())) || (tab() === 'merchant' && (!merchantName || !merchantCompany))">
       {{ loading() ? 'Opretter konto…' : 'Opret konto' }}
     </button>
 

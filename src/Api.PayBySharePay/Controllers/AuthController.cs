@@ -36,6 +36,17 @@ public class AuthController : ControllerBase
         if (person is null)
             return Unauthorized(new { error = "Ingen bruger fundet med denne email." });
 
+        // Hent den rå entity for at få adgang til PasswordHash
+        var personWithHash = await _participantService.GetByEmailAsync(request.Email);
+        if (personWithHash is null)
+            return Unauthorized(new { error = "Ingen bruger fundet med denne email." });
+
+        if (!string.IsNullOrEmpty(request.Password) && personWithHash.PasswordHash is not null)
+        {
+            if (!_participantService.VerifyPassword(request.Password, personWithHash.PasswordHash))
+                return Unauthorized(new { error = "Forkert adgangskode." });
+        }
+
         var expiresAt = DateTime.UtcNow.AddMinutes(480);
         var token = _tokenService.GenerateToken(person.Id, person.Name);
 
@@ -61,7 +72,8 @@ public class AuthController : ControllerBase
         {
             Name = request.Name,
             Email = request.Email,
-            Phone = request.Phone
+            Phone = request.Phone,
+            Password = request.Password
         });
 
         var expiresAt = DateTime.UtcNow.AddMinutes(480);

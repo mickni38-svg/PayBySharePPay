@@ -1,5 +1,19 @@
 :host { display: block; }
 
+.form-input--error {
+  border-color: var(--color-danger, #ef4444) !important;
+}
+
+.form-hint {
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+}
+
+.form-hint--error {
+  color: var(--color-danger, #ef4444);
+}
+
 .register {
   background: var(--color-bg);
   min-height: 100dvh;
