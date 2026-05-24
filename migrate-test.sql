@@ -445,6 +445,23 @@ BEGIN
     VALUES (N'20260516151034_AddMessageIsRead', N'9.0.16');
 END;
 
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260524060213_AddParticipantPasswordHash'
+)
+BEGIN
+    ALTER TABLE [Participants] ADD [PasswordHash] nvarchar(max) NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260524060213_AddParticipantPasswordHash'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260524060213_AddParticipantPasswordHash', N'9.0.16');
+END;
+
 COMMIT;
 GO
 
