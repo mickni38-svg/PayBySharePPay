@@ -8,8 +8,16 @@
     <File Path="docs/SBYS_Group_Order_Context_Pack/04_PROMPT_IMPLEMENT_GROUP_ORDER.md" />
   </Folder>
   <Folder Name="/Solution Items/">
+    <File Path="docs/docREADME.md" />
     <File Path="docs/features.md" />
-    <File Path="docs/README.md" />
+    <File Path="docs/paynsync-mobilepay-copilot-guides/00-master-prompt.md" />
+    <File Path="docs/paynsync-mobilepay-copilot-guides/01-payment-provider-abstraction.md" />
+    <File Path="docs/paynsync-mobilepay-copilot-guides/02-domain-model-and-database.md" />
+    <File Path="docs/paynsync-mobilepay-copilot-guides/03-mobilepay-sandbox-provider.md" />
+    <File Path="docs/paynsync-mobilepay-copilot-guides/04-webhooks-and-status-sync.md" />
+    <File Path="docs/paynsync-mobilepay-copilot-guides/05-host-execute-capture-flow.md" />
+    <File Path="docs/paynsync-mobilepay-copilot-guides/06-test-dashboard-and-qa-plan.md" />
+    <File Path="docs/paynsync-mobilepay-copilot-guides/README.md" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Api.PayBySharePay/Api.PayBySharePay.csproj" />

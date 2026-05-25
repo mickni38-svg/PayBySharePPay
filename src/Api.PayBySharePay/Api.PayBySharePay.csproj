@@ -20,6 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Service.PayBySharePay\Service.PayBySharePay.csproj" />
     <ProjectReference Include="..\DataStorage.PayBySharePay\DataStorage.PayBySharePay.csproj" />
+    <ProjectReference Include="..\Infrastructure.Payments.PayBySharePay\Infrastructure.Payments.PayBySharePay.csproj" />
   </ItemGroup>
 
 </Project>

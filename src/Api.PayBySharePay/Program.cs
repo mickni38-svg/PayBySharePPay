@@ -4,6 +4,7 @@ using Api.PayBySharePay.Middleware;
 using Api.PayBySharePay.Services;
 using DataStorage.PayBySharePay.Context;
 using DataStorage.PayBySharePay.Extensions;
+using Infrastructure.Payments.PayBySharePay.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -100,6 +101,7 @@ var connectionString = builder.Configuration.GetConnectionString("PayBySharePayD
 
 builder.Services.AddDataStorage(connectionString);
 builder.Services.AddServiceLayer();
+builder.Services.AddPaymentInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 

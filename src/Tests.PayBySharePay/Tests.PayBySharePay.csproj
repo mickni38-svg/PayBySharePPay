@@ -10,6 +10,10 @@
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.2" />
     <PackageReference Include="FluentAssertions" Version="6.*" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.8" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.8" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
     <PackageReference Include="Moq" Version="4.20.*" />
     <PackageReference Include="xunit" Version="2.9.2" />
@@ -23,6 +27,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Service.PayBySharePay\Service.PayBySharePay.csproj" />
     <ProjectReference Include="..\DataStorage.PayBySharePay\DataStorage.PayBySharePay.csproj" />
+    <ProjectReference Include="..\Infrastructure.Payments.PayBySharePay\Infrastructure.Payments.PayBySharePay.csproj" />
   </ItemGroup>
 
 </Project>
