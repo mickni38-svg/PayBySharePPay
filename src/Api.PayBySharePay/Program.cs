@@ -18,6 +18,11 @@ builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.Environment
 
 builder.Services.AddControllers();
 
+// ── HttpClient til udgående kald (merchant callbacks) ────────────────────────
+builder.Services.AddHttpClient("MerchantCallback");
+builder.Services.AddScoped<Service.PayBySharePay.Interfaces.IMerchantCallbackService,
+    Api.PayBySharePay.Services.MerchantCallbackService>();
+
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddHostedService<MerchantDemoHostedService>();

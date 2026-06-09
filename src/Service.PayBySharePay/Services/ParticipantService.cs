@@ -105,6 +105,30 @@ public class ParticipantService : IParticipantService
         await _friendRelationRepository.SaveChangesAsync();
     }
 
+    public async Task<ParticipantDto?> GetByIdAsync(int id)
+    {
+        var participant = await _participantRepository.GetByIdAsync(id);
+        return participant is null ? null : MapToDto(participant);
+    }
+
+    public async Task<ParticipantDto> UpdateProfileAsync(UpdateProfileDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.Name))
+            throw new ArgumentException("Navn må ikke være tomt.");
+
+        var participant = await _participantRepository.GetByIdAsync(dto.Id)
+            ?? throw new KeyNotFoundException($"Deltager med id {dto.Id} findes ikke.");
+
+        participant.Name = dto.Name.Trim();
+        participant.Email = dto.Email;
+        participant.Phone = dto.Phone;
+
+        await _participantRepository.UpdateAsync(participant);
+        await _participantRepository.SaveChangesAsync();
+
+        return MapToDto(participant);
+    }
+
     public async Task<ParticipantDto?> GetByEmailAsync(string email)
     {
         var participant = await _participantRepository.GetByEmailAsync(email);

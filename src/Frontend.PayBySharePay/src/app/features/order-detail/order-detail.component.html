@@ -72,6 +72,14 @@
                 <span>{{ lineTotal(p.orderLines) | number:'1.2-2' }} kr.</span>
               </div>
             }
+            @if (participantPaymentStatus(p.participantId)) {
+              <div class="order-line order-line--payment">
+                <span class="order-line__label">Betaling</span>
+                <span [class]="'payment-chip payment-chip--' + participantPaymentStatus(p.participantId).toLowerCase()">
+                  {{ paymentStatusLabel(participantPaymentStatus(p.participantId)) }}
+                </span>
+              </div>
+            }
           </div>
         </div>
       }
@@ -99,6 +107,67 @@
         Ingen har betalt endnu
       </p>
     </div>
+
+    <!-- Doc 06 §6: Alle reserveret → Godkend ordre -->
+    @if (isCurrentUser(createdByParticipantId())) {
+
+      @if (canApprove()) {
+        <div class="detail__approve-banner">
+          <p class="detail__approve-banner-title">Alle betalinger er reserveret</p>
+          <button class="btn btn--primary detail__approve-btn" (click)="approveOrder()">
+            Godkend ordre
+          </button>
+          <p class="detail__approve-sub">
+            Når du godkender ordren, gennemfører PayNSync de reserverede betalinger for alle deltagere.
+            Du betaler kun din egen bestilling.
+          </p>
+        </div>
+      }
+
+      <!-- Doc 06 §7: Capture i gang -->
+      @if (isCapturing() && captureResults().length > 0) {
+        <div class="detail__capture-progress">
+          <p class="detail__capture-title">Gennemfører betalinger...</p>
+          @for (r of captureResults(); track r.participantId) {
+            <div class="capture-row">
+              <span class="capture-row__name">{{ r.participantName }}</span>
+              @if (r.success) {
+                <span class="capture-row__status capture-row__status--ok">Gennemført</span>
+              } @else {
+                <span class="capture-row__status capture-row__status--fail">Fejlet</span>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      @if (isApproving() && captureResults().length === 0) {
+        <p class="detail__state">Gennemfører betalinger...</p>
+      }
+
+      <!-- Doc 06 §8: Delvis fejlet -->
+      @if (isPartiallyFailed()) {
+        <div class="detail__partial-fail">
+          <p class="detail__partial-fail-title">Ordren kunne ikke gennemføres fuldt ud.</p>
+          @for (r of captureResults(); track r.participantId) {
+            @if (!r.success) {
+              <p class="detail__partial-fail-line">{{ r.participantName }}'s betaling fejlede.</p>
+            }
+          }
+          <p class="detail__partial-fail-note">
+            Allerede gennemførte betalinger er markeret som betalt.
+            Du kan prøve igen eller annullere de resterende reservationer.
+          </p>
+          <button class="btn btn--primary detail__approve-btn" (click)="approveOrder()">
+            Prøv igen
+          </button>
+        </div>
+      }
+
+      @if (approveError()) {
+        <p class="detail__state detail__state--error">{{ approveError() }}</p>
+      }
+    }
 
   } @else {
 

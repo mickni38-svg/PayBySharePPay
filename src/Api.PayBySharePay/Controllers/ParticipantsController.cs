@@ -63,4 +63,35 @@ public class ParticipantsController : ControllerBase
         var result = await _participantService.CreateMerchantAsync(dto);
         return CreatedAtAction(nameof(Search), new { query = result.Name }, result);
     }
+
+    [HttpGet("{id:int}")]
+    [ProducesResponseType(typeof(ParticipantDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetById(int id)
+    {
+        var result = await _participantService.GetByIdAsync(id);
+        if (result is null) return NotFound();
+        return Ok(result);
+    }
+
+    [HttpPut("{id:int}/profile")]
+    [ProducesResponseType(typeof(ParticipantDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateProfile(int id, [FromBody] UpdateProfileRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Name))
+            return BadRequest(new { error = "Navn må ikke være tomt." });
+
+        var dto = new UpdateProfileDto
+        {
+            Id = id,
+            Name = request.Name,
+            Email = request.Email,
+            Phone = request.Phone
+        };
+
+        var result = await _participantService.UpdateProfileAsync(dto);
+        return Ok(result);
+    }
 }

@@ -10,13 +10,19 @@ public class OrderService : IOrderService
 {
     private readonly IOrderRepository _orderRepository;
     private readonly IParticipantRepository _participantRepository;
+    private readonly IParticipantPaymentRepository _paymentRepository;
     private readonly string _merchantDemoUrl;
     private readonly string _frontendUrl;
 
-    public OrderService(IOrderRepository orderRepository, IParticipantRepository participantRepository, IConfiguration configuration)
+    public OrderService(
+        IOrderRepository orderRepository,
+        IParticipantRepository participantRepository,
+        IParticipantPaymentRepository paymentRepository,
+        IConfiguration configuration)
     {
         _orderRepository = orderRepository;
         _participantRepository = participantRepository;
+        _paymentRepository = paymentRepository;
         _merchantDemoUrl = configuration["AppSettings:MerchantDemoUrl"] ?? "http://localhost:8081";
         _frontendUrl = configuration["AppSettings:FrontendUrl"] ?? "http://localhost:4200";
     }
@@ -215,6 +221,9 @@ public class OrderService : IOrderService
             }
         }
 
+        // ParticipantPayments — betalingsstatus pr. deltager
+        var participantPayments = (await _paymentRepository.GetByOrderIdAsync(orderId)).ToList();
+
         return new OrderOverviewDto
         {
             OrderId = order.Id,
@@ -251,7 +260,26 @@ public class OrderService : IOrderService
                 Content = m.Content,
                 CreatedAt = m.CreatedAt
             }).ToList(),
-            ParticipantOrderLines = participantOrderLines
+            ParticipantOrderLines = participantOrderLines,
+            ParticipantPayments = participantPayments.Select(pp =>
+            {
+                var opName = order.OrderParticipants
+                    .FirstOrDefault(op => op.ParticipantId == pp.ParticipantId)?.Participant.Name ?? "Ukendt";
+                return new ParticipantPaymentSummaryDto
+                {
+                    ParticipantPaymentId = pp.Id,
+                    ParticipantId = pp.ParticipantId,
+                    ParticipantName = opName,
+                    AmountMinorUnits = pp.AmountMinorUnits,
+                    Currency = pp.Currency,
+                    Status = pp.Status.ToString(),
+                    ProviderPaymentId = pp.ProviderPaymentId,
+                    ReservedAtUtc = pp.ReservedAtUtc,
+                    CapturedAtUtc = pp.CapturedAtUtc,
+                    LastErrorCode = pp.LastErrorCode,
+                    LastErrorMessage = pp.LastErrorMessage
+                };
+            }).ToList()
         };
     }
 

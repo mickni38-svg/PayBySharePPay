@@ -56,6 +56,12 @@ public class ParticipantRepository : IParticipantRepository
         return participant;
     }
 
+    public Task UpdateAsync(Participant participant)
+    {
+        _context.Participants.Update(participant);
+        return Task.CompletedTask;
+    }
+
     public async Task SaveChangesAsync()
     {
         await _context.SaveChangesAsync();

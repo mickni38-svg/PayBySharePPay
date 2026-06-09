@@ -16,6 +16,8 @@ public class OrderOverviewDto
     public List<PaymentDto> Payments { get; set; } = new();
     public List<MessageDto> Messages { get; set; } = new();
     public List<ParticipantOrderLinesDto> ParticipantOrderLines { get; set; } = new();
+    /// <summary>Betalingsstatus pr. deltager fra ParticipantPayment-tabellen.</summary>
+    public List<ParticipantPaymentSummaryDto> ParticipantPayments { get; set; } = new();
 }
 
 public class ParticipantOrderLinesDto
@@ -24,4 +26,20 @@ public class ParticipantOrderLinesDto
     public string ParticipantName { get; set; } = string.Empty;
     public bool HasPaid { get; set; }
     public List<MerchantOrderLineDto> Lines { get; set; } = new();
+}
+
+/// <summary>Betalingsstatus pr. deltager til Host-oversigt og test-dashboard.</summary>
+public class ParticipantPaymentSummaryDto
+{
+    public int ParticipantPaymentId { get; set; }
+    public int ParticipantId { get; set; }
+    public string ParticipantName { get; set; } = string.Empty;
+    public long AmountMinorUnits { get; set; }
+    public string Currency { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public string? ProviderPaymentId { get; set; }
+    public DateTime? ReservedAtUtc { get; set; }
+    public DateTime? CapturedAtUtc { get; set; }
+    public string? LastErrorCode { get; set; }
+    public string? LastErrorMessage { get; set; }
 }

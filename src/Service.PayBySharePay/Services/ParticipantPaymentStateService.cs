@@ -13,7 +13,7 @@ public class ParticipantPaymentStateService(
     private static readonly IReadOnlyDictionary<ParticipantPaymentStatus, IReadOnlySet<ParticipantPaymentStatus>> AllowedTransitions =
         new Dictionary<ParticipantPaymentStatus, IReadOnlySet<ParticipantPaymentStatus>>
         {
-            [ParticipantPaymentStatus.Created]              = new HashSet<ParticipantPaymentStatus> { ParticipantPaymentStatus.ReservationStarted },
+            [ParticipantPaymentStatus.Created]              = new HashSet<ParticipantPaymentStatus> { ParticipantPaymentStatus.ReservationStarted, ParticipantPaymentStatus.Cancelled },
             [ParticipantPaymentStatus.ReservationStarted]  = new HashSet<ParticipantPaymentStatus> { ParticipantPaymentStatus.Reserved, ParticipantPaymentStatus.ReservationFailed, ParticipantPaymentStatus.Cancelled },
             [ParticipantPaymentStatus.Reserved]             = new HashSet<ParticipantPaymentStatus> { ParticipantPaymentStatus.CapturePending, ParticipantPaymentStatus.Cancelled },
             [ParticipantPaymentStatus.CapturePending]       = new HashSet<ParticipantPaymentStatus> { ParticipantPaymentStatus.Captured, ParticipantPaymentStatus.CaptureFailed },

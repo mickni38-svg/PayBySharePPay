@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Infrastructure.Payments.PayBySharePay;
 using Infrastructure.Payments.PayBySharePay.Extensions;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -10,8 +11,8 @@ namespace Tests.PayBySharePay;
 
 public class FakePaymentProviderTests
 {
-    private static FakePaymentProvider CreateProvider()
-        => new(NullLogger<FakePaymentProvider>.Instance);
+    private static FakePaymentProvider CreateProvider(FakePaymentProviderOptions? options = null)
+        => new(NullLogger<FakePaymentProvider>.Instance, options ?? new FakePaymentProviderOptions());
 
     // ── DI ───────────────────────────────────────────────────────────────────
 
@@ -127,5 +128,116 @@ public class FakePaymentProviderTests
         result.Success.Should().BeTrue();
         result.Status.Should().NotBeNullOrEmpty();
         result.ReservedAmountMinorUnits.Should().BeGreaterThan(0);
+    }
+
+    // ── Fejlsimulering: Reserve ───────────────────────────────────────────────
+
+    [Fact]
+    public async Task Reserve_Returns_Failed_When_SimulateReservationFailed()
+    {
+        var sut = CreateProvider(new FakePaymentProviderOptions { SimulateReservationFailed = true });
+
+        var result = await sut.ReserveAsync(new ReservePaymentRequest(
+            GroupPaymentId: "grp-1",
+            ParticipantPaymentId: "part-1",
+            MerchantId: "m-1",
+            AmountMinorUnits: 10000,
+            Currency: "DKK",
+            Description: "Test",
+            ReturnUrl: "https://app.local/return",
+            CallbackUrl: "https://api.local/webhook",
+            IdempotencyKey: Guid.NewGuid().ToString()));
+
+        result.Success.Should().BeFalse();
+        result.ErrorCode.Should().Be("FAKE_RESERVE_FAILED");
+        result.ProviderPaymentId.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Reserve_Returns_Expired_When_SimulateReservationExpired()
+    {
+        var sut = CreateProvider(new FakePaymentProviderOptions { SimulateReservationExpired = true });
+
+        var result = await sut.ReserveAsync(new ReservePaymentRequest(
+            GroupPaymentId: "grp-1",
+            ParticipantPaymentId: "part-1",
+            MerchantId: "m-1",
+            AmountMinorUnits: 10000,
+            Currency: "DKK",
+            Description: "Test",
+            ReturnUrl: "https://app.local/return",
+            CallbackUrl: "https://api.local/webhook",
+            IdempotencyKey: Guid.NewGuid().ToString()));
+
+        result.Success.Should().BeFalse();
+        result.ErrorCode.Should().Be("FAKE_RESERVATION_EXPIRED");
+        result.Status.Should().Be("Expired");
+    }
+
+    [Fact]
+    public async Task Reserve_Throws_When_SimulateReserveException()
+    {
+        var sut = CreateProvider(new FakePaymentProviderOptions { SimulateReserveException = true });
+
+        var act = async () => await sut.ReserveAsync(new ReservePaymentRequest(
+            GroupPaymentId: "grp-1",
+            ParticipantPaymentId: "part-1",
+            MerchantId: "m-1",
+            AmountMinorUnits: 10000,
+            Currency: "DKK",
+            Description: "Test",
+            ReturnUrl: "https://app.local/return",
+            CallbackUrl: "https://api.local/webhook",
+            IdempotencyKey: Guid.NewGuid().ToString()));
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    // ── Fejlsimulering: Capture ───────────────────────────────────────────────
+
+    [Fact]
+    public async Task Capture_Returns_Failed_When_SimulateCaptureFailed()
+    {
+        var sut = CreateProvider(new FakePaymentProviderOptions { SimulateCaptureFailed = true });
+
+        var result = await sut.CaptureAsync(new CapturePaymentRequest(
+            ProviderPaymentId: "FAKE-abc",
+            AmountMinorUnits: 10000,
+            Currency: "DKK",
+            IdempotencyKey: Guid.NewGuid().ToString()));
+
+        result.Success.Should().BeFalse();
+        result.ErrorCode.Should().Be("FAKE_CAPTURE_FAILED");
+        result.ProviderCaptureId.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Capture_Throws_When_SimulateCaptureException()
+    {
+        var sut = CreateProvider(new FakePaymentProviderOptions { SimulateCaptureException = true });
+
+        var act = async () => await sut.CaptureAsync(new CapturePaymentRequest(
+            ProviderPaymentId: "FAKE-abc",
+            AmountMinorUnits: 10000,
+            Currency: "DKK",
+            IdempotencyKey: Guid.NewGuid().ToString()));
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    // ── Fejlsimulering: Cancel ────────────────────────────────────────────────
+
+    [Fact]
+    public async Task Cancel_Returns_Failed_When_SimulateCancelFailed()
+    {
+        var sut = CreateProvider(new FakePaymentProviderOptions { SimulateCancelFailed = true });
+
+        var result = await sut.CancelAsync(new CancelPaymentRequest(
+            ProviderPaymentId: "FAKE-abc",
+            Reason: "Test",
+            IdempotencyKey: Guid.NewGuid().ToString()));
+
+        result.Success.Should().BeFalse();
+        result.ErrorCode.Should().Be("FAKE_CANCEL_FAILED");
     }
 }

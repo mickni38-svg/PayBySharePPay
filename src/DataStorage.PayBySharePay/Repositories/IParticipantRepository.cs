@@ -8,5 +8,6 @@ public interface IParticipantRepository
     Task<Participant?> GetByIdAsync(int id);
     Task<Participant?> GetByEmailAsync(string email);
     Task<Participant> AddAsync(Participant participant);
+    Task UpdateAsync(Participant participant);
     Task SaveChangesAsync();
 }

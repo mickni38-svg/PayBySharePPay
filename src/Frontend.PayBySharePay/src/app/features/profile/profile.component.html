@@ -1,0 +1,91 @@
+<div class="profile">
+  <div class="profile__header">
+    <h2>Min profil</h2>
+  </div>
+
+  <div class="profile__body">
+    @if (isLoading()) {
+      <div class="profile__loading">Henter profil…</div>
+    } @else {
+      <form class="profile__form" (ngSubmit)="save()">
+
+        <div class="profile__field">
+          <label class="profile__label" for="profile-name">Navn</label>
+          <input
+            id="profile-name"
+            class="profile__input"
+            type="text"
+            [ngModel]="name()"
+            (ngModelChange)="name.set($event)"
+            name="name"
+            placeholder="Dit navn"
+            required
+          />
+        </div>
+
+        <div class="profile__field">
+          <label class="profile__label" for="profile-email">E-mail</label>
+          <input
+            id="profile-email"
+            class="profile__input"
+            type="email"
+            [ngModel]="email()"
+            (ngModelChange)="email.set($event)"
+            name="email"
+            placeholder="din@email.dk"
+          />
+        </div>
+
+        <div class="profile__field">
+          <label class="profile__label" for="profile-phone">Telefon</label>
+          <input
+            id="profile-phone"
+            class="profile__input"
+            type="tel"
+            [ngModel]="phone()"
+            (ngModelChange)="phone.set($event)"
+            name="phone"
+            placeholder="+45 12 34 56 78"
+          />
+        </div>
+
+        <div class="profile__divider"></div>
+
+        <div class="profile__toggle-row">
+          <div class="profile__toggle-info">
+            <span class="profile__toggle-label">Notifikationer</span>
+            <span class="profile__toggle-desc">Modtag beskeder om dine betalinger</span>
+          </div>
+          <button
+            type="button"
+            class="profile__toggle"
+            [class.profile__toggle--on]="notificationsEnabled()"
+            (click)="toggleNotifications()"
+            [attr.aria-checked]="notificationsEnabled()"
+            role="switch"
+          >
+            <span class="profile__toggle-thumb"></span>
+          </button>
+        </div>
+
+        <div class="profile__divider"></div>
+
+        @if (saveSuccess()) {
+          <div class="profile__feedback profile__feedback--success">✓ Ændringer gemt</div>
+        }
+        @if (saveError()) {
+          <div class="profile__feedback profile__feedback--error">Noget gik galt. Prøv igen.</div>
+        }
+
+        <button
+          type="submit"
+          class="profile__save-btn"
+          [disabled]="isSaving() || !name().trim()"
+        >
+          {{ isSaving() ? 'Gemmer…' : 'Gem ændringer' }}
+        </button>
+
+      </form>
+    }
+  </div>
+</div>
