@@ -6,7 +6,8 @@ import {
   OrderApiDto,
   OrderOverviewApiDto,
   OrderSummaryApiDto,
-  CreateOrderRequest
+  CreateOrderRequest,
+  ApproveAndCaptureResult
 } from '../models/order.model';
 
 @Injectable({
@@ -36,6 +37,14 @@ export class OrderService {
   /** GET /api/orders/{id}/overview – detaljeret ordrevisning */
   getOrderOverview(id: number): Observable<OrderOverviewApiDto> {
     return this.http.get<OrderOverviewApiDto>(`${this.apiUrl}/${id}/overview`);
+  }
+
+  /** POST /api/orders/{id}/approve — host godkender og trigger capture af alle reserverede betalinger */
+  approveOrder(orderId: number, requestingParticipantId: number): Observable<ApproveAndCaptureResult> {
+    return this.http.post<ApproveAndCaptureResult>(
+      `${this.apiUrl}/${orderId}/approve`,
+      { requestingParticipantId }
+    );
   }
 
   /** POST /api/orders/{id}/pay – host initierer betaling via eksternt betalings-API */

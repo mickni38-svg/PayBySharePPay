@@ -13,5 +13,7 @@ public class MerchantOrderDraftDto
     public string Status { get; set; } = string.Empty;
     public DateTime? ExpiresAtUtc { get; set; }
     public DateTime CreatedAtUtc { get; set; }
+    /// <summary>URL som deltageren skal redirectes til for at godkende reservationen (fx MobilePay/Vipps/Fake).</summary>
+    public string? PaymentRedirectUrl { get; set; }
     public List<MerchantOrderLineDto> Lines { get; set; } = new();
 }

@@ -1,108 +1,456 @@
-# Arkitektur
+# Architecture
 
-## Overordnet arkitektur
-
-PayBySharePay er en klassisk **3-lags webapplikation** med separat frontend, API og datalager.
+## Lagdeling – overblik
 
 ```
-[Angular Frontend]  →  [ASP.NET Core API]  →  [Service Layer]  →  [EF Core / SQL Server]
+┌──────────────────────────────────────────────────────────────────────┐
+│  Frontend.PayBySharePay  (Angular 19 SPA, port 4200)                 │
+│  Frontend.MerchantDemo   (statisk HTML/JS, port 8081)                │
+└────────────────────────┬─────────────────────────────────────────────┘
+						 │ HTTP/JSON  (JWT Bearer)
+┌────────────────────────▼─────────────────────────────────────────────┐
+│  Api.PayBySharePay  (ASP.NET Core 9, port 5071 / HTTPS 7007)        │
+│  Controllers · DTOs · JwtTokenService · ExceptionHandlingMiddleware  │
+│  MerchantCallbackService · MerchantDemoHostedService (dev only)      │
+└────────────────────────┬─────────────────────────────────────────────┘
+						 │ kun interfaces
+┌────────────────────────▼─────────────────────────────────────────────┐
+│  Service.PayBySharePay  (forretningslogik)                           │
+│  OrderService · GroupPaymentOrchestrationService                     │
+│  MerchantOrderService · PaymentService (legacy)                      │
+│  ParticipantService · MessageService · DirectoryService              │
+│  ParticipantPaymentStateService                                       │
+└──────────────┬──────────────────────────────┬────────────────────────┘
+			   │ repositories                  │ IPaymentProvider
+┌──────────────▼───────────────┐  ┌────────────▼────────────────────────┐
+│  DataStorage.PayBySharePay   │  │  Infrastructure.Payments             │
+│  EF Core + SQL Server        │  │  FakePaymentProvider                 │
+│  Entities · Repositories     │  │  MobilePaySandboxPaymentProvider     │
+│  Migrations                  │  │  VippsMobilePayTokenService          │
+└──────────────────────────────┘  └─────────────────────────────────────┘
+													  │ HTTPS
+										 ┌────────────▼──────────────────┐
+										 │  Vipps MobilePay ePayment API │
+										 │  (apitest.vipps.no / prod)    │
+										 └───────────────────────────────┘
 ```
 
-## Projekter i solution
+---
 
-| Projekt | Type | Ansvar |
-|---------|------|--------|
-| `Api.PayBySharePay` | ASP.NET Core Web API | REST API, auth, controllers, middleware |
-| `Service.PayBySharePay` | .NET Class Library | Forretningslogik, DTOs, interfaces |
-| `DataStorage.PayBySharePay` | .NET Class Library | EF Core DbContext, entities, repositories, migrationer |
-| `Frontend.PayBySharePay` | Angular 18 SPA | Brugergrænsefladen |
-| `Tests.PayBySharePay` | xUnit | Testprojekt (næsten tomt) |
-| `Tools.PayBySharePay` | .NET Console App | CLI-værktøj til seed, flush, dev-hjælpekommandoer |
+## Afhængighedsregler
 
-## Lagdeling
+| Fra | Til | Hvordan |
+|-----|-----|---------|
+| `Api` | `Service` | Injicerer interfaces fra `Service.PayBySharePay.Interfaces` |
+| `Api` | `DataStorage` | Kun DI-registrering via `AddDataStorage()` i `Program.cs` |
+| `Api` | `Infrastructure` | Kun DI-registrering via `AddPaymentInfrastructure()` |
+| `Service` | `DataStorage` | Bruger repositories og entities direkte |
+| `Infrastructure` | `Service` | Implementerer `IPaymentProvider` fra `Service.PayBySharePay.Interfaces` |
+| `DataStorage` | — | Ingen afhængigheder udover EF Core |
+| `Tests` | `Service` + `DataStorage` + `Infrastructure` | Fakes erstatter repositories; FakePaymentProvider bruges direkte |
 
-### API-lag (`Api.PayBySharePay`)
-- Controllers modtager HTTP-requests og mapper til service-DTOs
-- `JwtTokenService` udsteder JWT-tokens
-- `ExceptionHandlingMiddleware` fanger uhåndterede exceptions og returnerer JSON-fejl
-- Swagger/OpenAPI aktiveret
+---
 
-### Service-lag (`Service.PayBySharePay`)
-- Indeholder al forretningslogik
-- Interfaces (`IOrderService`, `IPaymentService` osv.) bruges af API'et via DI
-- Mapper mellem entities og DTOs
+## Frontend-teknologi (`Frontend.PayBySharePay`)
 
-### Datalager (`DataStorage.PayBySharePay`)
-- `PayBySharePayDbContext` er EF Core context med alle DbSets
-- Repository pattern med interfaces og implementeringer
-- `DataStorageServiceExtensions.AddDataStorage()` registrerer alt i DI
+**Framework:** Angular 19 (`@angular/core ^19.0.0`)  
+**Pattern:** Standalone components (ingen NgModule), lazy-loaded routes, zoneless-klar (`eventCoalescing: true`)  
+**State:** Angular Signals (`signal()`, `computed()`) — ingen NgRx eller anden global state manager  
+**HTTP:** `HttpClient` med én funktionel interceptor (`apiInterceptor`)  
+**Styling:** SCSS + CSS (per komponent)
 
-### Frontend (`Frontend.PayBySharePay`)
-- Angular 18 standalone components
-- Angular signals til state management
-- Lazy-loaded routes
-- HTTP-interceptor tilføjer JWT Bearer token på alle requests
-- `environment.ts` styrer API-base-URL
+### JWT-interceptor
 
-## Centrale klasser og services
+`apiInterceptor` kører på alle udgående kald:
+- Sætter `Content-Type: application/json` og `Accept: application/json`
+- Vedhæfter `Authorization: Bearer {token}` på alle kald undtagen `/api/auth/login`
+- Håndterer HTTP 401 → kalder `auth.logout()` + navigerer til `/login`
 
-### Backend
-| Klasse | Placering | Ansvar |
-|--------|-----------|--------|
-| `PayBySharePayDbContext` | DataStorage/Context | EF Core context |
-| `OrderService` | Service/Services | CRUD på ordrer, deltagere |
-| `PaymentService` | Service/Services | Registrering af betalinger |
-| `MerchantOrderService` | Service/Services | Merchant draft-system |
-| `ParticipantService` | Service/Services | Opret/søg deltagere |
-| `DirectoryService` | Service/Services | Telefonbog/brugersøgning |
-| `MessageService` | Service/Services | Beskeder på ordrer |
-| `JwtTokenService` | Api/Auth | Generér JWT tokens |
+### Session-håndtering
 
-### Frontend
-| Service | Ansvar |
-|---------|--------|
-| `AuthService` | Login, token, localStorage |
-| `OrderService` | API-kald til ordrer |
-| `PaymentService` | API-kald til betalinger |
-| `ActivityService` | Bygger aktivitetsfeed fra ordredata (client-side) |
-| `DirectoryService` | Søg deltagere |
-| `MessageService` | Beskeder |
-| `FriendService` | Venneliste |
+Token og brugerinfo gemmes i `localStorage` under nøglerne `sbys_token` og `sbys_user`.  
+`AuthService` eksponerer `isLoggedIn`, `currentUserId` og `currentUserName` som computed signals.
 
-## Dependency Injection
+### Environment-konfiguration
 
-### API bootstrap (`Api/Program.cs`)
-```csharp
-services.AddDataStorage(connectionString);  // fra DataStorage
-services.AddServiceLayer();                  // fra Service
-services.AddSingleton<JwtTokenService>();
+| Miljø | API base URL |
+|-------|-------------|
+| Development (`ng serve`) | `https://localhost:7007` |
+| Production (build) | `environment.ts` — kun én fil fundet; prod-env ikke separat defineret |
+
+### Angular-routes
+
+| Route | Komponent | Formål |
+|-------|-----------|--------|
+| `/home` | `HomeComponent` | Dashboard med action-cards og status-oversigt |
+| `/orders` | `OrdersComponent` | Ordreoversigt (aktiv/afsluttet tabs) |
+| `/orders/create` | `CreateOrderComponent` | 4-trins wizard: titel → merchant → deltagere → opret |
+| `/orders/:id` | `OrderDetailComponent` | Ordredetaljer + betalingsstatus + Host-handlinger |
+| `/messages` | `MessagesComponent` | Beskedindbakke |
+| `/pending-participants` | `PendingParticipantsComponent` | Host-view: deltagere der mangler at bestille |
+| `/find-participants` | `FindParticipantsComponent` | Søg + tilføj venner |
+| `/profile` | `ProfileComponent` | Brugerprofil |
+| `/login` | `LoginComponent` | Login |
+| `/register` | `RegisterComponent` | Registrering |
+
+### Azure Static Web Apps routing
+
+`staticwebapp.config.json` definerer SPA-fallback: alle routes rewriter til `/index.html`, undtagen statiske filer (`.css`, `.js`, `.ico`, billeder).
+
+---
+
+## Backend-teknologi (`Api.PayBySharePay`)
+
+**Framework:** ASP.NET Core 9  
+**Hosting (prod):** Azure App Service, IIS in-process via `web.config` + `AspNetCoreModuleV2`  
+**Hosting (dev):** Kestrel, HTTP port 5071 / HTTPS port 7007  
+**API-dokumentation:** Swagger/OpenAPI tilgængeligt på `/` (root redirecter til `/swagger`)
+
+### JWT-auth
+
+`JwtTokenService` udsteder HS256-tokens med claims:
+- `sub` = `participantId` (integer som string)
+- `name` = deltagerens navn
+- `jti` = unikt token-id (GUID)
+
+Token-levetid: konfigurerbar via `Jwt:ExpiresInMinutes` (default 480 min / 8 timer).  
+Validering: issuer, audience, levetid og signatur valideres.
+
+### Middleware-pipeline (rækkefølge)
+
+```
+Swagger → ExceptionHandlingMiddleware → CORS → (HTTPS redirect i prod) → Authentication → Authorization → Controllers
 ```
 
-### Frontend
-Alle Angular services er `providedIn: 'root'` (singleton).
+### ExceptionHandlingMiddleware
 
-## Dataflow – eksempel: Opret ordre
+| Exception-type | HTTP status |
+|----------------|-------------|
+| `ArgumentException` | 400 Bad Request |
+| `KeyNotFoundException` | 404 Not Found |
+| `InvalidOperationException` | 409 Conflict |
+| `UnauthorizedAccessException` | (fanges ikke — se note) |
+| Alle andre | 500 Internal Server Error |
+
+> Note: `UnauthorizedAccessException` er ikke eksplicit håndteret i middleware — kaster 500. Host-tjek i services bruger denne exception.
+
+### Controllers
+
+| Controller | Route | Auth | Formål |
+|-----------|-------|------|--------|
+| `AuthController` | `/api/auth` | Anonymous | Login, register (person + merchant) |
+| `OrdersController` | `/api/orders` | `[Authorize]` på klassen | CRUD + reserve/approve/cancel/pay |
+| `PaymentsController` | `/api/payments` | Ingen klasse-attr. | Register betaling, webhooks |
+| `MerchantOrdersController` | `/api/merchant-orders` | `[AllowAnonymous]` på `InitOrder` | Merchant draft-indsendelse |
+| `ParticipantsController` | `/api/participants` | Ingen | Søg, opret, opdatér profil |
+| `FriendsController` | `/api/friends` | Ingen | Venneliste-håndtering |
+| `DirectoryController` | `/api/directory` | Ingen | Tværgående søgning (person + merchant) |
+| `MessagesController` | `/api/messages` | Ingen | Ordrebeskeder + ulæst-count |
+| `VippsCallbackController` | `/api/payments/vipps` | `[AllowAnonymous]` | Vipps MobilePay webhook-modtagelse |
+| `DevController` | `/api/dev` | Ingen | `DELETE /reset` + `POST /seed-merchant-urls` (test only) |
+
+### Hosted Services
+
+- `MerchantDemoHostedService` — starter kun i `Development`. Kører `npx http-server` i `Frontend.MerchantDemo`-mappen på port 8081.
+
+### CORS
+
+Hardcodet tilliste i `Program.cs`:
+- `http/https://localhost:4200` og `:4201` (Angular dev)
+- `http/https://localhost:8081` (Merchant Demo dev)
+- `https://purple-coast-0d01c1003.7.azurestaticapps.net` (Angular prod)
+- `https://brave-flower-0026a7503.7.azurestaticapps.net` (Merchant Demo prod)
+
+---
+
+## Service-lag (`Service.PayBySharePay`)
+
+Alle services registreres som `Scoped` via `AddServiceLayer()`.
+
+### Nøgle-services
+
+**`OrderService`**  
+Opretter ordrer, tildeler deltagere, genererer `JoinToken` + `ParticipantToken` pr. `OrderParticipant`, sender merchant-links via `Message`-records.  
+Ejer `CheckAndSetReadyToPayAsync`: sætter ordre til `ReadyToPay` når alle ikke-merchant deltagere har status `OrderSubmitted`.
+
+**`GroupPaymentOrchestrationService`**  
+Central betalingsorkestrering. Alle `IPaymentProvider`-kald sker herfra. Håndterer idempotens, ordre-statusmaskine og fejlhåndtering pr. capture.
+
+**`ParticipantPaymentStateService`**  
+Ejer alle `ParticipantPayment`-statusskift. Enforcer tilladte overgange via en statisk transition-tabel og skriver `PaymentEventLog` for hvert skift.
+
+Tilladte overgange:
+```
+Created            → ReservationStarted | Cancelled
+ReservationStarted → Reserved | ReservationFailed | Cancelled
+Reserved           → CapturePending | Cancelled
+CapturePending     → Captured | CaptureFailed
+CaptureFailed      → CapturePending  (retry)
+Captured           → Refunded
+ReservationFailed, Cancelled, Expired, Refunded → (terminal)
+```
+
+**`MerchantOrderService`**  
+Modtager merchant draft (anonym). Validerer `ParticipantToken`, opretter `MerchantOrderDraft` + linjer, sætter `OrderParticipant.Status = "OrderSubmitted"`, kalder `CheckAndSetReadyToPayAsync`.
+
+**`PaymentService`** (legacy)  
+Opretter `Payment`-record og sender host-notifikation. Bruges af det gamle manuelle betalingsflow.
+
+**`MerchantCallbackService`** (implementeret i Api-laget)  
+Sender HTTP POST til merchant's `GroupOrderUrl` når alle betalinger er captured. Fejl stopper ikke flowet.
+
+---
+
+## Databaselag (`DataStorage.PayBySharePay`)
+
+**ORM:** Entity Framework Core + SQL Server  
+**Connection string:** `Server=...\SQLEXPRESS;Database=PayBySharePay;Trusted_Connection=True` (dev)
+
+### Entiteter og relationer
 
 ```
-Angular CreateOrderComponent
-  → POST /api/orders (med JWT)
-	→ OrdersController.CreateOrder()
-	  → IOrderService.CreateOrderAsync(dto)
-		→ OrderRepository.AddAsync(entity)
-		  → EF Core → SQL Server
+Participant (Person | Merchant)
+  ├── FriendRelation (selv-ref. many-to-many via InitiatorId / ReceiverId)
+  ├── OrderParticipant ──► Order  (unik ParticipantToken-index)
+  ├── Payment ──► Order           (legacy)
+  └── ParticipantPayment ──► Order  (provider-backed, RowVersion for concurrency)
+
+Order
+  ├── CreatedBy ──► Participant   (Restrict delete)
+  ├── MerchantParticipant? ──► Participant  (nullable, Restrict delete)
+  ├── OrderParticipant[]  (Cascade delete)
+  ├── Payment[]           (Cascade delete)
+  ├── Message[]
+  └── MerchantOrderDraft[]
+		└── MerchantOrderLine[]
+
+PaymentEventLog  (immutable audit trail — ingen navigationsegenskaber fra Order)
 ```
 
-## CORS
+### Repository-mønster
 
-API tillader kald fra:
-- `localhost:4200` / `localhost:4201` (lokalt)
-- `icy-water-0750d2703.7.azurestaticapps.net` (Azure Static Web App)
-- `paybysharepay.dk` / `www.paybysharepay.dk`
+Hvert entity har sit eget `IXxxRepository`-interface og en `XxxRepository`-implementering. Intet generisk basisrepository. Alle registreres som `Scoped`.
 
-## Eventuelle arkitekturmæssige svagheder
+### Migrationer
 
-- `ActivityService` på frontend bygger aktivitetsfeed client-side ved at mappe ordredata – der er ingen dedikeret aktivitetslog i backend
-- Auth er "email-kun" MVP – ingen password-validering
-- `appsettings.json` indeholder en lokal connection string som default
-- JWT-nøgle i `appsettings.json` er en dev-placeholder (`SBYS-DEV-SECRET-...`) og skal overskrives i prod via miljøvariabel eller Azure Key Vault
-- Ingen rate limiting eller brute-force-beskyttelse på login
+| Migration | Dato | Ændring |
+|-----------|------|---------|
+| `InitialCreate` | 2026-05-05 | Alle basistabeller |
+| `AddOrderCreatedBy` | 2026-05-06 | `Order.CreatedByParticipantId` FK |
+| `AddMerchantOrderDraft` | 2026-05-06 | `MerchantOrderDraft` + `MerchantOrderLine` |
+| `AddMerchantToOrder` | 2026-05-08 | `Order.MerchantParticipantId` FK |
+| `AddParticipantToOrderLine` | 2026-05-15 | `MerchantOrderLine.ParticipantId` |
+| `AddParticipantTokenAndDraftParticipant` | 2026-05-16 | `OrderParticipant.ParticipantToken` (unikt index), `MerchantOrderDraft.ParticipantId` |
+| `AddMessageIsRead` | 2026-05-16 | `Message.IsRead` flag |
+| `AddParticipantPasswordHash` | 2026-05-24 | `Participant.PasswordHash` |
+| `AddParticipantPaymentAndEventLog` | 2026-05-25 | `ParticipantPayment` + `PaymentEventLog` tabeller |
+
+---
+
+## Infrastrukturlaget – betalinger (`Infrastructure.Payments.PayBySharePay`)
+
+### IPaymentProvider
+
+Abstraherer alle udbyder-kald. Tre operationer:
+- `ReserveAsync` — reserver/autoriser betalingen hos udbyderen
+- `CaptureAsync` — gennemfør (træk penge)
+- `CancelAsync` — annuller reservationen
+- `GetStatusAsync` — forespørg status
+
+### FakePaymentProvider
+
+Bruges i dev og tests (`Payments:Provider = "Fake"`). Returnerer success synkront (ingen HTTP-kald). Adfærd styres via `FakePaymentProviderOptions` i `appsettings.json`:
+
+| Flag | Effekt |
+|------|--------|
+| `SimulateReservationFailed` | Reserve returnerer fejl |
+| `SimulateReservationExpired` | Reserve returnerer expired |
+| `SimulateCaptureFailed` | Capture returnerer fejl |
+| `SimulateCancelFailed` | Cancel returnerer fejl |
+| `SimulateReserveException` | Reserve kaster exception |
+| `SimulateCaptureException` | Capture kaster exception |
+
+### MobilePaySandboxPaymentProvider (Vipps)
+
+Bruges med `Payments:Provider = "MobilePay"`. Kommunikerer med Vipps MobilePay ePayment API.
+
+**Token-håndtering (`VippsMobilePayTokenService`):**  
+Cacher OAuth2 access token i hukommelsen. Fornyer det 5 minutter før udløb. Trådsikker via `SemaphoreSlim`.  
+Token-endpoint: `{BaseUrl}/accesstoken/get` (headers: `client_id`, `client_secret`, `Ocp-Apim-Subscription-Key`, `Merchant-Serial-Number`).
+
+**Vipps Reserve-kald:**  
+`POST {BaseUrl}/epayment/v1/payments`  
+Body: `amount`, `paymentMethod: { type: "WALLET" }`, `reference`, `userFlow: "WEB_REDIRECT"`, `returnUrl`, `webhookUrl`, `paymentDescription`.  
+Webhook URL konstrueres som: `{CallbackBaseUrl}/api/payments/vipps/callbacks/{ParticipantPaymentId}`.
+
+---
+
+## Eksterne integrationer
+
+### Vipps MobilePay ePayment API
+
+| Detalje | Værdi |
+|---------|-------|
+| Sandbox base URL | `https://apitest.vipps.no` |
+| Prod base URL | `https://api.vipps.no` (konfigurabel) |
+| Auth | OAuth2 client credentials (client_id + client_secret + subscription key) |
+| Betaling endpoint | `/epayment/v1/payments` |
+| Token endpoint | `/accesstoken/get` |
+| Webhook ind mod os | `POST /api/payments/vipps/callbacks/{reference}` |
+| Signatur-validering | ❌ Ikke implementeret |
+
+### Merchant callback (udgående)
+
+Efter alle betalinger er captured sender `MerchantCallbackService` en HTTP POST til `Merchant.GroupOrderUrl`:
+```json
+{
+  "orderId": 1,
+  "merchantId": "2",
+  "status": "Paid",
+  "participantOrders": [
+	{ "participantId": 3, "status": "Paid", "providerTransactionId": "..." }
+  ]
+}
+```
+Fejl ignoreres (betalingerne er allerede gennemført).
+
+---
+
+## Deployment
+
+### API (Azure App Service)
+
+- `web.config` konfigurerer IIS in-process hosting via `AspNetCoreModuleV2`
+- `ASPNETCORE_ENVIRONMENT = Production` sættes i `web.config`
+- `appsettings.json` + miljøspecifikke overrides (`appsettings.Test.json` o.lign.)
+- HTTPS redirect aktiveret i prod (deaktiveret i dev for at undgå problemer med http://localhost:8081)
+
+### Frontend (Azure Static Web Apps)
+
+- `ng build` producerer statiske filer
+- `staticwebapp.config.json`: navigationFallback rewriter alle routes til `/index.html` (SPA routing)
+- Statiske assets (CSS, JS, billeder) ekskluderet fra fallback
+
+### Merchant Demo (Azure Static Web Apps)
+
+- Enkelt `index.html` deployet som statisk site
+- Auto-detekterer API base URL fra `window.location.hostname`:
+  - `localhost` / `127.0.0.1` → `http://localhost:5071`
+  - Andre → `https://paybysharepay-api.azurewebsites.net`
+
+### CI/CD
+
+Ingen pipeline-konfiguration fundet i repositoriet (ingen `.github/workflows`, ingen `azure-pipelines.yml`).
+
+---
+
+## Konfiguration
+
+```jsonc
+// appsettings.json (nøglestier)
+"AppSettings:ApiBaseUrl"               // http://localhost:5071
+"AppSettings:MerchantDemoUrl"          // http://localhost:8081
+"AppSettings:FrontendUrl"              // http://localhost:4200
+"Payments:Provider"                    // "Fake" | "MobilePay"
+"Payments:Fake:SimulateReservationFailed"   // bool
+"Payments:Fake:SimulateReservationExpired"  // bool
+"Payments:Fake:SimulateCaptureFailed"       // bool
+"Payments:Fake:SimulateCancelFailed"        // bool
+"Payments:Fake:SimulateReserveException"    // bool
+"Payments:Fake:SimulateCaptureException"    // bool
+"Payments:VippsMobilePay:BaseUrl"           // https://apitest.vipps.no
+"Payments:VippsMobilePay:ClientId"
+"Payments:VippsMobilePay:ClientSecret"
+"Payments:VippsMobilePay:SubscriptionKey"
+"Payments:VippsMobilePay:MerchantSerialNumber"
+"Payments:VippsMobilePay:CallbackBaseUrl"   // din ngrok URL i dev, Azure URL i prod
+"ConnectionStrings:PayBySharePayDb"
+"Jwt:Key"                              // min. 32 tegn
+"Jwt:Issuer"                           // sbys-api
+"Jwt:Audience"                         // sbys-frontend
+"Jwt:ExpiresInMinutes"                 // 43200 (i appsettings; 480 bruges i kode)
+```
+
+---
+
+## Data flows gennem systemet
+
+### Flow 1: Bruger opretter gruppeordre
+
+```
+Angular (CreateOrderComponent)
+  → POST /api/orders  [JWT]
+  → OrdersController.CreateOrder()
+  → OrderService.CreateOrderAsync()
+	→ ParticipantRepository.GetByIdAsync()    [SQL]
+	→ OrderRepository.AddAsync()              [SQL]
+	→ OrderRepository.SaveChangesAsync()      [SQL]
+	→ Opretter Message-records pr. deltager   [SQL]
+  ← OrderDto (id, status, ...)
+Angular navigerer til /orders/{id}
+```
+
+### Flow 2: Deltager bestiller via merchant
+
+```
+Merchant Demo (index.html)
+  → POST /api/merchant-orders  [Anonymous]
+  → MerchantOrdersController.InitOrder()
+  → MerchantOrderService.InitOrderAsync()
+	→ OrderRepository.GetByIdWithDetailsAsync()       [SQL]
+	→ ParticipantRepository.GetByIdAsync()            [SQL]
+	→ DbContext.OrderParticipants (ParticipantToken)  [SQL]
+	→ MerchantOrderDraftRepository.AddAsync()         [SQL]
+	→ OrderService.CheckAndSetReadyToPayAsync()
+	  → Hvis alle OrderSubmitted: Order.Status = "ReadyToPay"  [SQL]
+	  → Opretter notifikations-Message til host                 [SQL]
+  ← MerchantOrderDraftDto
+```
+
+### Flow 3: Host godkender betaling
+
+```
+Angular (OrderDetailComponent)
+  → POST /api/orders/{id}/approve  [JWT]
+  → OrdersController.ApproveOrder()
+  → GroupPaymentOrchestrationService.ApproveAndCaptureAllAsync()
+	→ OrderRepository.GetByIdWithDetailsAsync()           [SQL]
+	→ ParticipantPaymentRepository.GetByOrderIdAsync()    [SQL]
+	→ ParticipantPaymentStateService.SetCapturePendingAsync()
+	  → PaymentEventLogRepository.AddAsync()              [SQL]
+	→ Order.Status = "Capturing"                          [SQL]
+	FOR EACH reserved payment:
+	  → IPaymentProvider.CaptureAsync()
+		[Fake: synkron success]
+		[Vipps: POST https://apitest.vipps.no/epayment/v1/payments/{id}/capture]
+	  → ParticipantPaymentStateService.SetCapturedAsync() [SQL]
+	→ Order.Status = "Paid"                               [SQL]
+	→ MerchantCallbackService.SendPaidCallbackAsync()
+	  → POST {merchant.GroupOrderUrl}  [HTTP udgående]
+  ← ApproveAndCaptureResult
+```
+
+### Flow 4: Vipps webhook
+
+```
+Vipps MobilePay
+  → POST /api/payments/vipps/callbacks/{participantPaymentId}  [Anonymous]
+  → VippsCallbackController.VippsCallback()
+	→ ParticipantPaymentRepository.GetByProviderPaymentIdAsync()  [SQL]
+	Mapper Vipps event-navn:
+	  AUTHORIZED  → ParticipantPaymentStateService.SetReservedAsync()   [SQL]
+	  CAPTURED    → ParticipantPaymentStateService.SetCapturedAsync()   [SQL]
+	  CANCELLED / ABORTED → SetCancelledAsync()                         [SQL]
+	  EXPIRED / TERMINATED → SetExpiredAsync()                          [SQL]
+  ← 200 OK (altid — Vipps skal ikke retry)
+```
+
+---
+
+## Open Questions
+
+1. **`UnauthorizedAccessException` → 500** — Host-tjek i services kaster `UnauthorizedAccessException`, men middleware mapper det ikke til 403. Det resulterer i HTTP 500. Er dette bevidst?
+2. **`Jwt:ExpiresInMinutes` i appsettings vs. kode** — `appsettings.json` indeholder `43200` (30 dage), men `JwtTokenService` bruger værdien direkte og `AuthController` bruger `AddMinutes(480)` hardcodet. Hvad er den faktiske udløbstid?
+3. **CI/CD** — Ingen pipeline-filer fundet. Deployment sker sandsynligvis manuelt eller via Azure Portal publish. Er der en separat pipeline-konfiguration uden for repositoriet?
+4. **Angular environment-filer** — Kun `environment.ts` (peger på `https://localhost:7007`) fundet. Ingen separat `environment.production.ts`. Hvordan sættes prod API URL ved build?
+5. **`DevController` i prod** — `DELETE /api/dev/reset` og `POST /api/dev/seed-merchant-urls` er deployet til produktion uden auth-beskyttelse.

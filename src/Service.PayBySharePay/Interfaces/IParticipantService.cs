@@ -9,6 +9,8 @@ public interface IParticipantService
     Task<ParticipantDto> CreatePersonAsync(CreatePersonDto dto);
     Task<ParticipantDto> CreateMerchantAsync(CreateMerchantDto dto);
     Task AddFriendAsync(AddFriendDto dto);
+    Task<ParticipantDto?> GetByIdAsync(int id);
+    Task<ParticipantDto> UpdateProfileAsync(UpdateProfileDto dto);
     Task<ParticipantDto?> GetByEmailAsync(string email);
     bool VerifyPassword(string password, string passwordHash);
 }

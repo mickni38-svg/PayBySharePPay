@@ -104,7 +104,7 @@
 }
 
 .user-auth__btn--primary {
-  background: var(--color-primary, #7C3AED);
+  background: var(--color-primary, #FFCCFF);
   color: #fff;
 }
 
@@ -127,7 +127,7 @@
   display: block;
   text-align: center;
   font-size: 13px;
-  color: var(--color-primary, #7C3AED);
+  color: var(--color-primary, #FFCCFF);
   text-decoration: none;
   padding: 4px 0;
 }
@@ -315,7 +315,7 @@
 }
 
 .status-card--pending {
-  border-left-color: #7C3AED;
+  border-left-color: #FFCCFF;
 }
 
 .status-card--updated {
@@ -337,8 +337,8 @@
 }
 
 .status-card--pending .status-card__icon {
-  background: rgba(124, 58, 237, 0.15);
-  color: #7C3AED;
+  background: rgba(236, 72, 153, 0.15);
+  color: #FFCCFF;
 }
 
 .status-card--updated .status-card__icon {

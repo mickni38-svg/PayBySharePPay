@@ -320,6 +320,81 @@ namespace DataStorage.PayBySharePay.Migrations
                     b.ToTable("Participants");
                 });
 
+            modelBuilder.Entity("DataStorage.PayBySharePay.Entities.ParticipantPayment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<long>("AmountMinorUnits")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("CancelledAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("CaptureStartedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("CapturedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LastErrorCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LastErrorMessage")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MerchantId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ParticipantId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ProviderName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ProviderPaymentId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ProviderReference")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ReservationStartedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ReservedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("ParticipantId");
+
+                    b.ToTable("ParticipantPayments");
+                });
+
             modelBuilder.Entity("DataStorage.PayBySharePay.Entities.Payment", b =>
                 {
                     b.Property<int>("Id")
@@ -352,6 +427,53 @@ namespace DataStorage.PayBySharePay.Migrations
                     b.HasIndex("ParticipantId");
 
                     b.ToTable("Payments");
+                });
+
+            modelBuilder.Entity("DataStorage.PayBySharePay.Entities.PaymentEventLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CorrelationId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("NewStatus")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("OldStatus")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ParticipantPaymentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PayloadJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ProviderPaymentId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("ParticipantPaymentId");
+
+                    b.ToTable("PaymentEventLogs");
                 });
 
             modelBuilder.Entity("DataStorage.PayBySharePay.Entities.FriendRelation", b =>
@@ -464,6 +586,25 @@ namespace DataStorage.PayBySharePay.Migrations
 
                     b.HasOne("DataStorage.PayBySharePay.Entities.Participant", "Participant")
                         .WithMany("OrderParticipants")
+                        .HasForeignKey("ParticipantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Participant");
+                });
+
+            modelBuilder.Entity("DataStorage.PayBySharePay.Entities.ParticipantPayment", b =>
+                {
+                    b.HasOne("DataStorage.PayBySharePay.Entities.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DataStorage.PayBySharePay.Entities.Participant", "Participant")
+                        .WithMany()
                         .HasForeignKey("ParticipantId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();

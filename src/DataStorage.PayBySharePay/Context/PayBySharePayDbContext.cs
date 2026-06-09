@@ -15,6 +15,8 @@ public class PayBySharePayDbContext : DbContext
     public DbSet<Message> Messages => Set<Message>();
     public DbSet<MerchantOrderDraft> MerchantOrderDrafts => Set<MerchantOrderDraft>();
     public DbSet<MerchantOrderLine> MerchantOrderLines => Set<MerchantOrderLine>();
+    public DbSet<ParticipantPayment> ParticipantPayments => Set<ParticipantPayment>();
+    public DbSet<PaymentEventLog> PaymentEventLogs => Set<PaymentEventLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -108,6 +110,33 @@ public class PayBySharePayDbContext : DbContext
                 .HasForeignKey(d => d.ParticipantId)
                 .OnDelete(DeleteBehavior.Restrict)
                 .IsRequired(false);
+        });
+
+        modelBuilder.Entity<ParticipantPayment>(entity =>
+        {
+            entity.HasKey(p => p.Id);
+
+            entity.Property(p => p.RowVersion)
+                .IsRowVersion();
+
+            entity.HasOne(p => p.Order)
+                .WithMany()
+                .HasForeignKey(p => p.OrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(p => p.Participant)
+                .WithMany()
+                .HasForeignKey(p => p.ParticipantId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<PaymentEventLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.EventType).HasMaxLength(100);
+            entity.Property(e => e.CorrelationId).HasMaxLength(100);
+            entity.HasIndex(e => e.ParticipantPaymentId);
+            entity.HasIndex(e => e.OrderId);
         });
 
         modelBuilder.Entity<MerchantOrderLine>(entity =>

@@ -4,6 +4,7 @@ using Api.PayBySharePay.Middleware;
 using Api.PayBySharePay.Services;
 using DataStorage.PayBySharePay.Context;
 using DataStorage.PayBySharePay.Extensions;
+using Infrastructure.Payments.PayBySharePay.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -16,6 +17,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true);
 
 builder.Services.AddControllers();
+
+// ── HttpClient til udgående kald (merchant callbacks) ────────────────────────
+builder.Services.AddHttpClient("MerchantCallback");
+builder.Services.AddScoped<Service.PayBySharePay.Interfaces.IMerchantCallbackService,
+    Api.PayBySharePay.Services.MerchantCallbackService>();
 
 if (builder.Environment.IsDevelopment())
 {
@@ -100,6 +106,7 @@ var connectionString = builder.Configuration.GetConnectionString("PayBySharePayD
 
 builder.Services.AddDataStorage(connectionString);
 builder.Services.AddServiceLayer();
+builder.Services.AddPaymentInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 

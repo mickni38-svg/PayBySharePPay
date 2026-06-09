@@ -1,7 +1,11 @@
 ﻿import { Component, OnInit, signal, computed } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { ActivatedRoute, Router } from "@angular/router";
-import { Order, OrderParticipant, OrderParticipantStatus, OrderStatus, OrderOverviewApiDto, mapOrderParticipantStatus } from "../../core/models/order.model";
+import {
+  Order, OrderParticipant, OrderParticipantStatus, OrderStatus, OrderOverviewApiDto,
+  mapOrderParticipantStatus, ParticipantPaymentStatus, paymentStatusLabel,
+  ApproveAndCaptureResult, ParticipantCaptureResult, ParticipantPaymentApiDto
+} from "../../core/models/order.model";
 import { ParticipantType } from "../../core/models/participant.model";
 import { OrderService } from "../../core/services/order.service";
 import { AuthService } from "../../core/services/auth.service";
@@ -41,6 +45,8 @@ const CATEGORIES: CategoryOption[] = [
 export class OrderDetailComponent implements OnInit {
   readonly ParticipantType = ParticipantType;
   readonly OrderParticipantStatus = OrderParticipantStatus;
+  readonly OrderStatus = OrderStatus;
+  readonly paymentStatusLabel = paymentStatusLabel;
 
   categories = CATEGORIES;
   order = signal<Order | null>(null);
@@ -51,8 +57,13 @@ export class OrderDetailComponent implements OnInit {
   activeTab = signal<'overview' | 'details'>('overview');
   createdByParticipantId = signal<number>(0);
   reminderSent = signal(false);
-
   currentUserId = signal<number | null>(null);
+
+  // Betaling/payment signals
+  paymentByParticipantId = signal<Map<number, { status: string; amount: number }>>(new Map());
+  isApproving = signal(false);
+  approveError = signal<string | null>(null);
+  captureResults = signal<ParticipantCaptureResult[]>([]);
 
   constructor(
     private route: ActivatedRoute,
@@ -86,6 +97,17 @@ export class OrderDetailComponent implements OnInit {
           }));
         this.participants.set(vms);
         this.expandedIds.set(new Set());
+
+        // Map betalingsstatus per deltager fra participantPayments (ParticipantPaymentSummaryDto)
+        const payMap = new Map<number, { status: string; amount: number }>();
+        for (const pay of dto.participantPayments ?? []) {
+          payMap.set(pay.participantId, {
+            status: pay.status,
+            amount: Math.round(pay.amountMinorUnits / 100)
+          });
+        }
+        this.paymentByParticipantId.set(payMap);
+
         this.isLoading.set(false);
       },
       error: () => { this.errorMessage.set("Kunne ikke hente ordre."); this.isLoading.set(false); }
@@ -130,12 +152,65 @@ export class OrderDetailComponent implements OnInit {
     return 'chip-pending';
   }
 
+  participantPaymentStatus(participantId: number): string {
+    return this.paymentByParticipantId().get(participantId)?.status ?? '';
+  }
+
+  participantPaymentAmount(participantId: number): number {
+    return this.paymentByParticipantId().get(participantId)?.amount ?? 0;
+  }
+
+  allReserved(): boolean {
+    const ps = this.participants();
+    if (ps.length === 0) return false;
+    return ps.every(p =>
+      this.participantPaymentStatus(p.participantId) === ParticipantPaymentStatus.Reserved
+    );
+  }
+
+  canApprove(): boolean {
+    const status = this.order()?.status;
+    return this.allReserved() &&
+      status !== OrderStatus.Capturing &&
+      status !== OrderStatus.Paid &&
+      status !== OrderStatus.PartiallyFailed;
+  }
+
+  isCapturing(): boolean {
+    return this.order()?.status === OrderStatus.Capturing || this.isApproving();
+  }
+
+  isPartiallyFailed(): boolean {
+    return this.order()?.status === OrderStatus.PartiallyFailed;
+  }
+
+  captureResultFor(participantId: number): ParticipantCaptureResult | undefined {
+    return this.captureResults().find(r => r.participantId === participantId);
+  }
+
+  approveOrder(): void {
+    const o = this.order();
+    const uid = this.currentUserId();
+    if (!o || !uid) return;
+    this.isApproving.set(true);
+    this.approveError.set(null);
+    this.orderService.approveOrder(o.id, uid).subscribe({
+      next: (result: ApproveAndCaptureResult) => {
+        this.captureResults.set(result.results);
+        this.order.update(ord => ord ? { ...ord, status: result.orderStatus as OrderStatus } : ord);
+        this.isApproving.set(false);
+      },
+      error: () => {
+        this.approveError.set('Godkendelsen fejlede. Prøv igen.');
+        this.isApproving.set(false);
+      }
+    });
+  }
+
   sendReminder(): void {
     this.reminderSent.set(true);
     setTimeout(() => this.reminderSent.set(false), 3000);
   }
-
-  payOrder(): void { alert("Betaling registreres - implementeres i naeste step"); }
 
   goBack(): void { this.router.navigate(["/orders"]); }
 }

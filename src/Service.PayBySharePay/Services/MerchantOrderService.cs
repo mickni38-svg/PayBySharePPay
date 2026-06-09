@@ -2,6 +2,7 @@ using DataStorage.PayBySharePay.Context;
 using DataStorage.PayBySharePay.Entities;
 using DataStorage.PayBySharePay.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Service.PayBySharePay.DTOs;
 using Service.PayBySharePay.Interfaces;
 
@@ -13,20 +14,26 @@ public class MerchantOrderService : IMerchantOrderService
     private readonly IOrderRepository _orderRepository;
     private readonly IParticipantRepository _participantRepository;
     private readonly IOrderService _orderService;
+    private readonly IGroupPaymentOrchestrationService _orchestration;
     private readonly PayBySharePayDbContext _db;
+    private readonly string _apiBaseUrl;
 
     public MerchantOrderService(
         IMerchantOrderDraftRepository draftRepository,
         IOrderRepository orderRepository,
         IParticipantRepository participantRepository,
         IOrderService orderService,
-        PayBySharePayDbContext db)
+        IGroupPaymentOrchestrationService orchestration,
+        PayBySharePayDbContext db,
+        IConfiguration configuration)
     {
         _draftRepository = draftRepository;
         _orderRepository = orderRepository;
         _participantRepository = participantRepository;
         _orderService = orderService;
+        _orchestration = orchestration;
         _db = db;
+        _apiBaseUrl = configuration["AppSettings:ApiBaseUrl"] ?? "http://localhost:5071";
     }
 
     public async Task<MerchantOrderDraftDto> InitOrderAsync(InitMerchantOrderDto dto)
@@ -94,7 +101,23 @@ public class MerchantOrderService : IMerchantOrderService
         // Tjek om alle deltagere har indsendt — sæt ReadyToPay hvis ja
         await _orderService.CheckAndSetReadyToPayAsync(dto.OrderId);
 
-        return MapToDto(draft);
+        // Start reservation hos betalingsudbyderen for denne deltager
+        var amountMinorUnits = (long)(draft.TotalAmount * 100);
+        var returnUrl = $"{_apiBaseUrl}/api/payment-callback/return?participantPaymentId=0";
+        var callbackUrl = $"{_apiBaseUrl}/api/payment-callback/webhook";
+
+        var reserveResult = await _orchestration.ReserveParticipantPaymentAsync(
+            orderId: dto.OrderId,
+            participantId: orderParticipant.ParticipantId,
+            merchantId: merchant.Id.ToString(),
+            amountMinorUnits: amountMinorUnits,
+            currency: draft.Currency,
+            returnUrl: returnUrl,
+            callbackUrl: callbackUrl);
+
+        var draftDto = MapToDto(draft);
+        draftDto.PaymentRedirectUrl = reserveResult.Success ? reserveResult.RedirectUrl : null;
+        return draftDto;
     }
 
     public async Task<MerchantOrderDraftDto?> GetByOrderIdAsync(int orderId)
