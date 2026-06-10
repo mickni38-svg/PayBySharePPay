@@ -29,6 +29,22 @@ Do not create plans for small bug fixes, text changes, configuration updates, or
 
 ---
 
+# PayNSync Development Workflow
+
+Før du implementerer en feature:
+
+1. Identificér hvilken use case der arbejdes på.
+2. Læs relevante dokumenter under `/docs`.
+3. Læs use case-dokumentationen under `docs/usecases/`.
+4. Forklar opgaven og den planlagte løsning.
+5. Vent på accept før implementering.
+6. Implementér løsningen.
+7. Kør build og tests.
+8. Ret eventuelle fejl.
+9. Opdater `docs/current-state.md` og den relevante `docs/usecases/UC-XX-*.md` hvis funktionaliteten er ændret.
+
+---
+
 # PayNSync – Solution Knowledge
 
 ## What the system does
@@ -42,7 +58,7 @@ PayNSync is a group payment platform. A Host creates a group order at a Merchant
 | `DataStorage.PayBySharePay` | EF Core, entities, repositories, migrations (SQL Server) |
 | `Infrastructure.Payments.PayBySharePay` | `IPaymentProvider` implementations: `FakePaymentProvider` + `MobilePaySandboxPaymentProvider` (Vipps) |
 | `Tests.PayBySharePay` | xUnit unit tests (in-memory fakes, no EF InMemory) |
-| `Frontend.PayBySharePay` | Angular 17+ SPA (standalone components, signals) |
+| `Frontend.PayBySharePay` | Angular 19 SPA (standalone components, signals) |
 | `Frontend.MerchantDemo` | Static HTML merchant ordering demo (Pizzeria Roma) |
 
 ## Naming conventions
@@ -101,4 +117,28 @@ Switch via `AddPaymentInfrastructure(config)` in `PaymentInfrastructureExtension
 * `docs/glossary.md` — domain term definitions
 * `docs/current-state.md` — feature-by-feature ✅/⚠️/❌ implementation status
 * `docs/flows.md` — step-by-step description of all major flows
+* `docs/usecases/UC-XX-navn.md` — one file per use case (see format below)
+
+## Use case format (`docs/usecases/`)
+Each use case follows this structure and naming:
+* File: `UC-{id}-{kebab-navn}.md` — e.g. `UC-01-opret-bruger.md`
+* Sections: Overblik, Aktører, Prækonditioner, Postkonditioner, Normalforløb, Alternative forløb, Undtagelsesforløb, Datamodel, API-endpoints, Implementeringsstatus, Kendte mangler og gaps, Tekniske noter, Relaterede use cases
+* Status per implementeringsdel: ✅ implementeret / ⚠️ delvist / ❌ ikke implementeret
+* Gaps dokumenteres med prioritet: 🔴 Høj / 🟡 Medium / 🟢 Lav
+* Use cases reverse-engineeres fra kodebasen — ikke fra ønsker
+
+### Oprettede use cases
+* `docs/usecases/UC-01-opret-bruger.md` — Registrering af Person og Merchant
+* `docs/usecases/UC-02-log-ind.md` — Login med e-mail og password
+* `docs/usecases/UC-03-log-ud.md` — Manuel og automatisk logout
+* `docs/usecases/UC-04-opdater-profil.md` — Rediger navn, e-mail og telefon
+* `docs/usecases/UC-05-find-deltagere-tilfoj-ven.md` — Katalog-søgning og vennehåndtering
+* `docs/usecases/UC-06-opret-ordre.md` — Opret gruppeordre og invitér deltagere
+* `docs/usecases/UC-07-se-ordrer-og-overblik.md` — Se ordreliste og ordreoverblik
+* `docs/usecases/UC-08-bestil-via-merchant-link.md` — Deltager bestiller via merchant-link
+* `docs/usecases/UC-09-reserver-betaling.md` — Reserver betaling hos payment provider
+* `docs/usecases/UC-10-godkend-og-capture.md` — Host godkender og capture'r alle betalinger
+* `docs/usecases/UC-11-annuller-ordre.md` — Host annullerer ordre og frigiver reservationer
+* `docs/usecases/UC-12-beskeder.md` — Se og sende beskeder, ulæst tæller
+* `docs/usecases/UC-13-payment-webhook.md` — Modtag async betalingsstatus fra provider
 

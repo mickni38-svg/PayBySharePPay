@@ -15,8 +15,18 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{208BA388-4
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{089100B1-113F-4E66-888A-E83F3999EAFD}"
 	ProjectSection(SolutionItems) = preProject
-		docs\features.md = docs\features.md
-		docs\README.md = docs\README.md
+		docs\architecture.md = docs\architecture.md
+		.github\workflows\build.yml = .github\workflows\build.yml
+		docs\business-rules.md = docs\business-rules.md
+		docs\current-state.md = docs\current-state.md
+		.github\workflows\deploy-api.yml = .github\workflows\deploy-api.yml
+		.github\workflows\deploy-frontend.yml = .github\workflows\deploy-frontend.yml
+		.github\workflows\deploy-merchantdemo.yml = .github\workflows\deploy-merchantdemo.yml
+		.github\workflows\deploy-test.yml = .github\workflows\deploy-test.yml
+		docs\flows.md = docs\flows.md
+		docs\glossary.md = docs\glossary.md
+		docs\project-overview.md = docs\project-overview.md
+		.github\workflows\publish-wiki.yml = .github\workflows\publish-wiki.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
@@ -126,5 +136,8 @@ Global
 		{E6C9E751-5F98-81B9-BA74-E896211850F5} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{398A0D78-3CF4-A73D-F4E0-A8FA26EC7BC9} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{1D6C0AA3-9C1B-4739-A1A0-CB9B9AC11EE4} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BA30F0F2-60FE-42BD-B247-35C9335F6B02}
 	EndGlobalSection
 EndGlobal
