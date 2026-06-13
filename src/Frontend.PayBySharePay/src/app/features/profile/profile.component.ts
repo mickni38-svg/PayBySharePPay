@@ -74,6 +74,7 @@ export class ProfileComponent implements OnInit {
 
     this.profileService.updateProfile(userId, request).subscribe({
       next: () => {
+        this.auth.updateStoredName(request.name);
         this.isSaving.set(false);
         this.saveSuccess.set(true);
         setTimeout(() => this.saveSuccess.set(false), 3000);

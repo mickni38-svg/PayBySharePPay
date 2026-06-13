@@ -47,6 +47,36 @@
 
 .login__input:focus { border-color: #7c5cbf; }
 
+.login__password-wrap {
+  position: relative;
+
+  .login__input {
+    padding-right: 2.8rem;
+  }
+}
+
+.login__eye {
+  position: absolute;
+  right: .75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover { color: #e0e0e0; }
+}
+
 .login__error { color: #e57373; font-size: .82rem; margin: 0; }
 
 .login__btn {
@@ -62,3 +92,18 @@
 }
 
 .login__btn:disabled { background: #4a3a70; cursor: not-allowed; }
+
+.login__register-link {
+  font-size: .82rem;
+  color: #888;
+  text-align: center;
+  margin: 0;
+
+  a {
+    color: #7c5cbf;
+    text-decoration: none;
+    font-weight: 600;
+
+    &:hover { text-decoration: underline; }
+  }
+}

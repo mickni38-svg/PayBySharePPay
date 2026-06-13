@@ -132,13 +132,13 @@
 
 | Del | Status | Detaljer |
 |-----|--------|----------|
-| Frontend — login-formular | ✅ | E-mail-felt + submit-knap |
+| Frontend — login-formular | ✅ | E-mail-felt + adgangskode-felt + submit-knap |
 | Frontend — 401-håndtering | ✅ | Viser dansk fejlbesked |
 | Frontend — session-lagring | ✅ | `localStorage` via `AuthService._storeSession()` |
 | Frontend — hard reload ved login | ✅ | `window.location.href = '/home'` |
 | API — `POST /api/auth/login` | ✅ | E-mail-opslag + BCrypt-verifikation |
 | API — JWT-udstedelse | ✅ | `JwtTokenService.GenerateToken()` |
-| Frontend — password-felt i login | ❌ | Login-formularen har kun e-mail-felt — password sendes aldrig |
+| Frontend — password-felt i login | ✅ | Password-felt tilføjet med vis/skjul-knap — sendes med til API |
 | JWT-interceptor — 401 → logout | ✅ | `apiInterceptor` kalder `auth.logout()` |
 
 ---
@@ -147,7 +147,7 @@
 
 | # | Mangel | Prioritet | Beskrivelse |
 |---|--------|-----------|-------------|
-| G1 | **Password-felt mangler i login-formular** | 🔴 Høj | `LoginComponent` har kun e-mail-felt. `AuthService.login()` sender aldrig password. BCrypt-verifikationen på server-side køres derfor aldrig for normale brugere. |
+| G1 | ~~**Password-felt manglede i login-formular**~~ | ~~🔴 Høj~~ | **Implementeret** — password-felt tilføjet med vis/skjul-knap. `AuthService.login()` sender nu password med når det er udfyldt. |
 | G2 | **Merchant kan ikke logge ind** | 🔴 Høj | `AuthController.Login()` søger kun efter `Person`-type. En merchant kan ikke logge ind via login-flowet. |
 | G3 | **Fejlbesked skelner ikke mellem ukendt e-mail og forkert password** | 🟡 Medium | Frontend viser samme besked for E1 og E2 — brugeren kan ikke se om det er e-mail eller password der er forkert. |
 | G4 | **Token refresh ikke implementeret** | 🟡 Medium | Når token udløber efter 8 timer (eller reelt 43200 min jf. config — se G5 i UC-01), skal brugeren logge ind igen manuelt. |

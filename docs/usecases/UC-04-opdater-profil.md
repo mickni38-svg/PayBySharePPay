@@ -130,6 +130,7 @@
 | Frontend — gem profil | ✅ | `PUT /api/participants/{id}/profile` |
 | Frontend — notifikations-toggle | ✅ | Lokal `localStorage`-præference (ingen API) |
 | Frontend — succesbesked (3 sek.) | ✅ | `saveSuccess` signal + `setTimeout` |
+| Frontend — navn synkroniseres i session efter gem | ✅ | `auth.updateStoredName()` opdaterer `localStorage` + signal |
 | API — `GET /api/participants/{id}` | ✅ | Returnerer `ParticipantDto` |
 | API — `PUT /api/participants/{id}/profile` | ✅ | Validering + opdatering |
 | Auth-krav på endpoints | ❌ | Begge endpoints er uden `[Authorize]` — se gaps |
@@ -151,7 +152,7 @@
 ## Tekniske noter
 
 - `ProfileService` og `ProfileComponent` er separate fra `AuthService` — bruger `participantId` fra `AuthService.currentUserId()`.
-- Navn-opdatering gemmes ikke automatisk i `localStorage`-sessionen (`sbys_user.name`) — efter gem kan visningsnavnet i navigationen være forældet indtil næste login.
+- Navn-opdatering synkroniseres nu til `localStorage`-sessionen via `AuthService.updateStoredName()` — navigationsnavnet opdateres straks efter gem.
 - `ParticipantsController` har ingen class-level `[Authorize]` — dette er et gennemgående sikkerhedsproblem for alle endpoints i controlleren.
 
 ---

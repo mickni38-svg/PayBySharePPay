@@ -6,6 +6,7 @@ import { environment } from '../../../environments/environment';
 
 export interface LoginRequest {
   email: string;
+  password?: string;
 }
 
 export interface LoginResponse {
@@ -48,9 +49,10 @@ export class AuthService {
 
   constructor(private readonly http: HttpClient) {}
 
-  login(email: string): Observable<LoginResponse> {
+  login(email: string, password?: string): Observable<LoginResponse> {
+    const body: LoginRequest = password ? { email, password } : { email };
     return this.http
-      .post<LoginResponse>(`${environment.apiUrl}/api/auth/login`, { email })
+      .post<LoginResponse>(`${environment.apiUrl}/api/auth/login`, body)
       .pipe(tap(res => this._storeSession(res)));
   }
 
@@ -82,6 +84,14 @@ export class AuthService {
 
   getToken(): string | null {
     return this._token();
+  }
+
+  updateStoredName(name: string): void {
+    const user = this._user();
+    if (!user) return;
+    const updated = { ...user, name };
+    localStorage.setItem(USER_KEY, JSON.stringify(updated));
+    this._user.set(updated);
   }
 
   private _parseStoredUser(): { participantId: number; name: string } | null {

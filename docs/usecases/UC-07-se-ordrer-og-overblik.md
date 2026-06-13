@@ -101,9 +101,10 @@
 
 | Endpoint | Metode | Auth | Response |
 |----------|--------|------|----------|
-| `GET /api/orders` | GET | JWT `[Authorize]` | 200 + `IEnumerable<OrderSummaryDto>` |
+| `GET /api/orders` | GET | JWT `[Authorize]` | 200 + `IEnumerable<OrderSummaryDto>` (alle ordrer) |
 | `GET /api/orders?participantId={id}` | GET | JWT `[Authorize]` | 200 + filtreret liste |
 | `GET /api/orders/{id}/overview` | GET | JWT `[Authorize]` | 200 + `OrderOverviewDto`, 404 |
+| `GET /api/orders/{id}/capture-status` | GET | JWT `[Authorize]` | 200 + `CaptureStatusDto`, 404 |
 
 ---
 
@@ -115,6 +116,7 @@
 | Frontend — ordreoverblik | ✅ | Deltagere, linjer, betalingsstatus |
 | API — `GET /api/orders?participantId` | ✅ | JWT-beskyttet |
 | API — `GET /api/orders/{id}/overview` | ✅ | JWT-beskyttet |
+| API — `GET /api/orders/{id}/capture-status` | ✅ | Returnerer `CaptureStatusDto` med status pr. deltager |
 | Service — `ParticipantPayments` i overview | ✅ | Inkluderet siden payment-integration branchen |
 | Service — synkronisering af `OrderParticipant.Status` | ⚠️ | Synkroniseres ved hvert overview-kald (write i GET) |
 | Real-time opdatering | ❌ | Ingen polling eller WebSocket |
@@ -129,6 +131,7 @@
 | G2 | **`totalAmount` fra første draft** | 🟡 Medium | `draft?.TotalAmount ?? 0m` tager kun første draft. Hvis der er drafts fra flere deltagere med individuelle beløb, er totalbeløbet forkert. |
 | G3 | **Ingen real-time opdatering** | 🟡 Medium | Siden opdateres ikke automatisk når andre deltagere indsender bestillinger eller betalingsstatus ændres. |
 | G4 | **`GET /api/orders` returnerer alle ordrer** | 🟢 Lav | Uden `participantId`-filter returnerer `GetAll()` alle ordrer i databasen — ingen adgangskontrol på tværs af brugere. |
+| G5 | **`capture-status` bruges ikke af Angular-frontend** | 🟢 Lav | Endpoint eksisterer og fungerer, men Angular-frontend bruger `overview`-endpoint til betalingsstatus i stedet. |
 
 ---
 

@@ -141,4 +141,6 @@ Each use case follows this structure and naming:
 * `docs/usecases/UC-11-annuller-ordre.md` — Host annullerer ordre og frigiver reservationer
 * `docs/usecases/UC-12-beskeder.md` — Se og sende beskeder, ulæst tæller
 * `docs/usecases/UC-13-payment-webhook.md` — Modtag async betalingsstatus fra provider
+* `docs/usecases/UC-14-legacy-betaling.md` — Manuelt betalingsflow (stub, pre-provider)
+* `docs/usecases/UC-15-dev-og-seed-tools.md` — DevController og seed-CLI til testdata
 

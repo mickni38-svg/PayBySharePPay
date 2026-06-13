@@ -149,6 +149,8 @@ Fejl: `CapturePending → CaptureFailed`
 | State machine — `Reserved → CapturePending → Captured` | ✅ | |
 | `MerchantCallbackService` ved `Paid` | ✅ | HTTP POST til merchant |
 | `PaymentEventLog` pr. state-skift | ✅ | |
+| API — `GET /api/orders/{id}/capture-status` | ✅ | Polling-endpoint — returnerer `CaptureStatusDto` med status pr. deltager |
+| Frontend — capture-status polling | ❌ | Angular bruger `overview`-endpoint, ikke `capture-status` |
 | `UnauthorizedAccessException` → HTTP 403 | ❌ | Returnerer HTTP 500 pga. middleware-gap |
 
 ---
