@@ -1,6 +1,6 @@
 # UC-01-S07 — Tilføj adgangskode til merchant-registrering
 
-**Use Case:** UC-01 — Opret Bruger  
+**Use Case:** [UC-01 — Opret Bruger](../usecases/UC-01-opret-bruger.md)  
 **Type:** Gap-story (G1)  
 **Status:** ❌ Ikke implementeret  
 **Prioritet:** 🔴 Høj  

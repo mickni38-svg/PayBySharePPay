@@ -1,6 +1,6 @@
 # UC-01-S06 — Håndter netværksfejl ved registrering
 
-**Use Case:** UC-01 — Opret Bruger  
+**Use Case:** [UC-01 — Opret Bruger](../usecases/UC-01-opret-bruger.md)  
 **Type:** Fejlhåndtering  
 **Status:** ✅ Implementeret  
 
@@ -18,7 +18,7 @@ Så jeg ved, at problemet er midlertidigt og kan prøve igen.
 
 - [ ] Hvis API-kaldet fejler (netværksfejl, timeout, 5xx), vises beskeden *"Noget gik galt. Prøv igen."*
 - [ ] Formularen forbliver udfyldt, så brugeren ikke skal taste alt ind igen.
-- [ ] Der logges ikke sensiative data (adgangskode mv.) ved fejl.
+- [ ] Der logges ikke sensitive data (adgangskode mv.) ved fejl.
 
 ---
 

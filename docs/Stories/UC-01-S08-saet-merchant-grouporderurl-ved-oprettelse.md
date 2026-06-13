@@ -1,6 +1,6 @@
 # UC-01-S08 — Sæt merchant GroupOrderUrl ved oprettelse
 
-**Use Case:** UC-01 — Opret Bruger  
+**Use Case:** [UC-01 — Opret Bruger](../usecases/UC-01-opret-bruger.md)  
 **Type:** Gap-story (G3)  
 **Status:** ❌ Ikke implementeret  
 **Prioritet:** 🟡 Medium  

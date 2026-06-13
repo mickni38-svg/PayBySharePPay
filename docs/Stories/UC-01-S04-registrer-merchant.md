@@ -1,6 +1,6 @@
 # UC-01-S04 — Registrer merchant (spisested)
 
-**Use Case:** UC-01 — Opret Bruger  
+**Use Case:** [UC-01 — Opret Bruger](../usecases/UC-01-opret-bruger.md)  
 **Type:** Merchant-registrering  
 **Status:** ✅ Implementeret (med kendte gaps)  
 
@@ -47,3 +47,4 @@ Så jeg kan blive synlig for grupper der vil bestille mad.
 
 - [UC-01-S05 — Håndter duplikat e-mail ved merchant-registrering](UC-01-S05-haandter-duplikat-email-merchant.md)
 - [UC-01-S07 — Tilføj adgangskode til merchant-registrering (gap G1)](UC-01-S07-merchant-adgangskode.md)
+- [UC-01-S08 — Sæt merchant GroupOrderUrl ved oprettelse (gap G3)](UC-01-S08-saet-merchant-grouporderurl-ved-oprettelse.md)

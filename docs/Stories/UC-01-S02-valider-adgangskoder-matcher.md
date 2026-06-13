@@ -1,6 +1,6 @@
 # UC-01-S02 — Valider at adgangskoder matcher
 
-**Use Case:** UC-01 — Opret Bruger  
+**Use Case:** [UC-01 — Opret Bruger](../usecases/UC-01-opret-bruger.md)  
 **Type:** Frontend-validering  
 **Status:** ✅ Implementeret  
 

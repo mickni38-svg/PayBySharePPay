@@ -1,6 +1,6 @@
 # UC-01-S03 — Håndter duplikat e-mail ved personregistrering
 
-**Use Case:** UC-01 — Opret Bruger  
+**Use Case:** [UC-01 — Opret Bruger](../usecases/UC-01-opret-bruger.md)  
 **Type:** Fejlhåndtering  
 **Status:** ✅ Implementeret  
 

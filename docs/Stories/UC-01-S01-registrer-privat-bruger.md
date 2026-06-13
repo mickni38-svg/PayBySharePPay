@@ -1,6 +1,6 @@
 # UC-01-S01 — Registrer privat bruger
 
-**Use Case:** UC-01 — Opret Bruger  
+**Use Case:** [UC-01 — Opret Bruger](../usecases/UC-01-opret-bruger.md)  
 **Type:** Person (privat bruger)  
 **Status:** ✅ Implementeret  
 
