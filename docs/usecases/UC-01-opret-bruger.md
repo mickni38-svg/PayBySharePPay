@@ -11,7 +11,7 @@
 | Felt | Værdi |
 |------|-------|
 | Use Case ID | UC-01 |
-| Navn | Opret Bruger |
+| Navn | Opret Brugerr |
 | Primær aktør | Ikke-registreret bruger (Person eller Merchant) |
 | Formål | Oprette en konto i PayNSync, så brugeren kan logge ind og deltage i gruppeordrer |
 | Trigger | Brugeren trykker "Opret konto" på login-siden |
@@ -211,3 +211,6 @@
 - [UC-02 — Log ind](UC-02-log-ind.md) *(ikke oprettet endnu)*
 - [UC-03 — Opdater Profil](UC-03-opdater-profil.md) *(ikke oprettet endnu)*
 - [UC-04 — Opret Ordre](UC-04-opret-ordre.md) *(ikke oprettet endnu)*
+
+## Spørgsmål til PO
+Der skal afklares med PO om følgende: Skal der implementeres en separat login-flow for merchants, eller skal de kunne logge ind med e-mail + password som almindelige brugere? Hvis det sidste, skal `RegisterMerchantRequest` opdateres til at inkludere et `Password`-felt, og `CreateMerchantAsync()` skal håndtere password-hash ligesom `CreatePersonAsync()`.
