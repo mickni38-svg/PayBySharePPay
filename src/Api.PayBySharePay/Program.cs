@@ -32,14 +32,21 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
     {
-        policy.WithOrigins(
-                  "http://localhost:4200", "https://localhost:4200",
-                  "http://localhost:4201", "https://localhost:4201",
-                  "http://localhost:8081", "https://localhost:8081",
-                  // Test frontend
-                  "https://purple-coast-0d01c1003.7.azurestaticapps.net",
-                  "https://brave-flower-0026a7503.7.azurestaticapps.net" // merchant-demo TEST
-              )
+        var origins = new List<string>
+        {
+            "http://localhost:4200", "https://localhost:4200",
+            "http://localhost:4201", "https://localhost:4201",
+            "http://localhost:8081", "https://localhost:8081",
+            // Test frontend (Azure)
+            "https://purple-coast-0d01c1003.7.azurestaticapps.net",
+            "https://brave-flower-0026a7503.7.azurestaticapps.net"
+        };
+
+        var extraOrigins = builder.Configuration.GetSection("AppSettings:CorsOrigins").Get<string[]>();
+        if (extraOrigins?.Length > 0)
+            origins.AddRange(extraOrigins);
+
+        policy.WithOrigins([.. origins])
               .AllowAnyHeader()
               .AllowAnyMethod();
     });

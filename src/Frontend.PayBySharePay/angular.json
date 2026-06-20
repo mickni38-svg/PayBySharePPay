@@ -78,7 +78,28 @@
                                                                                                                                         }
                                                                                                                                     ],
                                                                                                                         "outputHashing":  "all"
-                                                                                                                    }
+                                                                                                                    },
+                                                                                                           "simply":  {
+                                                                                                                          "outputHashing":  "all",
+                                                                                                                          "budgets":  [
+                                                                                                                                          {
+                                                                                                                                              "maximumWarning":  "500kB",
+                                                                                                                                              "maximumError":  "1MB",
+                                                                                                                                              "type":  "initial"
+                                                                                                                                          },
+                                                                                                                                          {
+                                                                                                                                              "maximumWarning":  "10kB",
+                                                                                                                                              "maximumError":  "20kB",
+                                                                                                                                              "type":  "anyComponentStyle"
+                                                                                                                                          }
+                                                                                                                                      ],
+                                                                                                                          "fileReplacements":  [
+                                                                                                                                                   {
+                                                                                                                                                       "with":  "src/environments/environment.simply.ts",
+                                                                                                                                                       "replace":  "src/environments/environment.ts"
+                                                                                                                                                   }
+                                                                                                                                               ]
+                                                                                                                      }
                                                                                                        },
                                                                                     "defaultConfiguration":  "development"
                                                                                 },
