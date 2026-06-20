@@ -1,0 +1,87 @@
+﻿name: Deploy til Simply.com (paynsync.dk)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    name: Byg og deploy til Simply.com (paynsync.dk)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # -- .NET 9 API: Self-Contained Windows x64 publish ----------------------
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.x'
+
+      - name: Publish API (self-contained, win-x64)
+        run: |
+          dotnet publish src/Api.PayBySharePay/Api.PayBySharePay.csproj \
+            --configuration Release \
+            --self-contained true \
+            --runtime win-x64 \
+            --output ./publish-api
+
+      - name: Injicer secrets i appsettings.Simply.json
+        run: |
+          jq \
+            --arg db "${{ secrets.SIMPLY_DB_CONNECTION_STRING }}" \
+            --arg jwt "${{ secrets.SIMPLY_JWT_KEY }}" \
+            '. + {"ConnectionStrings": {"PayBySharePayDb": $db}, "Jwt": {"Key": $jwt, "Issuer": "sbys-api", "Audience": "sbys-frontend", "ExpiresInMinutes": 43200}}' \
+            ./publish-api/appsettings.Simply.json \
+            > ./publish-api/appsettings.Simply.tmp.json
+          mv ./publish-api/appsettings.Simply.tmp.json ./publish-api/appsettings.Simply.json
+
+      # -- Angular Frontend ----------------------------------------------------
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: src/Frontend.PayBySharePay/package-lock.json
+
+      - name: Installer dependencies
+        working-directory: src/Frontend.PayBySharePay
+        run: npm ci
+
+      - name: Byg Angular (simply)
+        working-directory: src/Frontend.PayBySharePay
+        run: npx ng build --configuration simply
+
+      # -- Deploy via FTP -------------------------------------------------------
+      # FTP-server: nt31.unoeuro.com (IP: 93.191.156.14)
+      # Credentials hentes fra GitHub Secrets (se deploy/simply/README.md)
+      # Tjek FTP-mappenavne i Simply inden foerste deploy!
+
+      - name: Deploy API til api.paynsync.dk
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: nt31.unoeuro.com
+          username: ${{ secrets.SIMPLY_FTP_USERNAME }}
+          password: ${{ secrets.SIMPLY_FTP_PASSWORD }}
+          local-dir: ./publish-api/
+          server-dir: /api.paynsync.dk/
+          exclude: |
+            **/.git*
+            **/.git*/**
+
+      - name: Deploy Frontend til paynsync.dk
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: nt31.unoeuro.com
+          username: ${{ secrets.SIMPLY_FTP_USERNAME }}
+          password: ${{ secrets.SIMPLY_FTP_PASSWORD }}
+          local-dir: src/Frontend.PayBySharePay/dist/frontend.paybysharepay/
+          server-dir: /public_html/
+
+      - name: Deploy MerchantDemo til merchant.paynsync.dk
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: nt31.unoeuro.com
+          username: ${{ secrets.SIMPLY_FTP_USERNAME }}
+          password: ${{ secrets.SIMPLY_FTP_PASSWORD }}
+          local-dir: src/Frontend.MerchantDemo/
+          server-dir: /merchant.paynsync.dk/
