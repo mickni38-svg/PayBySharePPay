@@ -75,7 +75,7 @@ jobs:
           username: ${{ secrets.SIMPLY_FTP_USERNAME }}
           password: ${{ secrets.SIMPLY_FTP_PASSWORD }}
           local-dir: src/Frontend.PayBySharePay/dist/frontend.paybysharepay/
-          server-dir: /www.paynsync.dk/
+          server-dir: /public_html/
 
       - name: Deploy MerchantDemo til merchant.paynsync.dk
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
