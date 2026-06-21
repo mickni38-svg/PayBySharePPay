@@ -67,6 +67,7 @@ jobs:
           exclude: |
             **/.git*
             **/.git*/**
+            **/*.pdb
 
       - name: Deploy Frontend til paynsync.dk
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
