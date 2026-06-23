@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.6.11806.211
@@ -74,27 +74,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UC-01", "UC-01", "{E9AA68C8
 		docs\Stories\UC-01\UC-01-S06-haandter-netvaerksfejl-ved-registrering.md = docs\Stories\UC-01\UC-01-S06-haandter-netvaerksfejl-ved-registrering.md
 		docs\Stories\UC-01\UC-01-S07-merchant-adgangskode.md = docs\Stories\UC-01\UC-01-S07-merchant-adgangskode.md
 		docs\Stories\UC-01\UC-01-S08-saet-merchant-grouporderurl-ved-oprettelse.md = docs\Stories\UC-01\UC-01-S08-saet-merchant-grouporderurl-ved-oprettelse.md
-	EndProjectSection
-EndProject
-Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "Landing.PayBySharePay", "src\Landing.PayBySharePay\", "{0BB02676-AB6A-4CAC-F578-9BFF565C033F}"
-	ProjectSection(WebsiteProperties) = preProject
-		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
-		Debug.AspNetCompiler.VirtualPath = "/localhost_59379"
-		Debug.AspNetCompiler.PhysicalPath = "src\Landing.PayBySharePay\"
-		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_59379\"
-		Debug.AspNetCompiler.Updateable = "true"
-		Debug.AspNetCompiler.ForceOverwrite = "true"
-		Debug.AspNetCompiler.FixedNames = "false"
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.VirtualPath = "/localhost_59379"
-		Release.AspNetCompiler.PhysicalPath = "src\Landing.PayBySharePay\"
-		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_59379\"
-		Release.AspNetCompiler.Updateable = "true"
-		Release.AspNetCompiler.ForceOverwrite = "true"
-		Release.AspNetCompiler.FixedNames = "false"
-		Release.AspNetCompiler.Debug = "False"
-		VWDPort = "59379"
-		SlnRelativePath = "src\Landing.PayBySharePay\"
 	EndProjectSection
 EndProject
 Global
@@ -179,18 +158,6 @@ Global
 		{1D6C0AA3-9C1B-4739-A1A0-CB9B9AC11EE4}.Release|x64.Build.0 = Release|Any CPU
 		{1D6C0AA3-9C1B-4739-A1A0-CB9B9AC11EE4}.Release|x86.ActiveCfg = Release|Any CPU
 		{1D6C0AA3-9C1B-4739-A1A0-CB9B9AC11EE4}.Release|x86.Build.0 = Release|Any CPU
-		{0BB02676-AB6A-4CAC-F578-9BFF565C033F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0BB02676-AB6A-4CAC-F578-9BFF565C033F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0BB02676-AB6A-4CAC-F578-9BFF565C033F}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{0BB02676-AB6A-4CAC-F578-9BFF565C033F}.Debug|x64.Build.0 = Debug|Any CPU
-		{0BB02676-AB6A-4CAC-F578-9BFF565C033F}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{0BB02676-AB6A-4CAC-F578-9BFF565C033F}.Debug|x86.Build.0 = Debug|Any CPU
-		{0BB02676-AB6A-4CAC-F578-9BFF565C033F}.Release|Any CPU.ActiveCfg = Debug|Any CPU
-		{0BB02676-AB6A-4CAC-F578-9BFF565C033F}.Release|Any CPU.Build.0 = Debug|Any CPU
-		{0BB02676-AB6A-4CAC-F578-9BFF565C033F}.Release|x64.ActiveCfg = Debug|Any CPU
-		{0BB02676-AB6A-4CAC-F578-9BFF565C033F}.Release|x64.Build.0 = Debug|Any CPU
-		{0BB02676-AB6A-4CAC-F578-9BFF565C033F}.Release|x86.ActiveCfg = Debug|Any CPU
-		{0BB02676-AB6A-4CAC-F578-9BFF565C033F}.Release|x86.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -203,7 +170,6 @@ Global
 		{398A0D78-3CF4-A73D-F4E0-A8FA26EC7BC9} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{1D6C0AA3-9C1B-4739-A1A0-CB9B9AC11EE4} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{E9AA68C8-09A6-4FF3-8F06-8BAD67F4B895} = {9637ED3B-78A9-4699-82E0-555E4B42F55B}
-		{0BB02676-AB6A-4CAC-F578-9BFF565C033F} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {BA30F0F2-60FE-42BD-B247-35C9335F6B02}
