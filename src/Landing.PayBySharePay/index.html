@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PayBySharePay - Bestil sammen, betal hver for sig</title>
+  <title>PayNSync – Bestil sammen, betal hver for sig</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -97,24 +97,56 @@
       .concept__flow { flex-direction: column; align-items: center; }
       .concept__step { max-width: 100%; width: 100%; }
     }
+    html { scroll-behavior: smooth; }
+    nav { position: sticky; top: 0; z-index: 100; background: rgba(10,14,26,0.95); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 56px; }
+    .nav__brand { font-size: 15px; font-weight: 800; color: var(--text); text-decoration: none; display: flex; align-items: center; gap: 10px; }
+    .nav__brand-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+    .nav__links { display: flex; align-items: center; gap: 4px; }
+    .nav__links a { color: var(--muted); font-size: 13px; font-weight: 500; text-decoration: none; padding: 6px 10px; border-radius: 8px; transition: color 0.15s, background 0.15s; white-space: nowrap; }
+    .nav__links a:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+    .nav__cta { background: var(--green); color: #0a0e1a !important; font-weight: 700 !important; border-radius: 8px; padding: 7px 16px !important; }
+    .nav__cta:hover { background: #27ae60 !important; }
+    .nav__toggle { display: none; background: none; border: none; cursor: pointer; padding: 6px; color: var(--text); font-size: 22px; line-height: 1; }
+    .cta__btn { display: inline-block; margin: 16px 0 8px; background: var(--green); color: #0a0e1a; font-size: 15px; font-weight: 700; padding: 13px 36px; border-radius: 12px; text-decoration: none; transition: background 0.15s; }
+    .cta__btn:hover { background: #27ae60; }
+    @media (max-width: 768px) {
+      .nav__links { display: none; position: fixed; top: 56px; left: 0; right: 0; background: rgba(10,14,26,0.98); backdrop-filter: blur(12px); flex-direction: column; align-items: stretch; padding: 12px 16px 16px; border-bottom: 1px solid var(--border); gap: 2px; }
+      .nav__links.open { display: flex; }
+      .nav__links a { padding: 10px 14px; font-size: 14px; border-radius: 8px; }
+      .nav__toggle { display: block; }
+    }
   </style>
 </head>
 <body>
-  <section class="hero">
+  <nav>
+    <a href="#hjem" class="nav__brand"><span class="nav__brand-dot"></span>PayNSync</a>
+    <div class="nav__links" id="navLinks">
+      <a href="#hjem">Hjem</a>
+      <a href="#model">Modellen</a>
+      <a href="#roller">Roller</a>
+      <a href="#saadan">S&#229;dan virker det</a>
+      <a href="#funktioner">Funktioner</a>
+      <a href="#screenshots">Screenshots</a>
+      <a href="#merchants">Spisestedet</a>
+      <a href="https://mobil.paynsync.dk" class="nav__cta" target="_blank">&#197;bn appen</a>
+    </div>
+    <button class="nav__toggle" onclick="document.getElementById('navLinks').classList.toggle('open')">&#9776;</button>
+  </nav>
+  <section class="hero" id="hjem">
     <div class="hero__logo">
-      <img class="hero__logo-img" src="images/logo.png" alt="PayBySharePay logo" onerror="this.style.display='none'" />
+      <img class="hero__logo-img" src="images/logo.png" alt="PayNSync logo" onerror="this.style.display='none'" />
     </div>
     <div class="hero__badge">&#128679; Kommer snart &#8211; Beta er p&#229; vej!</div>
     <h1 class="hero__tagline">Bestil <span>sammen</span> &#8211;<br>betal <span>hver for sig</span></h1>
-    <p class="hero__sub">PayBySharePay er platformen til f&#230;lles take-away-bestillinger, hvor alle betaler pr&#230;cis deres del. Ingen udl&#230;g, ingen besv&#230;rlig opf&#248;lgning &#8211; ordren frigives kun n&#229;r alle har betalt og hosten godkender.</p>
+    <p class="hero__sub">PayNSync er platformen til f&#230;lles take-away-bestillinger, hvor alle betaler pr&#230;cis deres del. Ingen udl&#230;g, ingen besv&#230;rlig opf&#248;lgning &#8211; ordren frigives kun n&#229;r alle har betalt og hosten godkender.</p>
     <p class="hero__coming-soon">&#9203; Siden er ikke helt klar endnu &#8211; vi arbejder p&#229; sagen!</p>
   </section>
 
-  <section class="concept">
+  <section class="concept" id="model">
     <div class="concept__inner">
       <p class="concept__label">Betalingsmodellen</p>
       <h2 class="concept__title">Alle betaler sin andel &#8211; ordren sendes f&#248;rst n&#229;r hosten godkender</h2>
-      <p class="concept__desc">PayBySharePay bruger en unik model: deltagerne betaler hver for sig i appen, men den samlede ordre til spisestedet frigives <strong>f&#248;rst</strong> n&#229;r hosten aktivt trykker <em>&#8221;Betal for ordre&#8221;</em>.</p>
+      <p class="concept__desc">PayNSync bruger en unik model: deltagerne betaler hver for sig i appen, men den samlede ordre til spisestedet frigives <strong>f&#248;rst</strong> n&#229;r hosten aktivt trykker <em>&#8221;Betal for ordre&#8221;</em>.</p>
       <div class="concept__flow">
         <div class="concept__step">
           <div class="concept__step-num">1</div>
@@ -126,7 +158,7 @@
           <div class="concept__step-num">2</div>
           <span class="concept__step-icon">&#128202;</span>
           <div class="concept__step-title">Appen samler betalingerne</div>
-          <div class="concept__step-desc">PayBySharePay holder styr p&#229; hvem der har betalt og hvem der mangler.</div>
+          <div class="concept__step-desc">PayNSync holder styr p&#229; hvem der har betalt og hvem der mangler.</div>
         </div>
         <div class="concept__step concept__step--key">
           <div class="concept__step-num">3</div>
@@ -139,7 +171,7 @@
     </div>
   </section>
 
-  <section class="roles">
+  <section class="roles" id="roller">
     <h2 class="roles__title">To roller &#8211; &#233;n app</h2>
     <p class="roles__sub">PayBySharePay fungerer b&#229;de for den der arrangerer og dem der deltager</p>
     <div class="roles__grid">
@@ -169,14 +201,14 @@
     </div>
   </section>
 
-  <section class="how">
+  <section class="how" id="saadan">
     <div class="how__inner">
       <h2 class="how__title">S&#229;dan virker det &#8211; trin for trin</h2>
       <p class="how__sub">Fra oprettelse til leveret mad hos spisestedet</p>
       <div class="how__steps">
         <div class="how__step">
           <div class="how__step-num">1</div>
-          <div class="how__step-text"><strong>V&#230;lg et spisested i appen</strong><span>Find dit yndlingsspisested i PayBySharePay&#8217;s oversigt og opret en gruppebetaling.</span></div>
+          <div class="how__step-text"><strong>V&#230;lg et spisested i appen</strong><span>Find dit yndlingsspisested i PayNSync&#8217;s oversigt og opret en gruppebetaling.</span></div>
         </div>
         <div class="how__step">
           <div class="how__step-num">2</div>
@@ -202,7 +234,7 @@
     </div>
   </section>
 
-  <section class="features">
+  <section class="features" id="funktioner">
     <p class="features__label">Hvad kan PayBySharePay?</p>
     <h2 class="features__title">Alt hvad du beh&#248;ver til gruppeordrer</h2>
     <div class="features__grid">
@@ -215,7 +247,7 @@
     </div>
   </section>
 
-  <section class="screenshots">
+  <section class="screenshots" id="screenshots">
     <h2 class="screenshots__title">Se appen i aktion</h2>
     <p class="screenshots__sub">Designet til mobilbrug &#8211; ingen app-download n&#248;dvendig</p>
     <div class="screenshots__grid">
@@ -227,7 +259,7 @@
     </div>
   </section>
 
-  <section class="merchants">
+  <section class="merchants" id="merchants">
     <h2 class="merchants__title">&#127978; Er du et spisested?</h2>
     <p class="merchants__sub">PayBySharePay giver dine kunder mulighed for at bestille og betale som gruppe &#8211; via dit eksisterende website. Du modtager &#233;n samlet ordre og &#233;t samlet bel&#248;b.</p>
     <div class="merchants__grid">
@@ -239,10 +271,11 @@
 
   <section class="cta">
     <h2 class="cta__title">&#128679; Snart klar!</h2>
-    <p class="cta__sub">PayBySharePay er ikke helt klar endnu &#8211; men beta er p&#229; vej.<br>Hold &#248;je her og v&#230;r med fra starten.</p>
+    <p class="cta__sub">PayNSync er ikke helt klar endnu &#8211; men beta er p&#229; vej.<br>Hold &#248;je her og v&#230;r med fra starten.</p>
+    <a class="cta__btn" href="https://mobil.paynsync.dk" target="_blank">&#197;bn appen &#8594;</a>
     <p class="cta__note">Ingen app-download n&#248;dvendig &#8211; fungerer direkte i din browser.</p>
   </section>
 
-  <footer>&copy; 2026 PayBySharePay &nbsp;&middot;&nbsp; paybysharepay.dk</footer>
+  <footer>&copy; 2026 PayNSync &nbsp;&middot;&nbsp; paynsync.dk</footer>
 </body>
 </html>

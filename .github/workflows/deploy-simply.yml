@@ -69,14 +69,23 @@ jobs:
             **/.git*/**
             **/*.pdb
 
-      - name: Deploy Frontend til paynsync.dk
+      - name: Deploy Landing til paynsync.dk
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: nt31.unoeuro.com
+          username: ${{ secrets.SIMPLY_FTP_USERNAME }}
+          password: ${{ secrets.SIMPLY_FTP_PASSWORD }}
+          local-dir: src/Landing.PayBySharePay/
+          server-dir: /public_html/
+
+      - name: Deploy Frontend til mobil.paynsync.dk
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: nt31.unoeuro.com
           username: ${{ secrets.SIMPLY_FTP_USERNAME }}
           password: ${{ secrets.SIMPLY_FTP_PASSWORD }}
           local-dir: src/Frontend.PayBySharePay/dist/frontend.paybysharepay/
-          server-dir: /public_html/
+          server-dir: /mobil.paynsync.dk/
 
       - name: Deploy MerchantDemo til merchant.paynsync.dk
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
