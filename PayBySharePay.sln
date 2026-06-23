@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.6.11806.211
@@ -74,27 +74,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UC-01", "UC-01", "{E9AA68C8
 		docs\Stories\UC-01\UC-01-S06-haandter-netvaerksfejl-ved-registrering.md = docs\Stories\UC-01\UC-01-S06-haandter-netvaerksfejl-ved-registrering.md
 		docs\Stories\UC-01\UC-01-S07-merchant-adgangskode.md = docs\Stories\UC-01\UC-01-S07-merchant-adgangskode.md
 		docs\Stories\UC-01\UC-01-S08-saet-merchant-grouporderurl-ved-oprettelse.md = docs\Stories\UC-01\UC-01-S08-saet-merchant-grouporderurl-ved-oprettelse.md
-	EndProjectSection
-EndProject
-Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "Landing.PayBySharePay", "src\Landing.PayBySharePay\", "{0BB02676-AB6A-4CAC-F578-9BFF565C033F}"
-	ProjectSection(WebsiteProperties) = preProject
-		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
-		Debug.AspNetCompiler.VirtualPath = "/localhost_59379"
-		Debug.AspNetCompiler.PhysicalPath = "src\Landing.PayBySharePay\"
-		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_59379\"
-		Debug.AspNetCompiler.Updateable = "true"
-		Debug.AspNetCompiler.ForceOverwrite = "true"
-		Debug.AspNetCompiler.FixedNames = "false"
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.VirtualPath = "/localhost_59379"
-		Release.AspNetCompiler.PhysicalPath = "src\Landing.PayBySharePay\"
-		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_59379\"
-		Release.AspNetCompiler.Updateable = "true"
-		Release.AspNetCompiler.ForceOverwrite = "true"
-		Release.AspNetCompiler.FixedNames = "false"
-		Release.AspNetCompiler.Debug = "False"
-		VWDPort = "59379"
-		SlnRelativePath = "src\Landing.PayBySharePay\"
 	EndProjectSection
 EndProject
 Global
