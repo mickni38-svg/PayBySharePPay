@@ -35,13 +35,13 @@ Før du implementerer en feature:
 
 1. Identificér hvilken use case der arbejdes på.
 2. Læs relevante dokumenter under `/docs`.
-3. Læs use case-dokumentationen under `docs/usecases/`.
+3. Læs use case-opgaven under `docs/usecases/`.
 4. Forklar opgaven og den planlagte løsning.
 5. Vent på accept før implementering.
 6. Implementér løsningen.
 7. Kør build og tests.
 8. Ret eventuelle fejl.
-9. Opdater `docs/current-state.md` og den relevante `docs/usecases/UC-XX-*.md` hvis funktionaliteten er ændret.
+9. Opdater `docs/current-state.md` og den relevante `docs/usecases/UC-XX-*.md` hvis funktionaliteten er ændret og den relevante `docs/stories/UC-XX/UC-XX-*.md` hvis funktionaliteten er ændret..
 
 ---
 
