@@ -56,6 +56,13 @@ jobs:
       # Credentials hentes fra GitHub Secrets (se deploy/simply/README.md)
       # Tjek FTP-mappenavne i Simply inden foerste deploy!
 
+      - name: Tag API offline – upload app_offline.htm for at frigøre fillåse
+        run: |
+          echo "Deploy i gang – app er midlertidigt offline." > /tmp/app_offline.htm
+          lftp -u "${{ secrets.SIMPLY_FTP_USERNAME }},${{ secrets.SIMPLY_FTP_PASSWORD }}" nt31.unoeuro.com \
+            -e "put /tmp/app_offline.htm -o api.paynsync.dk/app_offline.htm; bye"
+          sleep 4
+
       - name: Deploy API til api.paynsync.dk
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -68,6 +75,13 @@ jobs:
             **/.git*
             **/.git*/**
             **/*.pdb
+            **/app_offline.htm
+
+      - name: Tag API online igen – slet app_offline.htm
+        if: always()
+        run: |
+          lftp -u "${{ secrets.SIMPLY_FTP_USERNAME }},${{ secrets.SIMPLY_FTP_PASSWORD }}" nt31.unoeuro.com \
+            -e "rm api.paynsync.dk/app_offline.htm; bye" || echo "app_offline.htm ikke fundet – ingen handling nødvendig"
 
       - name: Deploy Landing til paynsync.dk
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5

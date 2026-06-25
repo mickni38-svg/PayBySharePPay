@@ -63,6 +63,8 @@ PayNSync is a group payment platform. A Host creates a group order at a Merchant
 | `Frontend.MerchantDemo` | Static HTML merchant ordering demo (Pizzeria Roma) |
 
 ## Naming conventions
+* **Intern kode**: Alle projekter, klasser og filer hedder `PayBySharePay` — det ændres ikke.
+* **Eksternt produktnavn**: PayNSync — bruges i UI, landingpage, dokumentation og kommunikation udadtil.
 * Domain names: **Order**, **OrderParticipant**, **Participant** — NOT GroupPayment/GroupPaymentMember/UserEntity.
 * Amounts in `ParticipantPayment`: `AmountMinorUnits` (long, øre). Amounts in `Payment` and `MerchantOrderDraft`: decimal (kr).
 * Currency defaults to `"DKK"`.
@@ -102,6 +104,20 @@ Switch via `AddPaymentInfrastructure(config)` in `PaymentInfrastructureExtension
 
 ## Frontend routes (Angular)
 `/home`, `/orders`, `/orders/create`, `/orders/:id`, `/messages`, `/profile`, `/pending-participants`, `/find-participants`, `/login`, `/register`
+
+## Deployed Environments
+**Hosting: Simply.com (nt31.unoeuro.com) — IKKE Azure.**
+
+| Komponent | URL | Mappe på Simply.com |
+|-----------|-----|---------------------|
+| Landing page (vanilla HTML) | `https://paynsync.dk` | `/public_html/` |
+| API (.NET 9, self-contained win-x64) | `https://api.paynsync.dk` | `/api.paynsync.dk/` |
+| Frontend (Angular SPA) | `https://mobil.paynsync.dk` | `/mobil.paynsync.dk/` |
+| Merchant Demo (statisk HTML) | `https://merchant.paynsync.dk` | `/merchant.paynsync.dk/` |
+
+Deploy sker via GitHub Actions workflow `.github/workflows/deploy-simply.yml` over FTP.
+Secrets: `SIMPLY_FTP_USERNAME`, `SIMPLY_FTP_PASSWORD`, `SIMPLY_DB_CONNECTION_STRING`, `SIMPLY_JWT_KEY`.
+API-deploy bruger `app_offline.htm`-tricket for at frigøre fillåse under deploy.
 
 ## Known open questions / gaps
 1. No endpoint to join an order by `JoinToken` (generated but unused)
