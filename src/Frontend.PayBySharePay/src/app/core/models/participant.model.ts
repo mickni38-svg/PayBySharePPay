@@ -25,7 +25,7 @@ export interface MerchantInfo {
   paymentProvider?: string;
 }
 
-// API response DTO Ã¢â¬â matcher Service.PayBySharePay.DTOs.ParticipantDto
+// API response DTO â€“ matcher Service.PayBySharePay.DTOs.ParticipantDto
 export interface ParticipantApiDto {
   id: number;
   type: string; // "Person" | "Merchant"

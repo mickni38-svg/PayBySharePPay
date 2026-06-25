@@ -5,28 +5,28 @@
 
   <div class="messages__body">
     @if (isLoading()) {
-      <div class="messages__loading">Henter beskederÃ¢â¬Â¦</div>
+      <div class="messages__loading">Henter beskederâ€¦</div>
     } @else if (messages().length === 0) {
       <app-empty-state
-        icon="Ã°Å¸âÂ¬"
+        icon="ðŸ’¬"
         title="Ingen beskeder endnu"
-        subtitle="Beskeder vises her, nÃÂ¥r der er aktivitet i dine gruppebetalinger."
+        subtitle="Beskeder vises her, nÃ¥r der er aktivitet i dine gruppebetalinger."
       />
     } @else {
       <ul class="messages__list">
         @for (msg of messages(); track msg.id) {
           <li class="messages__item" [class.messages__item--unread]="!msg.isRead">
-            <div class="messages__item-icon">Ã°Å¸Ââ¢</div>
+            <div class="messages__item-icon">ðŸ•</div>
             <div class="messages__item-body">
               <p class="messages__item-text">{{ textWithoutUrl(msg.content) }}</p>
               @if (extractUrl(msg.content); as url) {
                 @if (internalPath(url); as path) {
                   <a [routerLink]="path" class="messages__item-link">
-                    Ã°Å¸ââ  GÃÂ¥ til Overblik
+                    ðŸ‘† GÃ¥ til Overblik
                   </a>
                 } @else {
                   <a [href]="url" target="_blank" rel="noopener" class="messages__item-link">
-                    Ã°Å¸ââ  Klik her for at bestille
+                    ðŸ‘† Klik her for at bestille
                   </a>
                 }
               }

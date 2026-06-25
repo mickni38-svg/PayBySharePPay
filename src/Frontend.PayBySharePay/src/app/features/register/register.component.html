@@ -7,21 +7,21 @@
       </svg>
     </button>
     <div class="register__logo">
-      <span class="register__logo-icon">Ã°Å¸âÂ³</span>
+      <span class="register__logo-icon">ðŸ’³</span>
       <span class="register__logo-text">PayBySharePay</span>
     </div>
   </div>
 
 
-  <p class="register__sub">VÃÂ¦lg hvilken type konto du vil oprette</p>
+  <p class="register__sub">VÃ¦lg hvilken type konto du vil oprette</p>
 
   <!-- Tab toggle -->
   <div class="register__tabs">
     <button class="register__tab" [class.register__tab--active]="tab() === 'person'" (click)="setTab('person')">
-      Ã°Å¸âÂ¤ Bruger
+      ðŸ‘¤ Bruger
     </button>
     <button class="register__tab" [class.register__tab--active]="tab() === 'merchant'" (click)="setTab('merchant')">
-      Ã°Å¸ÂÂ½Ã¯Â¸Â Spisested
+      ðŸ½ï¸ Spisested
     </button>
   </div>
 
@@ -108,7 +108,7 @@
 
     <button class="btn-primary register__submit" type="submit"
             [disabled]="loading() || (tab() === 'person' && (!personName || !personEmail || !personPassword || personPasswordMismatch())) || (tab() === 'merchant' && (!merchantName || !merchantCompany))">
-      {{ loading() ? 'Opretter kontoÃ¢â¬Â¦' : 'Opret konto' }}
+      {{ loading() ? 'Opretter kontoâ€¦' : 'Opret konto' }}
     </button>
 
     <p class="register__login-link">
