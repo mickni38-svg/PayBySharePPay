@@ -5,7 +5,7 @@
 * Kun push kode til git (git push) når brugeren eksplicit beder om det. Commit må gerne laves, men push skal afvente brugerens instruktion.
 * Opret kun tests hvis brugeren beder om det
 * Alle URLs i koden (HTML, JS, config) skal bruge HTTPS og ikke HTTP. Gælder også for links på landingpages og i frontend-kode.
-
+* du må ikke installere ny pakke eller dependency uden brugerens eksplicitte anmodning. Hvis du mener, at en ny pakke er nødvendig, skal du først spørge brugeren.
 # Project Development Workflow
 
 For new features or user stories:
