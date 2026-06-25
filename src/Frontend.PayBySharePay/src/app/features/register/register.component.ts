@@ -68,7 +68,7 @@ export class RegisterComponent {
         error: (err) => {
           this.error.set(err.status === 409
             ? 'En bruger med denne e-mail eksisterer allerede.'
-            : 'Noget gik galt. PrÃ¸v igen.');
+            : 'Noget gik galt. PrÃÂ¸v igen.');
           this.loading.set(false);
         }
       });
@@ -86,7 +86,7 @@ export class RegisterComponent {
         error: (err) => {
           this.error.set(err.status === 409
             ? 'Et spisested med denne e-mail eksisterer allerede.'
-            : 'Noget gik galt. PrÃ¸v igen.');
+            : 'Noget gik galt. PrÃÂ¸v igen.');
           this.loading.set(false);
         }
       });

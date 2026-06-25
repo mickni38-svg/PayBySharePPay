@@ -10,19 +10,19 @@ import { Message, CreateMessageRequest } from '../models/message.model';
 export class MessageService {
   private apiUrl = `${environment.apiUrl}/api/messages`;
 
-  /** Delt signal brugt af BottomNav, Home og Messages â€” ingen polling nÃ¸dvendig */
+  /** Delt signal brugt af BottomNav, Home og Messages Ã¢â¬â ingen polling nÃÂ¸dvendig */
   readonly unreadCount = signal(0);
 
   constructor(private http: HttpClient) {}
 
-  /** Henter antal ulÃ¦ste fra API og opdaterer signalet */
+  /** Henter antal ulÃÂ¦ste fra API og opdaterer signalet */
   refreshUnread(participantId: number): void {
     this.getUnreadCount(participantId).subscribe({
       next: (count) => this.unreadCount.set(count)
     });
   }
 
-  /** Nulstiller badge synkront (kaldes nÃ¥r Messages-siden Ã¥bnes) */
+  /** Nulstiller badge synkront (kaldes nÃÂ¥r Messages-siden ÃÂ¥bnes) */
   resetUnread(): void {
     this.unreadCount.set(0);
   }

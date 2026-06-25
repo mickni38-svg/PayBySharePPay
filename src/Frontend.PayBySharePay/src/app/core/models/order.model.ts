@@ -36,30 +36,30 @@ export enum ParticipantPaymentStatus {
   Refunded = 'Refunded'
 }
 
-/** Doc 06 Â§5: Danske statuslabels for betalingsstatus */
+/** Doc 06 ÃÂ§5: Danske statuslabels for betalingsstatus */
 export function paymentStatusLabel(status: string): string {
   switch (status) {
     case ParticipantPaymentStatus.Created:           return 'Afventer';
-    case ParticipantPaymentStatus.ReservationStarted: return 'Har Ã¥bnet menukort';
+    case ParticipantPaymentStatus.ReservationStarted: return 'Har ÃÂ¥bnet menukort';
     case ParticipantPaymentStatus.Reserved:          return 'Betaling reserveret';
     case ParticipantPaymentStatus.ReservationFailed: return 'Fejlet';
     case ParticipantPaymentStatus.CapturePending:    return 'Afventer Host';
-    case ParticipantPaymentStatus.Captured:          return 'Betaling gennemfÃ¸rt';
+    case ParticipantPaymentStatus.Captured:          return 'Betaling gennemfÃÂ¸rt';
     case ParticipantPaymentStatus.CaptureFailed:     return 'Fejlet';
     case ParticipantPaymentStatus.Cancelled:         return 'Annulleret';
-    case ParticipantPaymentStatus.Expired:           return 'UdlÃ¸bet';
+    case ParticipantPaymentStatus.Expired:           return 'UdlÃÂ¸bet';
     case ParticipantPaymentStatus.Refunded:          return 'Refunderet';
     default:                                          return 'Ukendt';
   }
 }
 
-/** Doc 06 Â§5: Danske statuslabels for deltager-deltagelse */
+/** Doc 06 ÃÂ§5: Danske statuslabels for deltager-deltagelse */
 export function participantStatusLabel(status: string): string {
   switch (status) {
     case 'Invited':         return 'Inviteret';
     case 'Accepted':        return 'Bestilling modtaget';
     case 'OrderSubmitted':  return 'Bestilling modtaget';
-    case 'Paid':            return 'Betaling gennemfÃ¸rt';
+    case 'Paid':            return 'Betaling gennemfÃÂ¸rt';
     case 'Declined':        return 'Afvist';
     default:                return status;
   }
@@ -70,8 +70,8 @@ export function orderStatusLabel(status: string): string {
   switch (status) {
     case OrderStatus.Collecting:     return 'Samler bestillinger';
     case OrderStatus.ReadyToPay:     return 'Klar til betaling';
-    case OrderStatus.HostApproved:   return 'Godkendt af vÃ¦rt';
-    case OrderStatus.Capturing:      return 'GennemfÃ¸rer betalinger...';
+    case OrderStatus.HostApproved:   return 'Godkendt af vÃÂ¦rt';
+    case OrderStatus.Capturing:      return 'GennemfÃÂ¸rer betalinger...';
     case OrderStatus.Paid:           return 'Betalt';
     case OrderStatus.PartiallyFailed: return 'Delvis fejlet';
     case OrderStatus.Cancelled:      return 'Annulleret';
@@ -97,7 +97,7 @@ export enum OrderParticipantStatus {
   Paid = 'Paid'
 }
 
-// API response DTOs â€“ matcher Service.PayBySharePay.DTOs
+// API response DTOs Ã¢â¬â matcher Service.PayBySharePay.DTOs
 export interface OrderApiDto {
   id: number;
   createdByParticipantId: number;
@@ -241,7 +241,7 @@ export function computePendingSummary(
   const pendingOrders: PendingOrder[] = [];
 
   for (const order of hostOrders) {
-    // Kun 'Invited' tÃ¦ller som afventende â€” OrderSubmitted og Paid er fÃ¦rdige
+    // Kun 'Invited' tÃÂ¦ller som afventende Ã¢â¬â OrderSubmitted og Paid er fÃÂ¦rdige
     const pendingPs = order.participants.filter(
       p => p.type !== 'Merchant' && p.status === 'Invited'
     );
@@ -257,7 +257,7 @@ export function computePendingSummary(
         participantId: p.participantId,
         displayName: p.name,
         initials: p.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2),
-        pendingReason: p.status === 'Invited' ? 'Mangler at bekrÃ¦fte deltagelse' : 'Mangler betaling'
+        pendingReason: p.status === 'Invited' ? 'Mangler at bekrÃÂ¦fte deltagelse' : 'Mangler betaling'
       }))
     });
   }

@@ -18,28 +18,28 @@ export class OrderService {
 
   constructor(private http: HttpClient) {}
 
-  /** GET /api/orders?participantId=x â€“ ordrer for Ã©n bruger */
+  /** GET /api/orders?participantId=x Ã¢â¬â ordrer for ÃÂ©n bruger */
   getOrdersByParticipant(participantId: number): Observable<OrderSummaryApiDto[]> {
     const params = new HttpParams().set('participantId', participantId);
     return this.http.get<OrderSummaryApiDto[]>(this.apiUrl, { params });
   }
 
-  /** GET /api/orders â€“ alle ordrer */
+  /** GET /api/orders Ã¢â¬â alle ordrer */
   getAllOrders(): Observable<OrderSummaryApiDto[]> {
     return this.http.get<OrderSummaryApiDto[]>(this.apiUrl);
   }
 
-  /** POST /api/orders â€“ opret ny ordre */
+  /** POST /api/orders Ã¢â¬â opret ny ordre */
   createOrder(request: CreateOrderRequest): Observable<OrderApiDto> {
     return this.http.post<OrderApiDto>(this.apiUrl, request);
   }
 
-  /** GET /api/orders/{id}/overview â€“ detaljeret ordrevisning */
+  /** GET /api/orders/{id}/overview Ã¢â¬â detaljeret ordrevisning */
   getOrderOverview(id: number): Observable<OrderOverviewApiDto> {
     return this.http.get<OrderOverviewApiDto>(`${this.apiUrl}/${id}/overview`);
   }
 
-  /** POST /api/orders/{id}/approve â€” host godkender og trigger capture af alle reserverede betalinger */
+  /** POST /api/orders/{id}/approve Ã¢â¬â host godkender og trigger capture af alle reserverede betalinger */
   approveOrder(orderId: number, requestingParticipantId: number): Observable<ApproveAndCaptureResult> {
     return this.http.post<ApproveAndCaptureResult>(
       `${this.apiUrl}/${orderId}/approve`,
@@ -47,7 +47,7 @@ export class OrderService {
     );
   }
 
-  /** POST /api/orders/{id}/pay â€“ host initierer betaling via eksternt betalings-API */
+  /** POST /api/orders/{id}/pay Ã¢â¬â host initierer betaling via eksternt betalings-API */
   payOrder(orderId: number, requestingParticipantId: number, amount: number): Observable<{ orderId: number; status: string; paymentReference: string }> {
     return this.http.post<{ orderId: number; status: string; paymentReference: string }>(
       `${this.apiUrl}/${orderId}/pay`,

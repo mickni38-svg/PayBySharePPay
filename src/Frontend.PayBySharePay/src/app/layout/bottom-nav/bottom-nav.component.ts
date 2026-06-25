@@ -142,7 +142,7 @@ export class BottomNavComponent implements OnInit, OnDestroy {
       if (userId != null) this.messageService.refreshUnread(userId);
     });
 
-    // Nulstil badge synkront nÃ¥r brugeren navigerer til /messages
+    // Nulstil badge synkront nÃÂ¥r brugeren navigerer til /messages
     this.routerSub = this.router.events.pipe(
       filter(e => e instanceof NavigationEnd)
     ).subscribe((e) => {
