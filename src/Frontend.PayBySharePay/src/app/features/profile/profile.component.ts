@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { ProfileService, UpdateProfileRequest } from '../../core/services/profile.service';
 import { ParticipantApiDto } from '../../core/models/participant.model';
+import { ThemeService } from '../../core/services/theme.service';
 
 const NOTIF_KEY = 'sbys_notifications_enabled';
 
@@ -27,7 +28,8 @@ export class ProfileComponent implements OnInit {
 
   constructor(
     private readonly auth: AuthService,
-    private readonly profileService: ProfileService
+    private readonly profileService: ProfileService,
+    protected readonly themeService: ThemeService
   ) {}
 
   ngOnInit(): void {

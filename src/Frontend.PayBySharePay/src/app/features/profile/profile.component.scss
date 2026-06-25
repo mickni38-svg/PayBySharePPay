@@ -98,6 +98,71 @@
   color: var(--color-text-secondary);
 }
 
+/* ── Theme picker ── */
+.profile__section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 12px;
+}
+
+.profile__themes {
+  display: flex;
+  gap: 16px;
+}
+
+.profile__theme-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: 12px;
+  padding: 12px 8px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  min-height: 44px;
+
+  &--active {
+    border-color: var(--color-primary);
+    background: var(--color-primary-bg);
+  }
+}
+
+.profile__theme-preview {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.1);
+  display: block;
+
+  &--default {
+    background: linear-gradient(135deg, #070B14 50%, #22C55E 50%);
+  }
+
+  &--dark {
+    background: linear-gradient(135deg, #0B0F1E 50%, #4AE07A 50%);
+  }
+
+  &--pink {
+    background: linear-gradient(135deg, #1A0028 50%, #FF4DB8 50%);
+  }
+}
+
+.profile__theme-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.profile__theme-btn--active .profile__theme-name {
+  color: var(--color-primary);
+}
+
 .profile__toggle {
   position: relative;
   width: 48px;
