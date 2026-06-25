@@ -5,7 +5,7 @@
 
   <div class="profile__body">
     @if (isLoading()) {
-      <div class="profile__loading">Henter profil…</div>
+      <div class="profile__loading">Henter profilâ€¦</div>
     } @else {
       <form class="profile__form" (ngSubmit)="save()">
 
@@ -71,10 +71,10 @@
         <div class="profile__divider"></div>
 
         @if (saveSuccess()) {
-          <div class="profile__feedback profile__feedback--success">✓ Ændringer gemt</div>
+          <div class="profile__feedback profile__feedback--success">âœ“ Ã†ndringer gemt</div>
         }
         @if (saveError()) {
-          <div class="profile__feedback profile__feedback--error">Noget gik galt. Prøv igen.</div>
+          <div class="profile__feedback profile__feedback--error">Noget gik galt. PrÃ¸v igen.</div>
         }
 
         <button
@@ -82,7 +82,7 @@
           class="profile__save-btn"
           [disabled]="isSaving() || !name().trim()"
         >
-          {{ isSaving() ? 'Gemmer…' : 'Gem ændringer' }}
+          {{ isSaving() ? 'Gemmerâ€¦' : 'Gem Ã¦ndringer' }}
         </button>
 
       </form>

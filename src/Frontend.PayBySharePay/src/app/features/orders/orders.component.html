@@ -1,7 +1,7 @@
 <div class="orders">
 
   @if (isLoading()) {
-    <p class="orders__state">Henter ordrer…</p>
+    <p class="orders__state">Henter ordrerâ€¦</p>
   } @else if (errorMessage()) {
     <p class="orders__state orders__state--error">{{ errorMessage() }}</p>
   } @else {
@@ -17,7 +17,7 @@
     <!-- Faner -->
     <div class="orders__tabs">
       <button class="tab-btn" [class.tab-btn--active]="activeTab() === 'active'" (click)="setTab('active')">
-        Igangværende ordre
+        IgangvÃ¦rende ordre
       </button>
       <button class="tab-btn" [class.tab-btn--active]="activeTab() === 'completed'" (click)="setTab('completed')">
         Afsluttede
@@ -25,7 +25,7 @@
     </div>
 
     @if (payError()) {
-      <div class="orders__pay-error">⚠️ {{ payError() }}</div>
+      <div class="orders__pay-error">âš ï¸ {{ payError() }}</div>
     }
 
 
@@ -33,7 +33,7 @@
     <!-- Ordeliste -->
     @if (activeOrders().length === 0) {
       <div class="orders__empty">
-        <span class="orders__empty-icon">📋</span>
+        <span class="orders__empty-icon">ðŸ“‹</span>
         <p>Ingen ordrer at vise.</p>
       </div>
     } @else {
@@ -43,14 +43,14 @@
           <!-- Ordrekort -->
           <div class="order-card" [class.order-card--expanded]="isExpanded(vm.id)">
 
-            <!-- Klikbar header: ikon | info+vært | avatarer | badge | pil -->
+            <!-- Klikbar header: ikon | info+vÃ¦rt | avatarer | badge | pil -->
             <div class="order-card__header" (click)="toggleExpand(vm.id)">
               <div class="order-card__icon">{{ categoryIcon(vm.category) }}</div>
               <div class="order-card__info">
                 <span class="order-card__title">{{ vm.title }}</span>
                 <span class="order-card__host-row">
-                  @if (vm.isHost) { <span class="order-card__host-badge">👑 Vært</span> }
-                  @else { <span class="order-card__host-badge">👤 Deltager</span> }
+                  @if (vm.isHost) { <span class="order-card__host-badge">ðŸ‘‘ VÃ¦rt</span> }
+                  @else { <span class="order-card__host-badge">ðŸ‘¤ Deltager</span> }
                 </span>
               </div>
               <!-- Deltagerikoner i header -->
@@ -73,7 +73,7 @@
               </div>
             </div>
 
-            <!-- Beløb + progress + knap på samme række -->
+            <!-- BelÃ¸b + progress + knap pÃ¥ samme rÃ¦kke -->
             <div class="order-card__footer">
               <div class="order-card__footer-left">
                 <span class="order-card__amount">
@@ -82,7 +82,7 @@
                   } @else if (vm.myOwnAmount !== null) {
                     {{ vm.myOwnAmount | number:'1.2-2' }} kr
                   } @else {
-                    – kr
+                    â€“ kr
                   }
                 </span>
                 @if (vm.isHost) {
@@ -94,7 +94,7 @@
                   <button class="btn btn--primary btn--sm"
                     [disabled]="!vm.allPaid || payingOrderId() === vm.id"
                     [class.btn--disabled]="!vm.allPaid || payingOrderId() === vm.id"
-                    (click)="payOrder(vm)">{{ payingOrderId() === vm.id ? 'Betaler…' : 'Betal nu' }}</button>
+                    (click)="payOrder(vm)">{{ payingOrderId() === vm.id ? 'Betalerâ€¦' : 'Betal nu' }}</button>
                 }
               </div>
             </div>
@@ -103,7 +103,7 @@
             <div class="order-card__accordion" [class.order-card__accordion--open]="isExpanded(vm.id)">
 
               @if (isLoadingDetails(vm.id)) {
-                <p class="accordion-loading">Henter detaljer…</p>
+                <p class="accordion-loading">Henter detaljerâ€¦</p>
               } @else {
 
                 <!-- Ordredetaljer -->
@@ -142,7 +142,7 @@
                   }
                   @if (!vm.isHost && vm.myOwnAmount !== null) {
                     <div class="order-detail__row">
-                      <span class="order-detail__label">Dit beløb</span>
+                      <span class="order-detail__label">Dit belÃ¸b</span>
                       <span class="order-detail__value order-detail__value--amount">{{ vm.myOwnAmount | number:'1.2-2' }} kr</span>
                     </div>
                   }
@@ -173,7 +173,7 @@
                         @if (group && group.lines.length > 0) {
                           @for (line of group.lines; track line.lineId) {
                             <div class="order-line">
-                              <span class="order-line__bullet">•</span>
+                              <span class="order-line__bullet">â€¢</span>
                               <span class="order-line__name">{{ line.name }}</span>
                               <span class="order-line__qty">x{{ line.quantity }}</span>
                               <span class="order-line__price">{{ line.lineTotal | number:'1.2-2' }} kr</span>
@@ -186,7 +186,7 @@
                     }
                   } @else {
                     <p class="order-lines-section__pending">
-                      Bestillinger vises først når ordren er betalt.
+                      Bestillinger vises fÃ¸rst nÃ¥r ordren er betalt.
                     </p>
                   }
                 </div>

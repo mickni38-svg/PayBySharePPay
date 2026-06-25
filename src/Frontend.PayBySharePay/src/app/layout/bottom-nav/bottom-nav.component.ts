@@ -68,8 +68,8 @@ import { filter } from 'rxjs/operators';
       width: 100%;
       max-width: 390px;
       height: 68px;
-      background: #0d1020;
-      border-top: 1px solid rgba(0, 200, 200, 0.15);
+      background: var(--color-nav-bg, #0a0c1a);
+      border-top: 1px solid var(--color-nav-border, rgba(34,197,94,0.18));
       display: flex;
       justify-content: space-around;
       align-items: center;
@@ -84,16 +84,16 @@ import { filter } from 'rxjs/operators';
       flex: 1;
       height: 100%;
       text-decoration: none;
-      color: #4b5563;
+      color: var(--color-nav-item, #4b5563);
       transition: color 0.2s;
       gap: 3px;
       min-height: 44px;
     }
     .bottom-nav__item svg { width: 22px; height: 22px; }
     .bottom-nav__item span { font-size: 10px; font-weight: 500; letter-spacing: 0.2px; }
-    .bottom-nav__item.active { color: #ffffff; }
+    .bottom-nav__item.active { color: var(--color-nav-item-active, #FFFFFF); }
     .bottom-nav__item--create svg { width: 26px; height: 26px; }
-    .bottom-nav__item--create.active { color: #2ecc71; }
+    .bottom-nav__item--create.active { color: var(--color-nav-create-active, #22C55E); }
     .bottom-nav__icon-wrap {
       position: relative;
       display: inline-flex;
@@ -142,7 +142,7 @@ export class BottomNavComponent implements OnInit, OnDestroy {
       if (userId != null) this.messageService.refreshUnread(userId);
     });
 
-    // Nulstil badge synkront når brugeren navigerer til /messages
+    // Nulstil badge synkront nÃ¥r brugeren navigerer til /messages
     this.routerSub = this.router.events.pipe(
       filter(e => e instanceof NavigationEnd)
     ).subscribe((e) => {

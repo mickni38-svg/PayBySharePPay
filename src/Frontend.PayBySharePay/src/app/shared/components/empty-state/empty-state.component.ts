@@ -46,7 +46,7 @@ import { CommonModule } from '@angular/common';
   `]
 })
 export class EmptyStateComponent {
-  @Input() icon = '📋';
+  @Input() icon = 'ðŸ“‹';
   @Input() title = '';
   @Input() subtitle?: string;
   @Input() actionLabel?: string;

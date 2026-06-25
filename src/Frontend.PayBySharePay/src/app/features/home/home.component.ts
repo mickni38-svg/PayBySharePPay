@@ -38,9 +38,9 @@ interface StatusCard {
 })
 export class HomeComponent implements OnInit, OnDestroy {
   actionCards: ActionCard[] = [
-    { label: 'Overblik',    subtitle: 'Se igangværende gruppebetalinger', route: '/orders',           accent: '#22C55E', iconBg: 'rgba(34,197,94,0.15)',  icon: 'chart'     },
+    { label: 'Overblik',    subtitle: 'Se igangvÃ¦rende gruppebetalinger', route: '/orders',           accent: '#22C55E', iconBg: 'rgba(34,197,94,0.15)',  icon: 'chart'     },
     { label: 'Beskeder',    subtitle: 'Se dine anmodninger',             route: '/messages',          accent: '#F59E0B', iconBg: 'rgba(245,158,11,0.15)', icon: 'chat'      },
-    { label: 'Deltagere',   subtitle: 'Find og tilføj venner',           route: '/find-participants', accent: '#06B6D4', iconBg: 'rgba(6,182,212,0.15)',  icon: 'users'     },
+    { label: 'Deltagere',   subtitle: 'Find og tilfÃ¸j venner',           route: '/find-participants', accent: '#06B6D4', iconBg: 'rgba(6,182,212,0.15)',  icon: 'users'     },
     { label: 'Profil',       subtitle: 'Se og rediger dine oplysninger', route: '/profile',   accent: '#FFCCFF', iconBg: 'rgba(255,204,255,0.15)', icon: 'activity'  },
   ];
 
@@ -74,7 +74,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     });
     this.refreshData();
 
-    // Reload status og unread-count ved hvert besøg på /home
+    // Reload status og unread-count ved hvert besÃ¸g pÃ¥ /home
     this.routerSub = this.router.events.pipe(
       filter(e => e instanceof NavigationEnd)
     ).subscribe((e) => {
@@ -111,11 +111,11 @@ export class HomeComponent implements OnInit, OnDestroy {
           cards.push({
             type: 'pending',
             title: `${pending.pendingParticipantCount} deltager${pending.pendingParticipantCount === 1 ? '' : 'e'} afventer`,
-            subtitle: `På tværs af ${pending.affectedOrderCount} ordre`
+            subtitle: `PÃ¥ tvÃ¦rs af ${pending.affectedOrderCount} ordre`
           });
         }
 
-        // Tilføj kort for host-ordrer hvor alle har betalt (og ikke dismissed)
+        // TilfÃ¸j kort for host-ordrer hvor alle har betalt (og ikke dismissed)
         const dismissed = this.dismissedAllPaidIds();
         const allPaidOrders = orders.filter(o =>
           o.createdByParticipantId === userId &&
@@ -127,7 +127,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         for (const o of allPaidOrders) {
           cards.push({
             type: 'allPaid',
-            title: `? Alle har betalt – ${o.title}`,
+            title: `? Alle har betalt â€“ ${o.title}`,
             subtitle: 'Ordren er sendt til spisestedet',
             orderId: o.id
           });
@@ -135,7 +135,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
         this.statusCards.set(cards);
 
-        // Tæl ordrer der venter på host-betaling
+        // TÃ¦l ordrer der venter pÃ¥ host-betaling
         const readyToPay = orders.filter(o =>
           o.createdByParticipantId === userId &&
           o.status === 'ReadyToPay'
@@ -180,7 +180,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.resetLoading.set(false);
-        this.resetMessage.set('? Fejl ved sletning – prøv igen.');
+        this.resetMessage.set('? Fejl ved sletning â€“ prÃ¸v igen.');
       }
     });
   }
@@ -195,7 +195,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         window.location.reload();
       },
       error: () => {
-        this.loginError.set('Login fejlede – prøv igen.');
+        this.loginError.set('Login fejlede â€“ prÃ¸v igen.');
         this.loginLoading.set(false);
       }
     });

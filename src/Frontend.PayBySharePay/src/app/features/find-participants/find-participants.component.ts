@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DirectoryEntry } from '../../core/models/directory.model';

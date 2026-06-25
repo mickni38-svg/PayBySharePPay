@@ -9,7 +9,7 @@ export interface Payment {
   createdAt: Date;
 }
 
-// API request – matcher Api.PayBySharePay.DTOs.RegisterPaymentRequest
+// API request â€“ matcher Api.PayBySharePay.DTOs.RegisterPaymentRequest
 export interface RegisterPaymentRequest {
   orderId: number;
   participantId: number;
