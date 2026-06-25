@@ -30,7 +30,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadMessages();
 
-    // Genindlæs og nulstil badge ved hvert besøg på /messages
+    // GenindlÃ¦s og nulstil badge ved hvert besÃ¸g pÃ¥ /messages
     this.routerSub = this.router.events.pipe(
       filter(e => e instanceof NavigationEnd)
     ).subscribe((e) => {
@@ -50,14 +50,14 @@ export class MessagesComponent implements OnInit, OnDestroy {
     if (userId == null) { this.isLoading.set(false); return; }
 
     this.isLoading.set(true);
-    // Nulstil badge synkront så det forsvinder med det samme
+    // Nulstil badge synkront sÃ¥ det forsvinder med det samme
     this.messageService.resetUnread();
 
     this.messageService.getByParticipant(userId).subscribe({
       next: (msgs) => {
         this.messages.set(msgs);
         this.isLoading.set(false);
-        // Markér alle som læst i backend
+        // MarkÃ©r alle som lÃ¦st i backend
         this.messageService.markAllRead(userId).subscribe();
       },
       error: () => this.isLoading.set(false)
@@ -70,7 +70,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
     return match ? match[0] : null;
   }
 
-  /** Returnerer den interne sti (/orders) hvis URL'en peger på samme origin, ellers null */
+  /** Returnerer den interne sti (/orders) hvis URL'en peger pÃ¥ samme origin, ellers null */
   internalPath(url: string): string | null {
     try {
       const parsed = new URL(url);

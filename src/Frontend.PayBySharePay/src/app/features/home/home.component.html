@@ -1,4 +1,4 @@
-<!-- Forside – ny dashboard -->
+<!-- Forside â€“ ny dashboard -->
 <div class="home">
 
   <!-- Fuld-bredde CTA: Opret ny gruppebetaling -->
@@ -12,7 +12,7 @@
       <div class="cta-card__text">
         <span class="cta-card__title">Opret ny gruppebetaling</span>
         @if (friendCount() === 0) {
-          <span class="cta-card__sub cta-card__sub--warn">Tilføj venner inden du kan indgå i en gruppebetaling</span>
+          <span class="cta-card__sub cta-card__sub--warn">TilfÃ¸j venner inden du kan indgÃ¥ i en gruppebetaling</span>
         } @else {
           <span class="cta-card__sub">Del regningen med venner</span>
         }
@@ -113,7 +113,7 @@
             }
           </div>
           @if (card.icon === 'users' && friendCount() === 0) {
-            <span class="action-card__sub action-card__sub--warn">Tilføj venner inden du kan indgå i en gruppebetaling</span>
+            <span class="action-card__sub action-card__sub--warn">TilfÃ¸j venner inden du kan indgÃ¥ i en gruppebetaling</span>
           } @else {
             <span class="action-card__sub">{{ card.subtitle }}</span>
           }
@@ -148,7 +148,7 @@
       </div>
     } @else {
       <select class="form-input dev-panel__select" [(ngModel)]="selectedEmail">
-        <option value="" disabled>Vælg testperson…</option>
+        <option value="" disabled>VÃ¦lg testpersonâ€¦</option>
         @for (p of persons(); track p.id) {
           <option [value]="p.handle">{{ p.displayName }} ({{ p.handle }})</option>
         }
@@ -158,7 +158,7 @@
       }
       <button class="dev-panel__btn" (click)="devLogin()"
               [disabled]="!selectedEmail || loginLoading()">
-        {{ loginLoading() ? 'Logger ind…' : 'Log ind' }}
+        {{ loginLoading() ? 'Logger indâ€¦' : 'Log ind' }}
       </button>
       <a class="dev-panel__link" routerLink="/register">Opret dig som bruger</a>
     }
@@ -166,7 +166,7 @@
     <div class="dev-panel__divider"></div>
     <button class="dev-panel__btn dev-panel__btn--danger" (click)="devReset()"
             [disabled]="resetLoading()">
-      {{ resetLoading() ? 'Sletter…' : '?? Slet alle ordre og beskeder' }}
+      {{ resetLoading() ? 'Sletterâ€¦' : '?? Slet alle ordre og beskeder' }}
     </button>
     @if (resetMessage()) {
       <p class="dev-panel__reset-msg">{{ resetMessage() }}</p>

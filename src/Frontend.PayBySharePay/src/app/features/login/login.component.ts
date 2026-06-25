@@ -41,7 +41,7 @@ export class LoginComponent {
         this.error.set(
           err.status === 401 || err.status === 404
             ? 'Ingen konto fundet med den e-mail eller forkert adgangskode.'
-            : 'Noget gik galt. Prøv igen.'
+            : 'Noget gik galt. PrÃ¸v igen.'
         );
         this.loading.set(false);
       }

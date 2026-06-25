@@ -26,7 +26,7 @@ interface OrderCardVM {
   participants: OrderParticipantApiDto[];
   participantOrderLines: ParticipantOrderLinesApiDto[];
   detailsLoaded: boolean;
-  /** Deltagerens eget beløb (null = ingen bestilling endnu) */
+  /** Deltagerens eget belÃ¸b (null = ingen bestilling endnu) */
   myOwnAmount: number | null;
   /** Sum af betalte deltageres ordrelinjer (til host-visning) */
   paidAmount: number;
@@ -95,7 +95,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
     this.orderService.getOrdersByParticipant(this.auth.currentUserId() ?? 0).subscribe({
       next: (list) => {
         this.allOrders.set(list);
-        // Kun åbn igangværende ordre som default (ikke afsluttede)
+        // Kun Ã¥bn igangvÃ¦rende ordre som default (ikke afsluttede)
         const activeIds = list
           .filter(o => !this.COMPLETED_STATUSES.includes(o.status))
           .map(o => o.id);
@@ -115,18 +115,18 @@ export class OrdersComponent implements OnInit, OnDestroy {
     const userId = this.auth.currentUserId() ?? 0;
     const isHost = o.createdByParticipantId === userId;
     const nonMerchant = o.participants.filter(p => p.type !== 'Merchant');
-    // Tæl deltagere der har bestilt (OrderSubmitted) eller betalt (Paid)
+    // TÃ¦l deltagere der har bestilt (OrderSubmitted) eller betalt (Paid)
     const submittedStatuses = ['OrderSubmitted', 'Paid'];
     const paidCount = nonMerchant.filter(p => submittedStatuses.includes(p.status)).length;
-    // Alle har bestilt når ordre er ReadyToPay eller Completed
+    // Alle har bestilt nÃ¥r ordre er ReadyToPay eller Completed
     const allPaid = o.status === 'ReadyToPay' || o.status === 'Completed' ||
       (nonMerchant.length > 0 && nonMerchant.every(p => submittedStatuses.includes(p.status)));
     const myPart = o.participants.find(p => p.participantId === userId);
 
-    // Hent detaljer fra cache hvis tilgængeligt
+    // Hent detaljer fra cache hvis tilgÃ¦ngeligt
     const cached = this._detailsCache().get(o.id);
 
-    // canShowOrderLines: vis linjer så snart de er tilgængelige (bestilling indsendt)
+    // canShowOrderLines: vis linjer sÃ¥ snart de er tilgÃ¦ngelige (bestilling indsendt)
     const anyoneHasLines = cached?.participantOrderLines.some(g => g.lines.length > 0) ?? false;
     const myLines = cached?.participantOrderLines.find(g => g.participantId === userId);
     const canShow = anyoneHasLines || (myLines?.lines?.length ?? 0) > 0;
@@ -134,18 +134,18 @@ export class OrdersComponent implements OnInit, OnDestroy {
     // Alle deltagere ser alles ordrelinjer (kun dem med linjer)
     const visibleLines = cached?.participantOrderLines.filter(g => g.lines.length > 0) ?? [];
 
-    // Deltagerens eget beløb baseret på egne ordrelinjer
+    // Deltagerens eget belÃ¸b baseret pÃ¥ egne ordrelinjer
     const myOwnLines = cached?.participantOrderLines.find(g => g.participantId === userId);
     const myOwnAmount = (myOwnLines?.lines?.length ?? 0) > 0
       ? myOwnLines!.lines.reduce((sum, l) => sum + l.lineTotal, 0)
       : null;
 
-    // Beløb der er betalt: sum af ordrelinjer for deltagere med hasPaid = true
+    // BelÃ¸b der er betalt: sum af ordrelinjer for deltagere med hasPaid = true
     const paidAmount = cached?.participantOrderLines
       .filter(g => g.hasPaid)
       .reduce((sum, g) => sum + g.lines.reduce((s, l) => s + l.lineTotal, 0), 0) ?? 0;
 
-    // Samlet bestilt beløb: sum af alle ordrelinjer uanset betalingsstatus
+    // Samlet bestilt belÃ¸b: sum af alle ordrelinjer uanset betalingsstatus
     const totalOrderedAmount = cached?.participantOrderLines
       .reduce((sum, g) => sum + g.lines.reduce((s, l) => s + l.lineTotal, 0), 0) ?? 0;
 
@@ -282,15 +282,15 @@ export class OrdersComponent implements OnInit, OnDestroy {
     this.orderService.payOrder(vm.id, userId, vm.totalOrderedAmount).subscribe({
       next: (result) => {
         this.payingOrderId.set(null);
-        // Flyt til Afsluttede fane og genindlæs
+        // Flyt til Afsluttede fane og genindlÃ¦s
         this.activeTab.set('completed');
         this.load();
       },
       error: (err) => {
         this.payingOrderId.set(null);
         this.payError.set(
-          err.status === 402 ? 'Betaling afvist — prøv igen.' :
-          err.status === 403 ? 'Kun værten kan betale.' :
+          err.status === 402 ? 'Betaling afvist â€” prÃ¸v igen.' :
+          err.status === 403 ? 'Kun vÃ¦rten kan betale.' :
           'Noget gik galt under betalingen.'
         );
       }
@@ -323,11 +323,11 @@ export class OrdersComponent implements OnInit, OnDestroy {
 
   categoryIcon(cat?: string): string {
     const map: Record<string, string> = {
-      sushi: '🍣', pizza: '🍕', burger: '🍔', drinks: '🍺',
-      tacos: '🌮', ramen: '🍜', kebab: '🥙', chicken: '🍗',
-      salad: '🥗', dessert: '🍰', coffee: '☕', other: '📦'
+      sushi: 'ðŸ£', pizza: 'ðŸ•', burger: 'ðŸ”', drinks: 'ðŸº',
+      tacos: 'ðŸŒ®', ramen: 'ðŸœ', kebab: 'ðŸ¥™', chicken: 'ðŸ—',
+      salad: 'ðŸ¥—', dessert: 'ðŸ°', coffee: 'â˜•', other: 'ðŸ“¦'
     };
-    return map[cat ?? ''] ?? '🍴';
+    return map[cat ?? ''] ?? 'ðŸ´';
   }
 
   formatDate(dateStr: string): string {

@@ -2,89 +2,75 @@
   <div class="profile__header">
     <h2>Min profil</h2>
   </div>
-
   <div class="profile__body">
     @if (isLoading()) {
-      <div class="profile__loading">Henter profil…</div>
+      <div class="profile__loading">Henter profil&#8230;</div>
     } @else {
       <form class="profile__form" (ngSubmit)="save()">
-
         <div class="profile__field">
           <label class="profile__label" for="profile-name">Navn</label>
-          <input
-            id="profile-name"
-            class="profile__input"
-            type="text"
-            [ngModel]="name()"
-            (ngModelChange)="name.set($event)"
-            name="name"
-            placeholder="Dit navn"
-            required
-          />
+          <input id="profile-name" class="profile__input" type="text"
+            [ngModel]="name()" (ngModelChange)="name.set($event)"
+            name="name" placeholder="Dit navn" required />
         </div>
-
         <div class="profile__field">
           <label class="profile__label" for="profile-email">E-mail</label>
-          <input
-            id="profile-email"
-            class="profile__input"
-            type="email"
-            [ngModel]="email()"
-            (ngModelChange)="email.set($event)"
-            name="email"
-            placeholder="din@email.dk"
-          />
+          <input id="profile-email" class="profile__input" type="email"
+            [ngModel]="email()" (ngModelChange)="email.set($event)"
+            name="email" placeholder="din@email.dk" />
         </div>
-
         <div class="profile__field">
           <label class="profile__label" for="profile-phone">Telefon</label>
-          <input
-            id="profile-phone"
-            class="profile__input"
-            type="tel"
-            [ngModel]="phone()"
-            (ngModelChange)="phone.set($event)"
-            name="phone"
-            placeholder="+45 12 34 56 78"
-          />
+          <input id="profile-phone" class="profile__input" type="tel"
+            [ngModel]="phone()" (ngModelChange)="phone.set($event)"
+            name="phone" placeholder="+45 12 34 56 78" />
         </div>
-
         <div class="profile__divider"></div>
-
         <div class="profile__toggle-row">
           <div class="profile__toggle-info">
             <span class="profile__toggle-label">Notifikationer</span>
             <span class="profile__toggle-desc">Modtag beskeder om dine betalinger</span>
           </div>
-          <button
-            type="button"
-            class="profile__toggle"
+          <button type="button" class="profile__toggle"
             [class.profile__toggle--on]="notificationsEnabled()"
             (click)="toggleNotifications()"
-            [attr.aria-checked]="notificationsEnabled()"
-            role="switch"
-          >
+            [attr.aria-checked]="notificationsEnabled()" role="switch">
             <span class="profile__toggle-thumb"></span>
           </button>
         </div>
-
         <div class="profile__divider"></div>
-
+        <div class="profile__section-title">Tema</div>
+        <div class="profile__themes">
+          <button type="button" class="profile__theme-btn"
+            [class.profile__theme-btn--active]="themeService.current() === 'default'"
+            (click)="themeService.setTheme('default')">
+            <span class="profile__theme-preview profile__theme-preview--default"></span>
+            <span class="profile__theme-name">Standard</span>
+          </button>
+          <button type="button" class="profile__theme-btn"
+            [class.profile__theme-btn--active]="themeService.current() === 'dark'"
+            (click)="themeService.setTheme('dark')">
+            <span class="profile__theme-preview profile__theme-preview--dark"></span>
+            <span class="profile__theme-name">M&#248;rk</span>
+          </button>
+          <button type="button" class="profile__theme-btn"
+            [class.profile__theme-btn--active]="themeService.current() === 'pink'"
+            (click)="themeService.setTheme('pink')">
+            <span class="profile__theme-preview profile__theme-preview--pink"></span>
+            <span class="profile__theme-name">Pink</span>
+          </button>
+        </div>
+        <div class="profile__divider"></div>
         @if (saveSuccess()) {
-          <div class="profile__feedback profile__feedback--success">✓ Ændringer gemt</div>
+          <div class="profile__feedback profile__feedback--success">&#10003; &#198;ndringer gemt</div>
         }
         @if (saveError()) {
-          <div class="profile__feedback profile__feedback--error">Noget gik galt. Prøv igen.</div>
+          <div class="profile__feedback profile__feedback--error">Noget gik galt. Pr&#248;v igen.</div>
         }
-
-        <button
-          type="submit"
-          class="profile__save-btn"
-          [disabled]="isSaving() || !name().trim()"
-        >
-          {{ isSaving() ? 'Gemmer…' : 'Gem ændringer' }}
+        <button type="submit" class="profile__save-btn"
+          [disabled]="isSaving() || !name().trim()">
+          {{ isSaving() ? 'Gemmer&#8230;' : 'Gem &#230;ndringer' }}
         </button>
-
       </form>
     }
   </div>
