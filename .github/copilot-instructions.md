@@ -4,6 +4,7 @@
 
 * Kun push kode til git (git push) når brugeren eksplicit beder om det. Commit må gerne laves, men push skal afvente brugerens instruktion.
 * Opret kun tests hvis brugeren beder om det
+* Alle URLs i koden (HTML, JS, config) skal bruge HTTPS og ikke HTTP. Gælder også for links på landingpages og i frontend-kode.
 
 # Project Development Workflow
 
