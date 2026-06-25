@@ -50,7 +50,7 @@
     .role-card__desc { font-size: 14px; color: var(--muted); margin-bottom: 18px; line-height: 1.6; }
     .role-card__list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
     .role-card__list li { font-size: 13px; display: flex; align-items: flex-start; gap: 8px; }
-    .role-card__list li::before { content: "checkmark"; color: var(--green); font-weight: 700; flex-shrink: 0; }
+    .role-card__list li::before { content: "\2713"; color: var(--green); font-weight: 700; flex-shrink: 0; }
     .how { background: var(--surface2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 64px 24px; }
     .how__inner { max-width: 700px; margin: 0 auto; }
     .how__title { text-align: center; font-size: 22px; font-weight: 800; margin-bottom: 8px; }
@@ -139,7 +139,6 @@
     <div class="hero__badge">&#128679; Kommer snart &#8211; Beta er p&#229; vej!</div>
     <h1 class="hero__tagline">Bestil <span>sammen</span> &#8211;<br>betal <span>hver for sig</span></h1>
     <p class="hero__sub">PayNSync er platformen til f&#230;lles take-away-bestillinger, hvor alle betaler pr&#230;cis deres del. Ingen udl&#230;g, ingen besv&#230;rlig opf&#248;lgning &#8211; ordren frigives kun n&#229;r alle har betalt og hosten godkender.</p>
-    <p class="hero__coming-soon">&#9203; Siden er ikke helt klar endnu &#8211; vi arbejder p&#229; sagen!</p>
   </section>
 
   <section class="concept" id="model">
@@ -151,8 +150,8 @@
         <div class="concept__step">
           <div class="concept__step-num">1</div>
           <span class="concept__step-icon">&#128101;</span>
-          <div class="concept__step-title">Deltagerne betaler sin andel</div>
-          <div class="concept__step-desc">Hver deltager betaler pr&#230;cis det de skylder &#8211; hverken mere eller mindre.</div>
+          <div class="concept__step-title">Deltagerne bestiller og betaler</div>
+          <div class="concept__step-desc">Hver deltager f&#229;r et personligt link til spisestedets hjemmeside, v&#230;lger sin mad og betaler via MobilePay.</div>
         </div>
         <div class="concept__step">
           <div class="concept__step-num">2</div>
@@ -167,13 +166,13 @@
           <div class="concept__step-desc">Kun n&#229;r hosten trykker <em>&#8221;Betal for ordre&#8221;</em> sendes den samlede ordre og betaling til spisestedet.</div>
         </div>
       </div>
-      <div class="concept__note">&#128274; <strong>Tryghed for alle:</strong> Deltagerne betaler kun deres andel. Spisestedet modtager &#233;n samlet ordre. Intet sker uden <strong>hostens godkendelse</strong>.</div>
+      <div class="concept__note">&#128274; <strong>Tryghed for alle:</strong> Betalinger sker via <strong>MobilePay</strong>. Deltagerne betaler kun deres andel. Spisestedet modtager &#233;n samlet ordre. Intet sker uden <strong>hostens godkendelse</strong>.</div>
     </div>
   </section>
 
   <section class="roles" id="roller">
     <h2 class="roles__title">To roller &#8211; &#233;n app</h2>
-    <p class="roles__sub">PayBySharePay fungerer b&#229;de for den der arrangerer og dem der deltager</p>
+    <p class="roles__sub">PayNSync fungerer b&#229;de for den der arrangerer og dem der deltager</p>
     <div class="roles__grid">
       <div class="role-card role-card--host">
         <span class="role-card__badge">V&#230;rt / Host</span>
@@ -192,9 +191,9 @@
         <div class="role-card__title">&#128587; Du deltager i ordren</div>
         <p class="role-card__desc">Som deltager betaler du kun din egen andel. Ingen udl&#230;g, ingen besv&#230;r med at opkr&#230;ve penge efterf&#248;lgende.</p>
         <ul class="role-card__list">
-          <li>Modtag invitation til en gruppebetaling</li>
-          <li>Se din egen andel og betalingsstatus</li>
-          <li>Betal din andel direkte i appen</li>
+          <li>Modtag invitation og et personligt bestillingslink</li>
+          <li>Bestil via spisestedets hjemmeside &#8211; v&#230;lg pr&#230;cis hvad du vil have</li>
+          <li>Betal din andel via MobilePay</li>
           <li>F&#248;lg ordrens status frem til levering</li>
         </ul>
       </div>
@@ -216,7 +215,7 @@
         </div>
         <div class="how__step">
           <div class="how__step-num">3</div>
-          <div class="how__step-text"><strong>Alle v&#230;lger og betaler sin andel</strong><span>Hver deltager v&#230;lger sin bestilling via et personligt link og betaler pr&#230;cis sin del &#8211; uafh&#230;ngigt af de andre.</span></div>
+          <div class="how__step-text"><strong>Alle bestiller og betaler via personligt link</strong><span>Hver deltager &#229;bner et unikt link til spisestedets hjemmeside, v&#230;lger sin mad og betaler via MobilePay &#8211; uafh&#230;ngigt af de andre.</span></div>
         </div>
         <div class="how__step">
           <div class="how__step-num">4</div>
@@ -235,7 +234,7 @@
   </section>
 
   <section class="features" id="funktioner">
-    <p class="features__label">Hvad kan PayBySharePay?</p>
+    <p class="features__label">Hvad kan PayNSync?</p>
     <h2 class="features__title">Alt hvad du beh&#248;ver til gruppeordrer</h2>
     <div class="features__grid">
       <div class="feature-card"><div class="feature-card__icon">&#127829;</div><div class="feature-card__title">Gruppebestillinger</div><div class="feature-card__desc">Opret en f&#230;lles ordre til et take-away-sted. Alle bestiller og betaler deres del.</div></div>
@@ -261,9 +260,9 @@
 
   <section class="merchants" id="merchants">
     <h2 class="merchants__title">&#127978; Er du et spisested?</h2>
-    <p class="merchants__sub">PayBySharePay giver dine kunder mulighed for at bestille og betale som gruppe &#8211; via dit eksisterende website. Du modtager &#233;n samlet ordre og &#233;t samlet bel&#248;b.</p>
+    <p class="merchants__sub">PayNSync giver dine kunder mulighed for at bestille og betale som gruppe &#8211; via dit eksisterende website. Du modtager &#233;n samlet ordre og &#233;t samlet bel&#248;b.</p>
     <div class="merchants__grid">
-      <div class="merchant-card"><div class="merchant-card__icon">&#128279;</div><div class="merchant-card__title">Nem integration</div><div class="merchant-card__desc">Tilf&#248;j et &#8221;Gruppebetaling med PayBySharePay&#8221;-link p&#229; dit website. Ingen stor teknisk ops&#230;tning.</div></div>
+      <div class="merchant-card__desc">Tilf&#248;j et &#8221;Gruppebetaling med PayNSync&#8221;-link p&#229; dit website. Ingen stor teknisk ops&#230;tning.</div>
       <div class="merchant-card"><div class="merchant-card__icon">&#128179;</div><div class="merchant-card__title">&#201;n samlet betaling</div><div class="merchant-card__desc">Du modtager &#233;n betaling for hele gruppeordren. PayBySharePay h&#229;ndterer koordineringen mellem deltagerne.</div></div>
       <div class="merchant-card"><div class="merchant-card__icon">&#128737;&#65039;</div><div class="merchant-card__title">Ordren frigives kun n&#229;r klar</div><div class="merchant-card__desc">Du starter aldrig produktion, f&#248;r alle deltagere har betalt og hosten har godkendt ordren.</div></div>
     </div>
