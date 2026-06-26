@@ -169,7 +169,7 @@ Statusoversigt over PayNSync pr. seneste kode-gennemgang.
 | Azure Static Web Apps (Angular SPA + Merchant Demo) | ✅ | `staticwebapp.config.json` med SPA-fallback |
 | `Tools.PayBySharePay` (seed-scripts) | ✅ | `seed`, `seed-group-orders`, `seed-pizza`, `flush` m.fl. |
 | Container/Docker | ❌ | Ikke konfigureret |
-| CI/CD pipeline | ❌ | Ingen pipeline-filer i repositoriet |
+| CI/CD pipeline | ✅ | `build.yml`: byg + test ved push/PR til main. `deploy-simply.yml`: manuel deploy til Simply.com (`workflow_dispatch`) — API, landing, frontend og merchant-demo |
 | Health checks | ❌ | Ikke konfigureret |
 | Rate limiting | ❌ | Ikke konfigureret |
 
