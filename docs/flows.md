@@ -74,7 +74,7 @@ Note: There is no endpoint to add participants AFTER an order is created.
 ## 4. Participant Orders via Merchant Link
 
 **Actor:** Participant (follows link from Message)  
-**Entry point:** Merchant Demo (Pizzeria Roma) at `https://brave-flower-0026a7503.7.azurestaticapps.net`
+**Entry point:** Merchant Demo (Pizzeria Roma) at `https://merchant.paynsync.dk`
 
 ```
 Participant opens message in app

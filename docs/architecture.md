@@ -75,8 +75,9 @@ Token og brugerinfo gemmes i `localStorage` under nøglerne `sbys_token` og `sby
 
 | Miljø | API base URL |
 |-------|-------------|
-| Development (`ng serve`) | `https://localhost:7007` |
-| Production (build) | `environment.ts` — kun én fil fundet; prod-env ikke separat defineret |
+| Development (`ng serve`) | `https://localhost:7007` (`environment.ts`) |
+| Simply / Prod (`ng build --configuration simply`) | `https://api.paynsync.dk` (`environment.simply.ts`) |
+| Test (`ng build --configuration test`) | se `environment.test.ts` |
 
 ### Angular-routes
 
@@ -102,8 +103,8 @@ Token og brugerinfo gemmes i `localStorage` under nøglerne `sbys_token` og `sby
 ## Backend-teknologi (`Api.PayBySharePay`)
 
 **Framework:** ASP.NET Core 9  
-**Hosting (prod):** Azure App Service, IIS in-process via `web.config` + `AspNetCoreModuleV2`  
-**Hosting (dev):** Kestrel, HTTP port 5071 / HTTPS port 7007  
+**Hosting (prod):** Simply.com Windows hosting — self-contained `win-x64` publish, IIS in-process via `web.config` + `AspNetCoreModuleV2`. Deploy via FTP til `api.paynsync.dk`.  
+**Hosting (dev):** Kestrel, HTTP port 5071 / HTTPS port 7007
 **API-dokumentation:** Swagger/OpenAPI tilgængeligt på `/` (root redirecter til `/swagger`)
 
 ### JWT-auth
@@ -155,11 +156,16 @@ Swagger → ExceptionHandlingMiddleware → CORS → (HTTPS redirect i prod) →
 
 ### CORS
 
-Hardcodet tilliste i `Program.cs`:
+Basisliste hardcodet i `Program.cs` (dev-origins + gamle Azure-origins der stadig er i koden):
 - `http/https://localhost:4200` og `:4201` (Angular dev)
 - `http/https://localhost:8081` (Merchant Demo dev)
-- `https://purple-coast-0d01c1003.7.azurestaticapps.net` (Angular prod)
-- `https://brave-flower-0026a7503.7.azurestaticapps.net` (Merchant Demo prod)
+- `https://purple-coast-0d01c1003.7.azurestaticapps.net` *(legacy Azure — stadig i kode)*
+- `https://brave-flower-0026a7503.7.azurestaticapps.net` *(legacy Azure — stadig i kode)*
+
+Produktions-origins injiceres fra `AppSettings:CorsOrigins` i `appsettings.Simply.json`:
+- `https://mobil.paynsync.dk` (Angular prod)
+- `https://paynsync.dk` og `https://www.paynsync.dk` (Landing page)
+- `https://merchant.paynsync.dk` (Merchant Demo prod)
 
 ---
 
@@ -318,29 +324,47 @@ Fejl ignoreres (betalingerne er allerede gennemført).
 
 ## Deployment
 
-### API (Azure App Service)
+### API (Simply.com — `api.paynsync.dk`)
 
+- Self-contained publish (`win-x64`) — ingen ekstern .NET-runtime kræves på serveren
 - `web.config` konfigurerer IIS in-process hosting via `AspNetCoreModuleV2`
-- `ASPNETCORE_ENVIRONMENT = Production` sættes i `web.config`
-- `appsettings.json` + miljøspecifikke overrides (`appsettings.Test.json` o.lign.)
+- `ASPNETCORE_ENVIRONMENT = Simply` sættes via `web.config` (bruger `appsettings.Simply.json`)
 - HTTPS redirect aktiveret i prod (deaktiveret i dev for at undgå problemer med http://localhost:8081)
+- FTP-server: `nt31.unoeuro.com` → `/api.paynsync.dk/`
 
-### Frontend (Azure Static Web Apps)
+### Frontend Angular (Simply.com — `mobil.paynsync.dk`)
 
-- `ng build` producerer statiske filer
-- `staticwebapp.config.json`: navigationFallback rewriter alle routes til `/index.html` (SPA routing)
-- Statiske assets (CSS, JS, billeder) ekskluderet fra fallback
+- `ng build --configuration simply` producerer statiske filer (`environment.simply.ts` bruges → `https://api.paynsync.dk`)
+- Deploy via FTP til `mobil.paynsync.dk`
 
-### Merchant Demo (Azure Static Web Apps)
+### Landing Page (Simply.com — `paynsync.dk`)
 
-- Enkelt `index.html` deployet som statisk site
+- `src/Landing.PayBySharePay/` deployet via FTP til `/public_html/`
+
+### Merchant Demo (Simply.com — `merchant.paynsync.dk`)
+
+- Enkelt `index.html` deployet som statisk site via FTP til `merchant.paynsync.dk`
 - Auto-detekterer API base URL fra `window.location.hostname`:
   - `localhost` / `127.0.0.1` → `http://localhost:5071`
-  - Andre → `https://paybysharepay-api.azurewebsites.net`
+  - Andre → `https://api.paynsync.dk`
 
 ### CI/CD
 
-Ingen pipeline-konfiguration fundet i repositoriet (ingen `.github/workflows`, ingen `azure-pipelines.yml`).
+GitHub Actions workflow: `.github/workflows/deploy-simply.yml` (manuel trigger — `workflow_dispatch`).
+
+| Trin | Beskrivelse |
+|------|-------------|
+| Publish API | `dotnet publish --self-contained --runtime win-x64` |
+| Injicer secrets | `jq` patcher `appsettings.Simply.json` med DB-connection + JWT-key fra GitHub Secrets |
+| Byg Angular | `ng build --configuration simply` |
+| Tag API offline | Upload `app_offline.htm` via FTP (frigør fillåse under deploy) |
+| Deploy API | FTP → `nt31.unoeuro.com/api.paynsync.dk/` |
+| Tag API online | Slet `app_offline.htm` |
+| Deploy Landing | FTP → `nt31.unoeuro.com/public_html/` |
+| Deploy Frontend | FTP → `nt31.unoeuro.com/mobil.paynsync.dk/` |
+| Deploy MerchantDemo | FTP → `nt31.unoeuro.com/merchant.paynsync.dk/` |
+
+**GitHub Secrets der kræves:** `SIMPLY_FTP_USERNAME`, `SIMPLY_FTP_PASSWORD`, `SIMPLY_DB_CONNECTION_STRING`, `SIMPLY_JWT_KEY`
 
 ---
 
@@ -451,6 +475,6 @@ Vipps MobilePay
 
 1. **`UnauthorizedAccessException` → 500** — Host-tjek i services kaster `UnauthorizedAccessException`, men middleware mapper det ikke til 403. Det resulterer i HTTP 500. Er dette bevidst?
 2. **`Jwt:ExpiresInMinutes` i appsettings vs. kode** — `appsettings.json` indeholder `43200` (30 dage), men `JwtTokenService` bruger værdien direkte og `AuthController` bruger `AddMinutes(480)` hardcodet. Hvad er den faktiske udløbstid?
-3. **CI/CD** — Ingen pipeline-filer fundet. Deployment sker sandsynligvis manuelt eller via Azure Portal publish. Er der en separat pipeline-konfiguration uden for repositoriet?
-4. **Angular environment-filer** — Kun `environment.ts` (peger på `https://localhost:7007`) fundet. Ingen separat `environment.production.ts`. Hvordan sættes prod API URL ved build?
+3. **CI/CD** — `deploy-simply.yml` er konfigureret til manuel deploy via `workflow_dispatch`. Ingen automatisk deploy ved push til `main`.
+4. **Angular environment-filer** — Tre filer: `environment.ts` (dev → `localhost:7007`), `environment.simply.ts` (prod → `https://api.paynsync.dk`), `environment.test.ts` (test). Konfigureres i `angular.json` via `fileReplacements`.
 5. **`DevController` i prod** — `DELETE /api/dev/reset` og `POST /api/dev/seed-merchant-urls` er deployet til produktion uden auth-beskyttelse.

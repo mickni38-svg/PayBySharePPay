@@ -1,8 +1,8 @@
 # PayNSync – Project Overview
 
 > **Internal code name:** PayBySharePay  
-> **Repository:** `PayBySharePPay` (branch: `payment-integration`)  
-> **Runtime:** .NET 9 (backend), Angular 17+ (frontend)  
+> **Repository:** `PayBySharePPay` (branch: `main`)  
+> **Runtime:** .NET 9 (backend), Angular 19 (frontend)  
 > **Database:** SQL Server (EF Core)
 
 ---
@@ -103,9 +103,10 @@ Koden afspejler en ambition om et fuldt integreret betalingsflow, hvor:
 
 | Komponent | URL | Hosting |
 |-----------|-----|---------|
-| API | `https://paybysharepay-api.azurewebsites.net` | Azure App Service |
-| Frontend (Angular SPA) | `https://purple-coast-0d01c1003.7.azurestaticapps.net` | Azure Static Web Apps |
-| Merchant Demo (Pizzeria Roma) | `https://brave-flower-0026a7503.7.azurestaticapps.net` | Azure Static Web Apps |
+| API | `https://api.paynsync.dk` | Simply.com (Windows hosting, IIS in-process) |
+| Frontend (Angular SPA) | `https://mobil.paynsync.dk` | Simply.com |
+| Landing page | `https://paynsync.dk` | Simply.com |
+| Merchant Demo (Pizzeria Roma) | `https://merchant.paynsync.dk` | Simply.com |
 
 ---
 
@@ -127,18 +128,17 @@ Koden afspejler en ambition om et fuldt integreret betalingsflow, hvor:
 ## Key External Dependencies
 
 - **Vipps MobilePay ePayment API** — `https://apitest.vipps.no/epayment/v1/payments` (sandbox)
-- **SQL Server** — lokal SQLEXPRESS (dev), Azure SQL (prod)
-- **Azure Static Web Apps** — hosting for begge frontends
-- **Azure App Service** — hosting for API
+- **SQL Server** — lokal SQLEXPRESS (dev), Simply.com MSSQL (prod via `SIMPLY_DB_CONNECTION_STRING` secret)
+- **Simply.com** — Windows hosting (FTP-deploy via GitHub Actions `deploy-simply.yml`)
 
 ---
 
 ## Tech Stack Summary
 
 **Backend:** ASP.NET Core 9, Entity Framework Core, JWT Bearer auth, Swagger/OpenAPI  
-**Frontend:** Angular 17+ (standalone components, signals, lazy-loaded routes, mobil-first)  
+**Frontend:** Angular 19 (standalone components, signals, lazy-loaded routes, mobil-first)  
 **Payments:** Vipps MobilePay ePayment API (OAuth2 client credentials)  
-**Auth:** JWT HS256, 480 minutters udløb  
+**Auth:** JWT HS256, 43200 minutters udløb (konfigureret via `Jwt:ExpiresInMinutes`)  
 **Tests:** xUnit, FluentAssertions, in-memory fakes (ingen EF InMemory)
 
 ---
