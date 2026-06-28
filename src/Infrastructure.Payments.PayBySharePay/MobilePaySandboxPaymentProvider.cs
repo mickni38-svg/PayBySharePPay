@@ -78,7 +78,7 @@ public sealed class MobilePaySandboxPaymentProvider : IPaymentProvider
             };
         }
 
-        var httpRequest = BuildRequest(HttpMethod.Post, "/epayment/v1/payments", token, request.IdempotencyKey);
+        var httpRequest = BuildRequest(HttpMethod.Post, "/epayment/v1/payments", token, request.IdempotencyKey, request.MerchantSerialNumber);
         httpRequest.Content = JsonContent.Create(body, options: _jsonOptions);
 
         _logger.LogInformation("[VippsMobilePay] Opretter betaling {Reference}", request.ParticipantPaymentId);
@@ -113,7 +113,7 @@ public sealed class MobilePaySandboxPaymentProvider : IPaymentProvider
             modificationAmount = new { value = request.AmountMinorUnits, currency = request.Currency }
         };
 
-        var httpRequest = BuildRequest(HttpMethod.Post, $"/epayment/v1/payments/{request.ProviderPaymentId}/capture", token, request.IdempotencyKey);
+        var httpRequest = BuildRequest(HttpMethod.Post, $"/epayment/v1/payments/{request.ProviderPaymentId}/capture", token, request.IdempotencyKey, request.MerchantSerialNumber);
         httpRequest.Content = JsonContent.Create(body, options: _jsonOptions);
 
         _logger.LogInformation("[VippsMobilePay] Capturer betaling {Reference}", request.ProviderPaymentId);
@@ -186,12 +186,13 @@ public sealed class MobilePaySandboxPaymentProvider : IPaymentProvider
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private HttpRequestMessage BuildRequest(HttpMethod method, string path, string token, string? idempotencyKey = null)
+    private HttpRequestMessage BuildRequest(HttpMethod method, string path, string token, string? idempotencyKey = null, string? merchantSerialNumber = null)
     {
         var req = new HttpRequestMessage(method, $"{_options.BaseUrl.TrimEnd('/')}{path}");
         req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         req.Headers.Add("Ocp-Apim-Subscription-Key", _options.SubscriptionKey);
-        req.Headers.Add("Merchant-Serial-Number", _options.MerchantSerialNumber);
+        // Brug per-merchant MSN hvis tilgængeligt, ellers global fra config
+        req.Headers.Add("Merchant-Serial-Number", merchantSerialNumber ?? _options.MerchantSerialNumber);
         req.Headers.Add("Vipps-System-Name", "paybysharepay");
         if (idempotencyKey is not null)
             req.Headers.Add("Idempotency-Key", idempotencyKey);

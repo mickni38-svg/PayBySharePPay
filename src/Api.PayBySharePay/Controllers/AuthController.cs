@@ -90,9 +90,13 @@ public class AuthController : ControllerBase
 
     [HttpPost("register-merchant")]
     [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> RegisterMerchant([FromBody] RegisterMerchantRequest request)
     {
+        if (string.IsNullOrWhiteSpace(request.VippsMerchantSerialNumber))
+            return BadRequest(new { error = "MSN-nummer (Vipps Merchant Serial Number) er påkrævet." });
+
         var existing = await _participantService.SearchParticipantsAsync(request.ContactEmail ?? request.Name);
         if (!string.IsNullOrEmpty(request.ContactEmail) &&
             existing.Any(p => string.Equals(p.Email, request.ContactEmail, StringComparison.OrdinalIgnoreCase)))
@@ -102,6 +106,7 @@ public class AuthController : ControllerBase
         {
             Name = request.Name,
             CompanyName = request.CompanyName,
+            VippsMerchantSerialNumber = request.VippsMerchantSerialNumber,
             CvrNumber = request.CvrNumber,
             ContactPerson = request.ContactPerson,
             ContactEmail = request.ContactEmail,

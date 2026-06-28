@@ -24,6 +24,13 @@ public class RegisterMerchantRequest
     [Required]
     public string CompanyName { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Vipps MobilePay Merchant Serial Number (MSN).
+    /// Afgør hvilken konto betalingerne goes til.
+    /// </summary>
+    [Required]
+    public string VippsMerchantSerialNumber { get; set; } = string.Empty;
+
     public string? CvrNumber { get; set; }
     public string? ContactPerson { get; set; }
 

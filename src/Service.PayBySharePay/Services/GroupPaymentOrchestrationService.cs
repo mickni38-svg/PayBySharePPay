@@ -93,6 +93,10 @@ public sealed class GroupPaymentOrchestrationService(
         // Callback URL bruger den faktiske ParticipantPaymentId — ignorerer hvad caller angiver
         var resolvedCallbackUrl = $"{callbackUrl.TrimEnd('/')}/{payment.Id}";
 
+        // Hent merchant's Vipps MSN hvis tilgængeligt (ellers bruges global fra config)
+        var order = await orderRepository.GetByIdWithDetailsAsync(orderId);
+        var merchantMsn = order?.MerchantParticipant?.VippsMerchantSerialNumber;
+
         var request = new ReservePaymentRequest(
             GroupPaymentId: orderId.ToString(),
             ParticipantPaymentId: payment.Id.ToString(),
@@ -103,7 +107,8 @@ public sealed class GroupPaymentOrchestrationService(
             ReturnUrl: returnUrl,
             CallbackUrl: resolvedCallbackUrl,
             IdempotencyKey: idempotencyKey,
-            TestPhoneNumber: testPhoneNumber);
+            TestPhoneNumber: testPhoneNumber,
+            MerchantSerialNumber: merchantMsn);
 
         // Sæt ReservationStarted med et temp-id indtil vi får svar fra provider
         var tempProviderId = $"pending-{payment.Id}";
@@ -231,7 +236,8 @@ public sealed class GroupPaymentOrchestrationService(
                 ProviderPaymentId: freshPayment.ProviderPaymentId ?? throw new InvalidOperationException($"Payment {payment.Id} mangler ProviderPaymentId"),
                 AmountMinorUnits: freshPayment.AmountMinorUnits,
                 Currency: freshPayment.Currency,
-                IdempotencyKey: idempotencyKey);
+                IdempotencyKey: idempotencyKey,
+                MerchantSerialNumber: order.MerchantParticipant?.VippsMerchantSerialNumber);
 
             CapturePaymentResult captureResult;
             try

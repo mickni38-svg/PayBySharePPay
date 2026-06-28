@@ -24,7 +24,8 @@ public sealed record ReservePaymentRequest(
     string ReturnUrl,
     string CallbackUrl,
     string IdempotencyKey,
-    string? TestPhoneNumber = null);
+    string? TestPhoneNumber = null,
+    string? MerchantSerialNumber = null);
 
 public sealed record ReservePaymentResult(
     bool Success,
@@ -40,7 +41,8 @@ public sealed record CapturePaymentRequest(
     string ProviderPaymentId,
     long AmountMinorUnits,
     string Currency,
-    string IdempotencyKey);
+    string IdempotencyKey,
+    string? MerchantSerialNumber = null);
 
 public sealed record CapturePaymentResult(
     bool Success,

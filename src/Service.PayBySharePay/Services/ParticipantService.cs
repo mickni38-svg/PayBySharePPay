@@ -63,6 +63,7 @@ public class ParticipantService : IParticipantService
             Type = ParticipantType.Merchant,
             Name = dto.Name.Trim(),
             CompanyName = dto.CompanyName.Trim(),
+            VippsMerchantSerialNumber = dto.VippsMerchantSerialNumber.Trim(),
             CvrNumber = dto.CvrNumber,
             VatNumber = dto.VatNumber,
             ContactPerson = dto.ContactPerson,

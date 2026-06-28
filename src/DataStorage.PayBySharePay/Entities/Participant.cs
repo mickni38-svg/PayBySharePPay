@@ -22,6 +22,13 @@ public class Participant
     public string? PaymentProvider { get; set; }
     public string? GroupOrderUrl { get; set; }
 
+    /// <summary>
+    /// Vipps MobilePay Merchant Serial Number (MSN) for dette salgssted.
+    /// Bruges til at sende betalinger direkte til det rigtige salgssted.
+    /// Null = brug global MSN fra appsettings.
+    /// </summary>
+    public string? VippsMerchantSerialNumber { get; set; }
+
     public ICollection<FriendRelation> FriendsInitiated { get; set; } = new List<FriendRelation>();
     public ICollection<FriendRelation> FriendsReceived { get; set; } = new List<FriendRelation>();
     public ICollection<OrderParticipant> OrderParticipants { get; set; } = new List<OrderParticipant>();
