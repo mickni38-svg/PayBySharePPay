@@ -108,7 +108,7 @@
       </p>
     </div>
 
-    <!-- Doc 06 Â§6: Alle reserveret â†’ Godkend ordre -->
+    <!-- Doc 06 §6: Alle reserveret → Godkend ordre -->
     @if (isCurrentUser(createdByParticipantId())) {
 
       @if (canApprove()) {
@@ -118,21 +118,21 @@
             Godkend ordre
           </button>
           <p class="detail__approve-sub">
-            NÃ¥r du godkender ordren, gennemfÃ¸rer PayNSync de reserverede betalinger for alle deltagere.
+            Når du godkender ordren, gennemfører PayNSync de reserverede betalinger for alle deltagere.
             Du betaler kun din egen bestilling.
           </p>
         </div>
       }
 
-      <!-- Doc 06 Â§7: Capture i gang -->
+      <!-- Doc 06 §7: Capture i gang -->
       @if (isCapturing() && captureResults().length > 0) {
         <div class="detail__capture-progress">
-          <p class="detail__capture-title">GennemfÃ¸rer betalinger...</p>
+          <p class="detail__capture-title">Gennemfører betalinger...</p>
           @for (r of captureResults(); track r.participantId) {
             <div class="capture-row">
               <span class="capture-row__name">{{ r.participantName }}</span>
               @if (r.success) {
-                <span class="capture-row__status capture-row__status--ok">GennemfÃ¸rt</span>
+                <span class="capture-row__status capture-row__status--ok">Gennemført</span>
               } @else {
                 <span class="capture-row__status capture-row__status--fail">Fejlet</span>
               }
@@ -142,24 +142,24 @@
       }
 
       @if (isApproving() && captureResults().length === 0) {
-        <p class="detail__state">GennemfÃ¸rer betalinger...</p>
+        <p class="detail__state">Gennemfører betalinger...</p>
       }
 
-      <!-- Doc 06 Â§8: Delvis fejlet -->
+      <!-- Doc 06 §8: Delvis fejlet -->
       @if (isPartiallyFailed()) {
         <div class="detail__partial-fail">
-          <p class="detail__partial-fail-title">Ordren kunne ikke gennemfÃ¸res fuldt ud.</p>
+          <p class="detail__partial-fail-title">Ordren kunne ikke gennemføres fuldt ud.</p>
           @for (r of captureResults(); track r.participantId) {
             @if (!r.success) {
               <p class="detail__partial-fail-line">{{ r.participantName }}'s betaling fejlede.</p>
             }
           }
           <p class="detail__partial-fail-note">
-            Allerede gennemfÃ¸rte betalinger er markeret som betalt.
-            Du kan prÃ¸ve igen eller annullere de resterende reservationer.
+            Allerede gennemførte betalinger er markeret som betalt.
+            Du kan prøve igen eller annullere de resterende reservationer.
           </p>
           <button class="btn btn--primary detail__approve-btn" (click)="approveOrder()">
-            PrÃ¸v igen
+            Prøv igen
           </button>
         </div>
       }

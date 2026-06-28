@@ -9,7 +9,7 @@ export interface Message {
   isRead: boolean;
 }
 
-// API request â€“ matcher Api.PayBySharePay.DTOs.CreateMessageRequest
+// API request – matcher Api.PayBySharePay.DTOs.CreateMessageRequest
 export interface CreateMessageRequest {
   orderId: number;
   participantId: number;

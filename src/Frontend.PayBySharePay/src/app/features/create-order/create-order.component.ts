@@ -43,17 +43,17 @@ function avatarColor(name: string): string {
 })
 export class CreateOrderComponent implements OnInit {
 
-  // â”€â”€ Wizard state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Wizard state ─────────────────────────────────────────────────────────
   currentStep = signal(1);
   readonly totalSteps = 4;
   stepError = signal<string | null>(null);
 
-  // â”€â”€ Trin 1: Grundinfo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Trin 1: Grundinfo ────────────────────────────────────────────────────
   title = signal('');
   emoji = signal('');
   message = '';
 
-  // â”€â”€ Trin 2: Spisested â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Trin 2: Spisested ────────────────────────────────────────────────────
   merchants = signal<MerchantVM[]>([]);
   selectedMerchant = signal<MerchantVM | null>(null);
   merchantSearch = '';
@@ -67,7 +67,7 @@ export class CreateOrderComponent implements OnInit {
     );
   });
 
-  // â”€â”€ Trin 3: Deltagere â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Trin 3: Deltagere ────────────────────────────────────────────────────
   persons = signal<ParticipantVM[]>([]);
   searchTerm = '';
   isLoading = signal(false);
@@ -83,7 +83,7 @@ export class CreateOrderComponent implements OnInit {
 
   selectedParticipants = computed(() => this.persons().filter(p => p.selected));
 
-  // â”€â”€ Submit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Submit ────────────────────────────────────────────────────────────────
   isSubmitting = signal(false);
   errorMessage = signal<string | null>(null);
 
@@ -136,7 +136,7 @@ export class CreateOrderComponent implements OnInit {
     });
   }
 
-  // â”€â”€ Wizard navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Wizard navigation ─────────────────────────────────────────────────────
   validateCurrentStep(): boolean {
     this.stepError.set(null);
     if (this.currentStep() === 1) {
@@ -145,19 +145,19 @@ export class CreateOrderComponent implements OnInit {
         return false;
       }
       if (!this.emoji().trim()) {
-        this.stepError.set('VÃ¦lg en emoji');
+        this.stepError.set('Vælg en emoji');
         return false;
       }
     }
     if (this.currentStep() === 2) {
       if (!this.selectedMerchant()) {
-        this.stepError.set('Du skal vÃ¦lge et spisested for at oprette en gruppebetaling.');
+        this.stepError.set('Du skal vælge et spisested for at oprette en gruppebetaling.');
         return false;
       }
     }
     if (this.currentStep() === 3) {
       if (this.selectedParticipants().length === 0) {
-        this.stepError.set('VÃ¦lg mindst Ã©n deltager');
+        this.stepError.set('Vælg mindst én deltager');
         return false;
       }
     }
@@ -189,19 +189,19 @@ export class CreateOrderComponent implements OnInit {
     return step < this.currentStep();
   }
 
-  // â”€â”€ Merchant
+  // ── Merchant
   toggleMerchant(m: MerchantVM): void {
     this.selectedMerchant.update(current => current?.id === m.id ? null : m);
   }
 
-  // â”€â”€ Deltagere â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Deltagere ─────────────────────────────────────────────────────────────
   togglePerson(p: ParticipantVM): void {
     this.persons.update(list =>
       list.map(item => item.id === p.id ? { ...item, selected: !item.selected } : item)
     );
   }
 
-  // â”€â”€ Submit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Submit ────────────────────────────────────────────────────────────────
   submit(): void {
     this.stepError.set(null);
     if (!this.title().trim() || !this.emoji().trim()) {
@@ -209,7 +209,7 @@ export class CreateOrderComponent implements OnInit {
       return;
     }
     if (!this.selectedMerchant()) {
-      this.stepError.set('Du skal vÃ¦lge et spisested for at oprette en gruppebetaling.');
+      this.stepError.set('Du skal vælge et spisested for at oprette en gruppebetaling.');
       return;
     }
     if (this.isSubmitting()) return;
@@ -231,7 +231,7 @@ export class CreateOrderComponent implements OnInit {
         this.router.navigate(['/home']);
       },
       error: () => {
-        this.errorMessage.set('Kunne ikke oprette ordre. PrÃ¸v igen.');
+        this.errorMessage.set('Kunne ikke oprette ordre. Prøv igen.');
         this.isSubmitting.set(false);
       }
     });

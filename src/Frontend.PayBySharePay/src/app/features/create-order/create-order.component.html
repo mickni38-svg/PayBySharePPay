@@ -27,7 +27,7 @@
   <!-- Indhold -->
   <div class="wizard__content">
 
-    <!-- â”€â”€ TRIN 1: Grundinfo â”€â”€ -->
+    <!-- ── TRIN 1: Grundinfo ── -->
     @if (currentStep() === 1) {
 
       <div class="field">
@@ -47,7 +47,7 @@
         <input
           class="field__input field__input--emoji"
           type="text"
-          placeholder="Tryk pÃ¥ ðŸ˜Š pÃ¥ dit tastatur og vÃ¦lg en emojiâ€¦"
+          placeholder="Tryk på 😊 på dit tastatur og vælg en emoji…"
           [ngModel]="emoji()"
           (ngModelChange)="emoji.set($event)"
           maxlength="2"
@@ -61,7 +61,7 @@
         <label class="field__label">BESKED (VALGFRI)</label>
         <textarea
           class="field__textarea"
-          placeholder="Skriv en kort besked til deltagerneâ€¦"
+          placeholder="Skriv en kort besked til deltagerne…"
           [(ngModel)]="message"
           maxlength="200"
           rows="3"
@@ -69,20 +69,20 @@
       </div>
     }
 
-    <!-- â”€â”€ TRIN 2: Spisested â”€â”€ -->
+    <!-- ── TRIN 2: Spisested ── -->
     @if (currentStep() === 2) {
 
       <div class="field">
         <input
           class="field__input"
           type="search"
-          placeholder="SÃ¸g spisestedâ€¦"
+          placeholder="Søg spisested…"
           [(ngModel)]="merchantSearch"
         />
       </div>
 
       @if (isLoading()) {
-        <p class="state-text">Henterâ€¦</p>
+        <p class="state-text">Henter…</p>
       } @else if (filteredMerchants().length === 0) {
         <p class="state-text">Ingen spisestedder fundet</p>
       } @else {
@@ -109,23 +109,23 @@
         </div>
       }
 
-      <p class="wizard__hint-text">Kan du ikke finde dit spisested? SpÃ¸rg om de bruger <strong>PayBySharePay</strong>.</p>
+      <p class="wizard__hint-text">Kan du ikke finde dit spisested? Spørg om de bruger <strong>PayBySharePay</strong>.</p>
     }
 
-    <!-- â”€â”€ TRIN 3: Deltagere â”€â”€ -->
+    <!-- ── TRIN 3: Deltagere ── -->
     @if (currentStep() === 3) {
 
       <div class="field">
         <input
           class="field__input"
           type="search"
-          placeholder="SÃ¸g navnâ€¦"
+          placeholder="Søg navn…"
           [(ngModel)]="searchTerm"
         />
       </div>
 
       @if (isLoading()) {
-        <p class="state-text">Henterâ€¦</p>
+        <p class="state-text">Henter…</p>
       } @else if (filtered().length === 0) {
         <p class="state-text">Ingen deltagere fundet</p>
       } @else {
@@ -153,17 +153,17 @@
       }
     }
 
-    <!-- â”€â”€ TRIN 4: Gennemse â”€â”€ -->
+    <!-- ── TRIN 4: Gennemse ── -->
     @if (currentStep() === 4) {
 
       <div class="review-card">
         <div class="review-row">
-          <span class="review-row__icon">â—‡</span>
+          <span class="review-row__icon">◇</span>
           <span class="review-row__label">Titel</span>
           <span class="review-row__value">{{ title() }}</span>
         </div>
         <div class="review-row">
-          <span class="review-row__icon">ðŸ·ï¸</span>
+          <span class="review-row__icon">🏷️</span>
           <span class="review-row__label">Emoji</span>
           <span class="review-row__value">
             @if (emoji()) { {{ emoji() }} }
@@ -171,7 +171,7 @@
           </span>
         </div>
         <div class="review-row">
-          <span class="review-row__icon">ðŸ’¬</span>
+          <span class="review-row__icon">💬</span>
           <span class="review-row__label">Besked</span>
           <span class="review-row__value">
             @if (message.trim()) { {{ message }} }
@@ -179,7 +179,7 @@
           </span>
         </div>
         <div class="review-row">
-          <span class="review-row__icon">ðŸª</span>
+          <span class="review-row__icon">🏪</span>
           <span class="review-row__label">Spisested</span>
           <span class="review-row__value">
             @if (selectedMerchant()) { {{ selectedMerchant()!.displayName }} }
@@ -187,7 +187,7 @@
           </span>
         </div>
         <div class="review-row">
-          <span class="review-row__icon">ðŸ‘¥</span>
+          <span class="review-row__icon">👥</span>
           <span class="review-row__label">Deltagere</span>
           <span class="review-row__value">{{ selectedParticipants().length }} valgt</span>
         </div>
@@ -232,17 +232,17 @@
   <div class="wizard__footer">
     <div class="wizard__footer__actions">
       @if (currentStep() > 1) {
-        <button class="btn-back" (click)="goBack()" aria-label="Tilbage">â†</button>
+        <button class="btn-back" (click)="goBack()" aria-label="Tilbage">←</button>
       }
       @if (currentStep() < 4) {
-        <button class="btn-primary" (click)="goNext()">NÃ¦ste</button>
+        <button class="btn-primary" (click)="goNext()">Næste</button>
       } @else {
         <button
           class="btn-primary btn-primary--green"
           [disabled]="!canSubmit() || isSubmitting()"
           (click)="submit()"
         >
-          @if (isSubmitting()) { Opretterâ€¦ } @else { Opret gruppebetaling }
+          @if (isSubmitting()) { Opretter… } @else { Opret gruppebetaling }
         </button>
       }
     </div>

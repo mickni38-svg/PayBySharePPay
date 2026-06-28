@@ -6,7 +6,7 @@ import { OrderService } from '../../core/services/order.service';
 import { PendingParticipantsSummary, PendingOrder, PendingParticipant, computePendingSummary } from '../../core/models/order.model';
 
 export const REMINDER_MESSAGE =
-  `Hej ðŸ‘‹\nVi mangler stadig, at du fÃ¦rdiggÃ¸r din handling i PayBySharePay.\nSÃ¥ vi kan gÃ¸re ordren klar.\nTak! ðŸ™‚`;
+  `Hej 👋\nVi mangler stadig, at du færdiggør din handling i PayBySharePay.\nSå vi kan gøre ordren klar.\nTak! 🙂`;
 
 @Component({
   selector: 'app-pending-participants',
@@ -64,8 +64,8 @@ export class PendingParticipantsComponent implements OnInit {
   }
 
   sendReminders(): void {
-    // Placeholder: kobles pÃ¥ backend notification-service nÃ¥r den er klar
-    console.log('Sender pÃ¥mindelser til:', this.allPendingParticipants());
+    // Placeholder: kobles på backend notification-service når den er klar
+    console.log('Sender påmindelser til:', this.allPendingParticipants());
     this.reminderSent.set(true);
     setTimeout(() => this.showReminderDialog.set(false), 1500);
   }

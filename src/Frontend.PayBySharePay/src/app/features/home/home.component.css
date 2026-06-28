@@ -1,4 +1,4 @@
-/* Forside – mørk dashboard */
+/* Forside â€“ mÃ¸rk dashboard */
 :host { display: block; }
 
 .home {
@@ -217,7 +217,7 @@
   line-height: 1;
 }
 
-/* CTA – Opret ny gruppebetaling */
+/* CTA â€“ Opret ny gruppebetaling */
 .home__cta {
   padding: 16px var(--space-page) 0;
 }
