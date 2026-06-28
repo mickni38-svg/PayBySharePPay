@@ -112,16 +112,18 @@ Koden afspejler en ambition om et fuldt integreret betalingsflow, hvor:
 
 ## Projects in Solution
 
+> Bemærk: Kun .NET-projekter er registreret i `PayBySharePay.sln`. Frontend-projekterne er **ikke** en del af Visual Studio-løsningsfilen — de er selvstændige mapper ved siden af `.sln`.
+
 | Projekt | Type | Rolle |
-|---------|------|-------|
+|---------|------|---------|
 | `Api.PayBySharePay` | ASP.NET Core Web API (.NET 9) | HTTP-indgang — controllers, auth, middleware |
 | `Service.PayBySharePay` | Class library | Forretningslogik, orkestrering, DTOs, interfaces |
 | `DataStorage.PayBySharePay` | Class library | EF Core entities, DbContext, repositories, migrationer |
 | `Infrastructure.Payments.PayBySharePay` | Class library | Betalingsudbyder-implementeringer (Fake + Vipps MobilePay) |
 | `Tools.PayBySharePay` | Console app | Udviklerværktøj / seed-scripts |
 | `Tests.PayBySharePay` | xUnit test project | Enhedstests (orkestrering, state machine, fake provider) |
-| `Frontend.PayBySharePay` | Angular SPA | Brugervendt mobil-first webapp |
-| `Frontend.MerchantDemo` | Statisk HTML/JS | Simuleret merchant-bestillingsside (Pizzeria Roma) |
+| `Frontend.PayBySharePay` | Angular SPA *(ikke i .sln)* | Brugervendt mobil-first webapp |
+| `Frontend.MerchantDemo` | Statisk HTML/JS *(ikke i .sln)* | Simuleret merchant-bestillingsside (Pizzeria Roma) |
 
 ---
 
@@ -138,7 +140,7 @@ Koden afspejler en ambition om et fuldt integreret betalingsflow, hvor:
 **Backend:** ASP.NET Core 9, Entity Framework Core, JWT Bearer auth, Swagger/OpenAPI  
 **Frontend:** Angular 19 (standalone components, signals, lazy-loaded routes, mobil-first)  
 **Payments:** Vipps MobilePay ePayment API (OAuth2 client credentials)  
-**Auth:** JWT HS256, 43200 minutters udløb (konfigureret via `Jwt:ExpiresInMinutes`)  
+**Auth:** JWT HS256. `JwtTokenService` læser `Jwt:ExpiresInMinutes` fra config (default fallback `480`, `appsettings.json` sætter `43200` = 30 dage). Token-levetiden er dermed **43200 min (30 dage)**. `AuthController` returnerer dog `ExpiresAt = now + 480 min` hardkodet i response-body — dette er en fejl (se Open Questions #3).  
 **Tests:** xUnit, FluentAssertions, in-memory fakes (ingen EF InMemory)
 
 ---
@@ -147,4 +149,5 @@ Koden afspejler en ambition om et fuldt integreret betalingsflow, hvor:
 
 1. **Merchant-registrering** — `POST /api/auth/register-merchant` eksisterer i `AuthController`. Det er uklart om merchants logger ind og bruger frontenden, eller om de udelukkende integrerer via API og callback.
 2. **Vision for deltagerbetaling** — Koden returnerer en `redirectUrl` fra reserve-kaldet (til MobilePay-app). Det er uklart om slutbrugeren skal omdirigeres automatisk, eller om dette kun bruges i testscenarier.
-3. **Skalering til andre merchanttyper** — Systemet er designet til restaurant-bestillinger (ordrelinjer, menupunkter). Det er ikke tydeligt fra koden, om visionen omfatter andre merchanttyper (fx events, transport, tjenester).
+3. **JWT `ExpiresAt` i response-body** — `JwtTokenService` udsteder et token med `Jwt:ExpiresInMinutes = 43200` (30 dage). `AuthController` returnerer dog `ExpiresAt = DateTime.UtcNow.AddMinutes(480)` hardkodet i alle tre auth-svar (login, register, register-merchant). Klienten tror dermed at sessionen udløber om 8 timer, selvom tokenet er gyldigt i 30 dage.
+4. **Skalering til andre merchanttyper** — Systemet er designet til restaurant-bestillinger (ordrelinjer, menupunkter). Det er ikke tydeligt fra koden, om visionen omfatter andre merchanttyper (fx events, transport, tjenester).

@@ -20,7 +20,7 @@ Organiseret efter aktør og domæneområde.
 - Login sker på email — systemet finder den første `Person` med matchende email (case-insensitiv).
 - Hvis `PasswordHash` er sat og et password er angivet, skal BCrypt-verifikation bestå.
 - Hvis `PasswordHash` er null, tillades login **uden** password (legacy seed-brugere).
-- Vellykkede logins returnerer JWT med `sub` = `participantId`, `name` = navn, `jti` = nyt GUID, udløb = konfigureret i `Jwt:ExpiresInMinutes` (default 480 min).
+- Vellykkede logins returnerer JWT med `sub` = `participantId`, `name` = navn, `jti` = nyt GUID. Token-levetid styres af `Jwt:ExpiresInMinutes` i konfigurationen (default **43200 min / 30 dage** i `appsettings.json`). `AuthController` returnerer en hardkodet `ExpiresAt = now + 480 min` i response-body — dette afspejler **ikke** den faktiske token-levetid (se Open Questions #2 i arkitektur-dokumentet).
 
 ### Profilopdatering
 
@@ -47,7 +47,7 @@ Organiseret efter aktør og domæneområde.
   - `POST /api/orders/{id}/complete` (legacy afslut)
   - `POST /api/orders/{id}/pay` (legacy betal)
 - Host-tjek sker i **service-laget** ved sammenligning: `requestingParticipantId == order.CreatedByParticipantId`. Tjekket er **ikke** baseret på JWT-claims.
-- Hvis host-tjek fejler, kastes `UnauthorizedAccessException` (resulterer i HTTP 500 pga. manglende middleware-mapping — se Open Questions).
+- Hvis host-tjek fejler, kastes `UnauthorizedAccessException` (fanges af den generiske handler i `ExceptionHandlingMiddleware` og returnerer HTTP 500 med JSON-body `{ "error": "Der opstod en uventet fejl.", "detail": "<ex.Message>" }` — ikke 403).
 
 ---
 
@@ -154,7 +154,8 @@ ReadyToPay → Completed          (legacy via /complete eller /pay)
 
 ### Reserve-regler
 
-- **Idempotens:** hvis en ikke-cancelled, ikke-failed `ParticipantPayment` allerede eksisterer for samme deltager+ordre, returneres den eksisterende uden nyt provider-kald.
+- **Idempotens:** hvis en ikke-cancelled, ikke-failed, ikke-expired `ParticipantPayment` allerede eksisterer for samme deltager+ordre, returneres den eksisterende uden nyt provider-kald.
+- Reservation startes **automatisk af `MerchantOrderService.InitOrderAsync`** umiddelbart efter draft er oprettet og `OrderParticipant.Status` sat til `OrderSubmitted`. Reservation kan også startes direkte via `POST /api/orders/{id}/reserve`.
 - Reservationsflow:
   1. Opret `ParticipantPayment` (status `Created`)
   2. Sæt temp `ProviderPaymentId = "pending-{id}"`, status → `ReservationStarted`
@@ -253,9 +254,9 @@ Lookup sker på `ProviderPaymentId`. Ikke fundet → 404.
 | Vipps `Name`-felt (case-insensitiv) | Handling |
 |-------------------------------------|----------|
 | `"AUTHORIZED"` eller `"RESERVE"` | → `SetReservedAsync` |
-| `"CAPTURED"` | Ingen state-ændring (capture sker via vores eget flow) |
+| `"CAPTURED"` | Logger og ignorerer — ingen state-ændring (capture sker via vores eget `/approve`-flow) |
 | `"CANCELLED"` eller `"ABORTED"` | → `SetCancelledAsync` |
-| `"TERMINATED"` eller `"EXPIRED"` | → `SetReservationFailedAsync` |
+| `"TERMINATED"` eller `"EXPIRED"` | → `SetReservationFailedAsync` (sætter `ReservationFailed`, **ikke** `Expired`) |
 | Andet | Logger og ignorerer |
 
 Lookup sker på `ProviderPaymentId` (svarer til `reference` i Vipps-callback).  

@@ -251,7 +251,7 @@ EF Core optimistisk concurrency-token på `ParticipantPayment`. Forhindrer to sa
 | `Captured` | Betaling gennemført | Penge trukket fra konto |
 | `CaptureFailed` | Fejlet | Capture-kald fejlede hos provider |
 | `Cancelled` | Annulleret | Reservation annulleret |
-| `Expired` | Udløbet | Reservation udløbet hos provider |
+| `Expired` | Udløbet | Defineret i enum og terminaltilstand; ingen service-metode sætter denne status. Vipps `EXPIRED`/`TERMINATED`-callbacks sætter `ReservationFailed` (via `SetReservationFailedAsync`), ikke `Expired` |
 | `Refunded` | Refunderet | Defineret men ikke implementeret |
 
 ---

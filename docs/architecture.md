@@ -114,7 +114,7 @@ Token og brugerinfo gemmes i `localStorage` under nøglerne `sbys_token` og `sby
 - `name` = deltagerens navn
 - `jti` = unikt token-id (GUID)
 
-Token-levetid: konfigurerbar via `Jwt:ExpiresInMinutes` (default 480 min / 8 timer).  
+Token-levetid: konfigurerbar via `Jwt:ExpiresInMinutes`. Default i `appsettings.json`: **43200 min (30 dage)**. `AuthController.Login()` returnerer hardkodet `expiresAt = now + 480 min` i response-body — dette er **ikke** den faktiske token-levetid (se Open Questions #2).  
 Validering: issuer, audience, levetid og signatur valideres.
 
 ### Middleware-pipeline (rækkefølge)
@@ -130,10 +130,10 @@ Swagger → ExceptionHandlingMiddleware → CORS → (HTTPS redirect i prod) →
 | `ArgumentException` | 400 Bad Request |
 | `KeyNotFoundException` | 404 Not Found |
 | `InvalidOperationException` | 409 Conflict |
-| `UnauthorizedAccessException` | (fanges ikke — se note) |
+| `UnauthorizedAccessException` | 500 Internal Server Error (fanges af generisk handler — se note) |
 | Alle andre | 500 Internal Server Error |
 
-> Note: `UnauthorizedAccessException` er ikke eksplicit håndteret i middleware — kaster 500. Host-tjek i services bruger denne exception.
+> Note: `UnauthorizedAccessException` fanges **ikke** eksplicit — den fanges af den generiske `Exception`-handler og returnerer HTTP 500 med JSON-body `{ "error": "Der opstod en uventet fejl.", "detail": "<ex.Message>", "type": "UnauthorizedAccessException" }`. Host-tjek i services kaster denne exception (f.eks. `"Kun ordrevært (host) kan godkende og capture."`), og `detail` eksponerer dermed interne beskeder i 500-svaret.
 
 ### Controllers
 
@@ -142,7 +142,7 @@ Swagger → ExceptionHandlingMiddleware → CORS → (HTTPS redirect i prod) →
 | `AuthController` | `/api/auth` | Anonymous | Login, register (person + merchant) |
 | `OrdersController` | `/api/orders` | `[Authorize]` på klassen | CRUD + reserve/approve/cancel/pay |
 | `PaymentsController` | `/api/payments` | Ingen klasse-attr. | Register betaling, webhooks |
-| `MerchantOrdersController` | `/api/merchant-orders` | `[AllowAnonymous]` på `InitOrder` | Merchant draft-indsendelse |
+| `MerchantOrdersController` | `/api/merchant-orders` | `[Authorize]` på klassen, `[AllowAnonymous]` kun på `POST InitOrder` | Merchant draft-indsendelse (anonym) + `GET by-order/{id}` (kræver JWT) |
 | `ParticipantsController` | `/api/participants` | Ingen | Søg, opret, opdatér profil |
 | `FriendsController` | `/api/friends` | Ingen | Venneliste-håndtering |
 | `DirectoryController` | `/api/directory` | Ingen | Tværgående søgning (person + merchant) |
@@ -462,10 +462,11 @@ Vipps MobilePay
   → VippsCallbackController.VippsCallback()
 	→ ParticipantPaymentRepository.GetByProviderPaymentIdAsync()  [SQL]
 	Mapper Vipps event-navn:
-	  AUTHORIZED  → ParticipantPaymentStateService.SetReservedAsync()   [SQL]
-	  CAPTURED    → ParticipantPaymentStateService.SetCapturedAsync()   [SQL]
-	  CANCELLED / ABORTED → SetCancelledAsync()                         [SQL]
-	  EXPIRED / TERMINATED → SetExpiredAsync()                          [SQL]
+	  AUTHORIZED / RESERVE → ParticipantPaymentStateService.SetReservedAsync()                     [SQL]
+	  CAPTURED             → Logger og ignorerer (ingen state-ændring — capture sker via /approve)
+	  CANCELLED / ABORTED  → SetCancelledAsync()                                                    [SQL]
+	  EXPIRED / TERMINATED → SetReservationFailedAsync() (sætter ReservationFailed, ikke Expired)   [SQL]
+	  Andet                → Logger og ignorerer
   ← 200 OK (altid — Vipps skal ikke retry)
 ```
 

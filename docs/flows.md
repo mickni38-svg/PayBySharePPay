@@ -287,10 +287,11 @@ User completes payment in MobilePay app
 		│
 		├─► Lookup by reference (ProviderPaymentId)
 		├─► Map Vipps event name:
-		│   AUTHORIZED → SetReservedAsync
-		│   CAPTURED   → SetCapturedAsync
-		│   CANCELLED / ABORTED → SetCancelledAsync
-		│   EXPIRED / TERMINATED → SetExpiredAsync
+		│   AUTHORIZED / RESERVE → SetReservedAsync
+		│   CAPTURED             → Logger og ignorerer (ingen state-ændring — capture sker via /approve-flow)
+		│   CANCELLED / ABORTED  → SetCancelledAsync
+		│   EXPIRED / TERMINATED → SetReservationFailedAsync (sætter ReservationFailed, ikke Expired)
+		│   Andet                → Logger og ignorerer
 		└─► Returns 200 (always — so Vipps doesn't retry on not-found)
 ```
 
