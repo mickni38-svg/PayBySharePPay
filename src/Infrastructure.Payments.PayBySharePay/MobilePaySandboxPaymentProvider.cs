@@ -47,17 +47,36 @@ public sealed class MobilePaySandboxPaymentProvider : IPaymentProvider
         // Ignorerer hvad frontend sender for at sikre korrekt Vipps-format.
         var webhookUrl = $"{_options.CallbackBaseUrl.TrimEnd('/')}/api/payments/vipps/callbacks/{request.ParticipantPaymentId}";
 
-        var body = new
+        object body;
+        if (!string.IsNullOrWhiteSpace(request.TestPhoneNumber))
         {
-            amount = new { value = request.AmountMinorUnits, currency = request.Currency },
-            paymentMethod = new { type = "WALLET" },
-            reference = request.ParticipantPaymentId,
-            userFlow = "WEB_REDIRECT",
-            returnUrl = request.ReturnUrl,
-            paymentDescription = request.Description,
-            webhookUrl,
-            profile = new { scope = "name phoneNumber" }
-        };
+            body = new
+            {
+                amount = new { value = request.AmountMinorUnits, currency = request.Currency },
+                paymentMethod = new { type = "WALLET" },
+                reference = request.ParticipantPaymentId,
+                userFlow = "WEB_REDIRECT",
+                returnUrl = request.ReturnUrl,
+                paymentDescription = request.Description,
+                webhookUrl,
+                profile = new { scope = "name phoneNumber" },
+                customer = new { phoneNumber = request.TestPhoneNumber }
+            };
+        }
+        else
+        {
+            body = new
+            {
+                amount = new { value = request.AmountMinorUnits, currency = request.Currency },
+                paymentMethod = new { type = "WALLET" },
+                reference = request.ParticipantPaymentId,
+                userFlow = "WEB_REDIRECT",
+                returnUrl = request.ReturnUrl,
+                paymentDescription = request.Description,
+                webhookUrl,
+                profile = new { scope = "name phoneNumber" }
+            };
+        }
 
         var httpRequest = BuildRequest(HttpMethod.Post, "/epayment/v1/payments", token, request.IdempotencyKey);
         httpRequest.Content = JsonContent.Create(body, options: _jsonOptions);

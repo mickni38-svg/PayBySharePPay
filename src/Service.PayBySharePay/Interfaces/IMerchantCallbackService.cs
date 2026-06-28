@@ -1,23 +1,20 @@
+using Service.PayBySharePay.DTOs;
+
 namespace Service.PayBySharePay.Interfaces;
 
 /// <summary>
-/// Sender callback til merchant, når alle betalinger er captured.
+/// Sender standard GroupOrderPaid-payload til merchant efter fuld capture.
 /// Implementeres i API-laget, så service-laget ikke har HttpClient-afhængighed.
 /// </summary>
 public interface IMerchantCallbackService
 {
-    /// <summary>Sender "Paid"-notifikation til merchantens CallbackUrl.</summary>
-    Task SendPaidCallbackAsync(
-        int orderId,
+    /// <summary>
+    /// Sender den endelige group order til merchantens GroupOrderUrl.
+    /// Kaldes kun når Order.Status = Paid og alle betalinger er Captured.
+    /// </summary>
+    Task SendGroupOrderPaidAsync(
+        PayNSyncFinalGroupOrderDto payload,
         string? callbackUrl,
-        string? merchantId,
-        IEnumerable<MerchantCallbackParticipantOrder> participantOrders,
         CancellationToken cancellationToken = default);
 }
 
-public sealed class MerchantCallbackParticipantOrder
-{
-    public int ParticipantId { get; init; }
-    public bool Success { get; init; }
-    public string? ProviderTransactionId { get; init; }
-}

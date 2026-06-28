@@ -5,6 +5,27 @@ Organiseret efter aktør og domæneområde.
 
 ---
 
+## Besluttet kerneflow for betaling og ordrefrigivelse
+
+PayNSync v1 bruger følgende ansvarsdeling:
+
+| Område | Ansvarlig |
+|--------|-----------|
+| Menu, priser, kurv og ordrelinjer | Merchant |
+| Gruppeordre, deltagere og participant tokens | PayNSync |
+| Oprettelse af MobilePay/Vipps reservation | PayNSync |
+| Deltagerens godkendelse/swipecall | Vipps/MobilePay app |
+| Betalingsstatus, capture og retry | PayNSync |
+| Endelig ordreaccept til merchant | PayNSync |
+
+Grundregel:
+
+> **En individuel MobilePay/Vipps-godkendelse reserverer kun deltagerens beløb. Den frigiver aldrig ordren til merchant. Merchant modtager først den samlede ordre, når alle deltagere har reserveret, host har godkendt, og PayNSync har captured alle betalinger.**
+
+Merchant-knappen bør derfor ikke hedde `Betal`. Den bør hedde fx `Bekræft min ordre` eller `Gem ordre og reservér betaling`, fordi deltageren først godkender en reservation. Det endelige træk sker senere via capture.
+
+---
+
 ## Deltagere (Participants)
 
 ### Typer og oprettelse
@@ -94,15 +115,21 @@ Organiseret efter aktør og domæneområde.
 
 ```
 Collecting
-  └─► (alle ikke-merchant deltagere har status OrderSubmitted)
-		└─► ReadyToPay
-			  ├─► (host kalder /approve)
-			  │     └─► HostApproved
-			  │           └─► Capturing
-			  │                 ├─► Paid              (alle captured OK)
-			  │                 └─► PartiallyFailed   (≥1 capture fejlede)
-			  │                       └─► (kan retry via /approve igen)
-			  └─► Cancelled   (host kalder /cancel)
+  └─► (deltagere indsender merchant-drafts)
+        └─► OrderSubmitted pr. deltager
+              └─► PayNSync opretter MobilePay/Vipps reservation pr. deltager
+                    └─► Deltager swiper/godkender i MobilePay/Vipps
+                          └─► ParticipantPayment = Reserved
+
+Når alle ikke-merchant deltagere har ParticipantPayment.Status = Reserved:
+  └─► ReadyToPay
+        ├─► (host kalder /approve)
+        │     └─► HostApproved
+        │           └─► Capturing
+        │                 ├─► Paid              (alle captured OK)
+        │                 └─► PartiallyFailed   (≥1 capture fejlede)
+        │                       └─► (kan retry via /approve igen)
+        └─► Cancelled   (host kalder /cancel)
 
 Collecting → Cancelled          (host kan altid annullere)
 ReadyToPay → Cancelled          (host kan annullere)
@@ -115,6 +142,13 @@ Paid → (terminal — kan IKKE annulleres)
 ReadyToPay → Completed          (legacy via /complete eller /pay)
 ```
 
+Vigtigt:
+
+- `OrderSubmitted` betyder kun, at deltagerens ordrelinjer er gemt.
+- `OrderSubmitted` må **ikke** alene sætte hele ordren til `ReadyToPay`.
+- `ReadyToPay` betyder, at alle relevante deltagerbetalinger er `Reserved`.
+- En individuel MobilePay/Vipps reservation må aldrig sende/frigive ordren til merchant.
+
 - Ordren kan **ikke** annulleres hvis status er `Paid`.
 - Idempotent: allerede `Paid` returnerer success uden fejl fra `/approve`.
 - Idempotent: allerede `Cancelled` returnerer success uden fejl fra `/cancel`.
@@ -122,6 +156,43 @@ ReadyToPay → Completed          (legacy via /complete eller /pay)
 ---
 
 ## Merchant-regler
+
+
+## Merchant Demo og MobilePay/Vipps-start
+
+Merchant Demo starter ikke MobilePay/Vipps direkte. Merchant Demo starter PayNSyncs reservation-flow.
+
+Regler:
+
+- Merchant Demo må kun sende draft-ordre, totalbeløb, currency, `participantToken` og eventuelt testtelefonnummer til PayNSync API.
+- PayNSync backend opretter Vipps/MobilePay payment/reservation.
+- PayNSync backend returnerer `redirectUrl` til Merchant Demo.
+- Merchant Demo redirecter deltageren til `redirectUrl`.
+- Deltageren swiper/godkender i MobilePay/Vipps app/test flow.
+- PayNSync modtager webhook og sætter den konkrete `ParticipantPayment` til `Reserved`.
+- Merchant Demo må ikke indeholde Vipps/MobilePay secrets eller kalde Vipps API direkte.
+- Merchant Demo må ikke capture betalinger.
+- Merchant Demo må ikke selv afgøre om den samlede ordre er betalt.
+
+Knappen på Merchant Demo bør hedde:
+
+```text
+Bekræft ordre og reservér med MobilePay
+```
+
+Forklaringstekst bør tydeligt sige:
+
+```text
+Du bliver sendt til MobilePay for at godkende en reservation.
+Beløbet trækkes først, når alle i gruppen har bestilt, og værten godkender den samlede ordre.
+```
+
+Telefonnummer/testtelefonnummer:
+
+- Kan bruges til at starte/oprette en Vipps/MobilePay payment i sandbox.
+- Må ikke bruges som capture-nøgle.
+- Capture skal altid ske via `ProviderPaymentId` / Vipps reference på en allerede godkendt reservation.
+
 
 ### Merchant-draft (bestilling)
 
@@ -132,14 +203,38 @@ ReadyToPay → Completed          (legacy via /complete eller /pay)
 - Alle ordrelinjer i en draft tildeles `ParticipantId` fra den fundne `OrderParticipant`.
 - Draft-status sættes til `"Submitted"` (ikke `"Draft"`, som er default-værdien i entiteten).
 - Betalingsreservation startes **automatisk** ved draft-indsendelse (`MerchantOrderService` kalder `ReserveParticipantPaymentAsync`).
+- Merchant må ikke selv oprette MobilePay/Vipps-betalingen i v1. Merchant sender kun ordrelinjer og totalbeløb til PayNSync.
+- En deltager skal efter ordre-draft sendes til MobilePay/Vipps-flowet og selv swipe/godkende reservationen. PayNSync må ikke senere betale på deltagerens vegne kun ud fra telefonnummer eller MobilePay-id.
 - `AmountMinorUnits` beregnes som `(long)(draft.TotalAmount * 100)`.
+- En gemt merchant-draft betyder ikke, at merchant må lave/frigive ordren. Draften er kun deltagerens ønskede ordre, indtil den samlede gruppeordre er captured og accepteret.
 
-### Callback til merchant
+### PayNSync Merchant Integration Contract v1
 
-- Når alle betalinger er captured, sender `MerchantCallbackService` en HTTP POST til `Merchant.GroupOrderUrl`.
-- Payload indeholder `orderId`, `merchantId`, `status: "Paid"` og liste af deltagerresultater.
-- Callback-fejl stopper **ikke** flowet — betalingerne er allerede gennemført.
-- Hvis `Merchant.GroupOrderUrl` er null/tom, springes callback over.
+- Merchant skal i v1 tilpasse sig PayNSyncs standard **Group Order Contract**.
+- PayNSync understøtter ikke merchant-specifikke payload-mappinger i v1.
+- Merchant skal kunne sende deltagerens draft-ordre til PayNSync og modtage én final group order fra PayNSync.
+- PayNSync bør gemme normaliserede ordrelinjer og kan gemme merchantens originale JSON som `RawMerchantPayloadJson` til audit, debugging og fremtidige merchant adapters.
+- Merchant-specific adapters kan komme senere, men må ikke komplicere v1-kerneflowet.
+
+### Callback til merchant / final group order
+
+- Merchant-callback må **kun** sendes som endelig ordreaccept efter samlet successful capture.
+- Når alle betalinger er captured, sender `MerchantCallbackService` / `IMerchantOrderSender` én HTTP POST til `Merchant.GroupOrderUrl`.
+- Payload skal være PayNSyncs standard `GroupOrderPaid` contract.
+- Payload skal som minimum indeholde:
+  - `eventType = "GroupOrderPaid"`
+  - `paynsyncOrderId`
+  - `merchantId`
+  - `status = "Paid"`
+  - `currency`
+  - `totalAmount`
+  - `paidAtUtc`
+  - `participants[]` med deltagergrupperede ordrelinjer
+  - `paymentStatus = "Captured"` pr. deltager
+- Merchant må først lave/frigive ordren efter modtagelse af final group order med `status: "Paid"`.
+- Callback-fejl stopper **ikke** flowet — betalingerne er allerede gennemført. Fejl skal dog logges og kunne håndteres af support/drift.
+- Hvis `Merchant.GroupOrderUrl` er null/tom, springes callback over. Det bør kun være tilladt i dev/test eller ved merchants uden aktiv integration.
+- PayNSync må ikke sende endelig merchant-callback ved `OrderSubmitted`, `ReservationStarted` eller enkelt-deltager `Reserved`.
 
 ---
 
@@ -156,18 +251,22 @@ ReadyToPay → Completed          (legacy via /complete eller /pay)
 
 - **Idempotens:** hvis en ikke-cancelled, ikke-failed, ikke-expired `ParticipantPayment` allerede eksisterer for samme deltager+ordre, returneres den eksisterende uden nyt provider-kald.
 - Reservation startes **automatisk af `MerchantOrderService.InitOrderAsync`** umiddelbart efter draft er oprettet og `OrderParticipant.Status` sat til `OrderSubmitted`. Reservation kan også startes direkte via `POST /api/orders/{id}/reserve`.
+- Reservationen er en **deltager-godkendt reservation**, ikke en endelig betaling. Deltageren skal swipe/godkende i MobilePay/Vipps.
+- Et successful swipe/webhook må kun sætte den konkrete `ParticipantPayment` til `Reserved` og derefter tjekke, om hele ordren kan sættes til `ReadyToPay`.
 - Reservationsflow:
   1. Opret `ParticipantPayment` (status `Created`)
   2. Sæt temp `ProviderPaymentId = "pending-{id}"`, status → `ReservationStarted`
   3. Kald `IPaymentProvider.ReserveAsync`
-  4. Success: opdatér `ProviderPaymentId` med rigtigt provider-ID
+  4. Success: opdatér `ProviderPaymentId` med rigtigt provider-ID og returnér betalings-/redirect-information til deltageren
   5. Fake provider: sæt status → `Reserved` synkront
-  6. Rigtig provider: status forbliver `ReservationStarted` indtil webhook
-  7. Fejl/exception: status → `ReservationFailed`
+  6. Rigtig provider: status forbliver `ReservationStarted` indtil webhook fra Vipps/MobilePay
+  7. Webhook `AUTHORIZED`/`RESERVE`: status → `Reserved`
+  8. Fejl/exception: status → `ReservationFailed`
 
 ### Capture-regler
 
 - Kun host kan godkende (`requestingParticipantId == order.CreatedByParticipantId`).
+- Capture må først ske, når deltagerne allerede har godkendt deres reservationer i MobilePay/Vipps.
 - Ordren skal være i `ReadyToPay`, `HostApproved`, `Capturing` eller `PartiallyFailed` for at capture må starte.
 - Mindst én `Reserved` betaling skal eksistere — ellers fejler kaldet.
 - Rækkefølge:
@@ -178,6 +277,7 @@ ReadyToPay → Completed          (legacy via /complete eller /pay)
   5. Fejl/exception → `CaptureFailed` + ordre → `PartiallyFailed` + **stop loop**
 - Allerede `Captured` betalinger springes over (idempotens).
 - Alle captured → ordre → `Paid`.
+- Først når ordren er `Paid`, må PayNSync sende endelig samlet ordreaccept til merchant.
 
 ### Cancel-regler
 
@@ -253,7 +353,7 @@ Lookup sker på `ProviderPaymentId`. Ikke fundet → 404.
 
 | Vipps `Name`-felt (case-insensitiv) | Handling |
 |-------------------------------------|----------|
-| `"AUTHORIZED"` eller `"RESERVE"` | → `SetReservedAsync` |
+| `"AUTHORIZED"` eller `"RESERVE"` | → `SetReservedAsync` for den konkrete deltagerbetaling |
 | `"CAPTURED"` | Logger og ignorerer — ingen state-ændring (capture sker via vores eget `/approve`-flow) |
 | `"CANCELLED"` eller `"ABORTED"` | → `SetCancelledAsync` |
 | `"TERMINATED"` eller `"EXPIRED"` | → `SetReservationFailedAsync` (sætter `ReservationFailed`, **ikke** `Expired`) |
@@ -262,6 +362,8 @@ Lookup sker på `ProviderPaymentId`. Ikke fundet → 404.
 Lookup sker på `ProviderPaymentId` (svarer til `reference` i Vipps-callback).  
 Ikke fundet → returnerer **200 OK** (så Vipps ikke retrier).  
 Webhook-signatur valideres **ikke**.
+
+**Vigtig regel:** Vipps/MobilePay webhook må aldrig sende eller frigive den samlede ordre til merchant. Webhooken må kun opdatere betalingsstatus og eventuelt sætte ordren til `ReadyToPay`, hvis alle deltagerbetalinger er `Reserved`. Den endelige merchant-callback må kun ske efter host-godkendelse og successful capture.
 
 ---
 

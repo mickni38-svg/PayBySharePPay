@@ -1,3 +1,4 @@
+using Api.PayBySharePay.Services;
 using DataStorage.PayBySharePay.Context;
 using DataStorage.PayBySharePay.Entities;
 using Microsoft.AspNetCore.Mvc;
@@ -10,10 +11,12 @@ namespace Api.PayBySharePay.Controllers;
 public class DevController : ControllerBase
 {
     private readonly PayBySharePayDbContext _context;
+    private readonly ILastMerchantCallbackStore _callbackStore;
 
-    public DevController(PayBySharePayDbContext context)
+    public DevController(PayBySharePayDbContext context, ILastMerchantCallbackStore callbackStore)
     {
         _context = context;
+        _callbackStore = callbackStore;
     }
 
     /// <summary>
@@ -50,5 +53,21 @@ public class DevController : ControllerBase
 
         await _context.SaveChangesAsync();
         return Ok(new { updated = merchants.Count, url = merchantDemoUrl });
+    }
+
+    /// <summary>
+    /// DEV/TEST ONLY – returnerer den seneste GroupOrderPaid-payload sendt til merchant for en given ordre.
+    /// Bruges til at verificere final callback indhold uden et rigtigt merchant-endpoint.
+    /// </summary>
+    [HttpGet("merchant-callbacks/latest")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public IActionResult GetLatestMerchantCallback([FromQuery] int orderId)
+    {
+        var payload = _callbackStore.Get(orderId);
+        if (payload is null)
+            return NotFound(new { message = $"Ingen callback fundet for ordre {orderId}" });
+
+        return Ok(payload);
     }
 }

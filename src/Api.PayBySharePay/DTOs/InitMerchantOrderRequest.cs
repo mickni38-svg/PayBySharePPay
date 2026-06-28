@@ -8,9 +8,7 @@ public class InitMerchantOrderRequest
     [Range(1, int.MaxValue)]
     public int OrderId { get; set; }
 
-    [Required]
-    [Range(1, int.MaxValue)]
-    public int MerchantParticipantId { get; set; }
+    public int? MerchantParticipantId { get; set; }
 
     [Required]
     public string ParticipantToken { get; set; } = string.Empty;
@@ -27,6 +25,8 @@ public class InitMerchantOrderRequest
     public string Currency { get; set; } = "DKK";
     public string PaymentMode { get; set; } = "AuthorizeThenCapture";
     public DateTime? ExpiresAtUtc { get; set; }
+    public string? TestPhoneNumber { get; set; }
+    public string? RawMerchantPayloadJson { get; set; }
 
     public List<OrderLineRequest> Lines { get; set; } = new();
 }

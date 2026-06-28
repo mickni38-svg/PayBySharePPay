@@ -20,6 +20,7 @@ public interface IGroupPaymentOrchestrationService
         string currency,
         string returnUrl,
         string callbackUrl,
+        string? testPhoneNumber = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>

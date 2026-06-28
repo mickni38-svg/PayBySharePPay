@@ -4,6 +4,7 @@ namespace Service.PayBySharePay.DTOs;
 public sealed record ReserveParticipantPaymentResult(
     bool Success,
     int ParticipantPaymentId,
+    string? ProviderPaymentId,
     string? RedirectUrl,
     string? ErrorCode,
     string? ErrorMessage);

@@ -27,9 +27,10 @@ public sealed class GroupPaymentOrchestrationService(
         string currency,
         string returnUrl,
         string callbackUrl,
+        string? testPhoneNumber = null,
         CancellationToken cancellationToken = default)
     {
-        // Idempotens: find eksisterende ikke-cancelled betaling for denne deltager/ordre
+        // Idempotens: find eksisterende ikke-cancelled/failed/expired betaling for denne deltager/ordre
         var existing = (await paymentRepository.GetByOrderIdAsync(orderId))
             .FirstOrDefault(p => p.ParticipantId == participantId
                                  && p.Status != ParticipantPaymentStatus.Cancelled
@@ -38,13 +39,44 @@ public sealed class GroupPaymentOrchestrationService(
 
         if (existing != null)
         {
+            // Afvis hvis betaling allerede er Captured
+            if (existing.Status == ParticipantPaymentStatus.Captured)
+            {
+                logger.LogWarning(
+                    "[Orchestration] Re-submit afvist: ParticipantPayment {Id} er allerede Captured for Participant {ParticipantId}",
+                    existing.Id, participantId);
+                return new ReserveParticipantPaymentResult(
+                    Success: false,
+                    ParticipantPaymentId: existing.Id,
+                    ProviderPaymentId: existing.ProviderPaymentId,
+                    RedirectUrl: null,
+                    ErrorCode: "ALREADY_CAPTURED",
+                    ErrorMessage: "Betalingen er allerede gennemført og kan ikke ændres.");
+            }
+
+            // Returnér eksisterende info hvis allerede Reserved
+            if (existing.Status == ParticipantPaymentStatus.Reserved)
+            {
+                logger.LogInformation(
+                    "[Orchestration] Idempotent: ParticipantPayment {Id} er allerede Reserved for Participant {ParticipantId}",
+                    existing.Id, participantId);
+                return new ReserveParticipantPaymentResult(
+                    Success: true,
+                    ParticipantPaymentId: existing.Id,
+                    ProviderPaymentId: existing.ProviderPaymentId,
+                    RedirectUrl: null,
+                    ErrorCode: null,
+                    ErrorMessage: null);
+            }
+
+            // For andre ikke-afsluttede statuser (ReservationStarted, Created): returnér idempotent
             logger.LogInformation(
                 "[Orchestration] Idempotent reserve: ParticipantPayment {Id} already exists for Participant {ParticipantId} on Order {OrderId}, Status={Status}",
                 existing.Id, participantId, orderId, existing.Status);
-
             return new ReserveParticipantPaymentResult(
                 Success: true,
                 ParticipantPaymentId: existing.Id,
+                ProviderPaymentId: existing.ProviderPaymentId,
                 RedirectUrl: null,
                 ErrorCode: null,
                 ErrorMessage: null);
@@ -58,6 +90,9 @@ public sealed class GroupPaymentOrchestrationService(
 
         var idempotencyKey = $"reserve-{payment.Id}-{orderId}-{participantId}";
 
+        // Callback URL bruger den faktiske ParticipantPaymentId — ignorerer hvad caller angiver
+        var resolvedCallbackUrl = $"{callbackUrl.TrimEnd('/')}/{payment.Id}";
+
         var request = new ReservePaymentRequest(
             GroupPaymentId: orderId.ToString(),
             ParticipantPaymentId: payment.Id.ToString(),
@@ -66,11 +101,11 @@ public sealed class GroupPaymentOrchestrationService(
             Currency: currency,
             Description: $"Gruppebetaling ordre #{orderId}",
             ReturnUrl: returnUrl,
-            CallbackUrl: callbackUrl,
-            IdempotencyKey: idempotencyKey);
+            CallbackUrl: resolvedCallbackUrl,
+            IdempotencyKey: idempotencyKey,
+            TestPhoneNumber: testPhoneNumber);
 
-        // Sæt ReservationStarted — gemmer providerPaymentId på entiteten
-        // Vi bruger et temp-id indtil vi får svar fra provider
+        // Sæt ReservationStarted med et temp-id indtil vi får svar fra provider
         var tempProviderId = $"pending-{payment.Id}";
         await stateService.SetReservationStartedAsync(payment.Id, tempProviderId, idempotencyKey, cancellationToken);
 
@@ -83,13 +118,13 @@ public sealed class GroupPaymentOrchestrationService(
         {
             logger.LogError(ex, "[Orchestration] ReserveAsync threw for ParticipantPayment {Id}", payment.Id);
             await stateService.SetReservationFailedAsync(payment.Id, "EXCEPTION", ex.Message, idempotencyKey, cancellationToken);
-            return new ReserveParticipantPaymentResult(false, payment.Id, null, "EXCEPTION", ex.Message);
+            return new ReserveParticipantPaymentResult(false, payment.Id, null, null, "EXCEPTION", ex.Message);
         }
 
         if (!result.Success)
         {
             await stateService.SetReservationFailedAsync(payment.Id, result.ErrorCode, result.ErrorMessage, idempotencyKey, cancellationToken);
-            return new ReserveParticipantPaymentResult(false, payment.Id, null, result.ErrorCode, result.ErrorMessage);
+            return new ReserveParticipantPaymentResult(false, payment.Id, null, null, result.ErrorCode, result.ErrorMessage);
         }
 
         // Opdater providerPaymentId med det rigtige id fra provider
@@ -111,6 +146,7 @@ public sealed class GroupPaymentOrchestrationService(
         return new ReserveParticipantPaymentResult(
             Success: true,
             ParticipantPaymentId: payment.Id,
+            ProviderPaymentId: result.ProviderPaymentId,
             RedirectUrl: result.RedirectUrl,
             ErrorCode: null,
             ErrorMessage: null);
@@ -143,8 +179,11 @@ public sealed class GroupPaymentOrchestrationService(
             throw new InvalidOperationException($"Ordren kan ikke godkendes i status '{order.Status}'. Alle deltagere skal have indsendt bestilling.");
 
         var payments = (await paymentRepository.GetByOrderIdAsync(orderId)).ToList();
+
+        // Doc 05: inkludér CaptureFailed i retry-puljen
         var reservedPayments = payments
-            .Where(p => p.Status == ParticipantPaymentStatus.Reserved)
+            .Where(p => p.Status == ParticipantPaymentStatus.Reserved
+                        || p.Status == ParticipantPaymentStatus.CaptureFailed)
             .ToList();
 
         if (reservedPayments.Count == 0)
@@ -272,7 +311,15 @@ public sealed class GroupPaymentOrchestrationService(
 
             logger.LogInformation("[Orchestration] All payments captured. Order {OrderId} → Paid", orderId);
 
-            await SendMerchantCallbackAsync(order, captureResults, cancellationToken);
+            try
+            {
+                await SendMerchantCallbackAsync(order, captureResults, payments, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "[Orchestration] Merchant callback fejlede for Order {OrderId}. Ordre forbliver Paid.", orderId);
+                // Callback-fejl ruller ikke betalingen tilbage
+            }
         }
 
         return new ApproveAndCaptureResult
@@ -412,21 +459,65 @@ public sealed class GroupPaymentOrchestrationService(
     private async Task SendMerchantCallbackAsync(
         DataStorage.PayBySharePay.Entities.Order order,
         List<ParticipantCaptureResult> captureResults,
+        List<DataStorage.PayBySharePay.Entities.ParticipantPayment> allPayments,
         CancellationToken cancellationToken)
     {
         var callbackUrl = order.MerchantParticipant?.GroupOrderUrl;
-        var merchantId = order.MerchantParticipant?.Id.ToString();
 
-        await merchantCallbackService.SendPaidCallbackAsync(
-            orderId: order.Id,
-            callbackUrl: callbackUrl,
-            merchantId: merchantId,
-            participantOrders: captureResults.Select(r => new MerchantCallbackParticipantOrder
+        // Byg deltager-sektion: ét element pr. captured deltager
+        var participants = captureResults
+            .Where(r => r.Success)
+            .Select(r =>
             {
-                ParticipantId = r.ParticipantId,
-                Success = r.Success,
-                ProviderTransactionId = r.ProviderCaptureId
-            }),
+                var payment = allPayments.FirstOrDefault(p => p.ParticipantId == r.ParticipantId);
+
+                // Find drafts og lines for denne deltager
+                var draft = order.MerchantOrderDrafts
+                    .FirstOrDefault(d => d.ParticipantId == r.ParticipantId);
+
+                var lines = (draft?.Lines ?? Enumerable.Empty<DataStorage.PayBySharePay.Entities.MerchantOrderLine>())
+                    .Select(l => new PayNSyncFinalOrderLineDto
+                    {
+                        Sku = l.LineId,
+                        Name = l.Name,
+                        Quantity = l.Quantity,
+                        UnitPrice = l.UnitPrice,
+                        LineTotal = l.LineTotal
+                    }).ToList();
+
+                var participantName = order.OrderParticipants
+                    .FirstOrDefault(op => op.ParticipantId == r.ParticipantId)
+                    ?.Participant.Name ?? r.ParticipantName;
+
+                return new PayNSyncFinalParticipantOrderDto
+                {
+                    ParticipantId = r.ParticipantId,
+                    DisplayName = participantName,
+                    Amount = payment != null ? payment.AmountMinorUnits / 100m : 0m,
+                    PaymentStatus = "Captured",
+                    ProviderPaymentId = payment?.ProviderPaymentId,
+                    MerchantDraftId = draft?.MerchantDraftReference,
+                    Lines = lines
+                };
+            }).ToList();
+
+        var totalAmount = participants.Sum(p => p.Amount);
+
+        var payload = new PayNSyncFinalGroupOrderDto
+        {
+            EventType = "GroupOrderPaid",
+            PaynsyncOrderId = order.Id,
+            MerchantId = order.MerchantParticipantId,
+            Status = "Paid",
+            Currency = allPayments.FirstOrDefault()?.Currency ?? "DKK",
+            TotalAmount = totalAmount,
+            PaidAtUtc = DateTime.UtcNow,
+            Participants = participants
+        };
+
+        await merchantCallbackService.SendGroupOrderPaidAsync(
+            payload: payload,
+            callbackUrl: callbackUrl,
             cancellationToken: cancellationToken);
     }
 }

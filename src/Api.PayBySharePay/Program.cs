@@ -16,10 +16,15 @@ var builder = WebApplication.CreateBuilder(args);
 // Indlæs miljøspecifik konfiguration (fx appsettings.Test.json) hvis den findes
 builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true);
 
+// Indlæs lokal override (aldrig committed til git — indeholder lokale secrets/nøgler)
+builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
+
 builder.Services.AddControllers();
 
 // ── HttpClient til udgående kald (merchant callbacks) ────────────────────────
 builder.Services.AddHttpClient("MerchantCallback");
+builder.Services.AddSingleton<Api.PayBySharePay.Services.ILastMerchantCallbackStore,
+    Api.PayBySharePay.Services.InMemoryLastMerchantCallbackStore>();
 builder.Services.AddScoped<Service.PayBySharePay.Interfaces.IMerchantCallbackService,
     Api.PayBySharePay.Services.MerchantCallbackService>();
 

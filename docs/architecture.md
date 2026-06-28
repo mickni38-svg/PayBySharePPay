@@ -177,7 +177,8 @@ Alle services registreres som `Scoped` via `AddServiceLayer()`.
 
 **`OrderService`**  
 Opretter ordrer, tildeler deltagere, genererer `JoinToken` + `ParticipantToken` pr. `OrderParticipant`, sender merchant-links via `Message`-records.  
-Ejer `CheckAndSetReadyToPayAsync`: sætter ordre til `ReadyToPay` når alle ikke-merchant deltagere har status `OrderSubmitted`.
+`OrderSubmitted` betyder kun, at deltagerens ordrelinjer er gemt hos PayNSync. Det må **ikke** alene sætte ordren til `ReadyToPay`.  
+`ReadyToPay` må først sættes, når alle ikke-merchant deltagere har en `ParticipantPayment` med status `Reserved`, dvs. alle har swipet/godkendt deres MobilePay/Vipps-reservation.
 
 **`GroupPaymentOrchestrationService`**  
 Central betalingsorkestrering. Alle `IPaymentProvider`-kald sker herfra. Håndterer idempotens, ordre-statusmaskine og fejlhåndtering pr. capture.
@@ -197,7 +198,9 @@ ReservationFailed, Cancelled, Expired, Refunded → (terminal)
 ```
 
 **`MerchantOrderService`**  
-Modtager merchant draft (anonym). Validerer `ParticipantToken`, opretter `MerchantOrderDraft` + linjer, sætter `OrderParticipant.Status = "OrderSubmitted"`, kalder `CheckAndSetReadyToPayAsync`.
+Modtager merchant draft (anonym). Validerer `ParticipantToken`, opretter `MerchantOrderDraft` + linjer og sætter `OrderParticipant.Status = "OrderSubmitted"`. Derefter starter PayNSync reservationsflowet for deltageren via `ReserveParticipantPaymentAsync()` / `IPaymentProvider.ReserveAsync()`.
+
+Vigtigt: `MerchantOrderService` må ikke frigive ordren til merchant, og `OrderSubmitted` må ikke gøre gruppeordren `ReadyToPay`. Det sker først, når alle deltageres betalinger er `Reserved`.
 
 **`PaymentService`** (legacy)  
 Opretter `Payment`-record og sender host-notifikation. Bruges af det gamle manuelle betalingsflow.
@@ -287,11 +290,84 @@ Token-endpoint: `{BaseUrl}/accesstoken/get` (headers: `client_id`, `client_secre
 **Vipps Reserve-kald:**  
 `POST {BaseUrl}/epayment/v1/payments`  
 Body: `amount`, `paymentMethod: { type: "WALLET" }`, `reference`, `userFlow: "WEB_REDIRECT"`, `returnUrl`, `webhookUrl`, `paymentDescription`.  
-Webhook URL konstrueres som: `{CallbackBaseUrl}/api/payments/vipps/callbacks/{ParticipantPaymentId}`.
+Webhook URL bør pege på PayNSyncs offentlige webhook endpoint, fx `{CallbackBaseUrl}/api/payments/vipps/callbacks`. Payment lookup bør ske via Vipps `reference` / `ProviderPaymentId` i payloaden frem for telefonnummer.
 
 ---
 
 ## Eksterne integrationer
+
+
+## Merchant Demo og MobilePay/Vipps redirect-flow
+
+Merchant Demo er en statisk HTML/JS-demo og skal ikke indeholde Vipps/MobilePay credentials eller kalde Vipps API direkte.
+
+Ansvarsdeling:
+
+```text
+Frontend.MerchantDemo
+  - viser menu/kurv
+  - læser orderId + participantToken fra link
+  - sender draft-ordre til PayNSync API
+  - modtager redirectUrl
+  - redirecter brugeren til Vipps/MobilePay approval flow
+
+Api/Service/Infrastructure
+  - gemmer merchant draft
+  - opretter ParticipantPayment
+  - kalder Vipps/MobilePay ePayment API
+  - returnerer redirectUrl
+  - modtager webhook
+  - opdaterer status til Reserved
+  - capturer senere via host approve
+```
+
+Merchant Demo må ikke:
+
+```text
+- hente access token
+- kalde /accesstoken/get
+- kalde /epayment/v1/payments direkte
+- gemme client_id/client_secret/subscription key
+- håndtere webhook-signaturer
+- capture betalinger
+```
+
+### Merchant Demo reservation-start flow
+
+```
+Deltager klikker "Bekræft ordre og reservér med MobilePay"
+  → Merchant Demo POST /api/merchant-orders
+  → MerchantOrderService.InitOrderAsync()
+  → MerchantOrderDraft + MerchantOrderLine gemmes
+  → ParticipantPayment oprettes/sættes ReservationStarted
+  → MobilePaySandboxPaymentProvider.ReserveAsync()
+  → Vipps/MobilePay create payment returnerer redirectUrl
+  ← PayNSync API returnerer redirectUrl til Merchant Demo
+  → Merchant Demo: window.location.href = redirectUrl
+  → Deltager swiper/godkender i MobilePay/Vipps app/test flow
+  → Vipps webhook til PayNSync
+  → ParticipantPayment.Status = Reserved
+```
+
+Response fra `POST /api/merchant-orders` bør derfor indeholde betalings-/redirect-information:
+
+```json
+{
+  "status": "ReservationStarted",
+  "orderId": 123,
+  "participantPaymentId": 456,
+  "providerPaymentId": "PNS-123-7-456",
+  "redirectUrl": "https://...",
+  "message": "Ordren er gemt. Godkend reservationen i MobilePay."
+}
+```
+
+### Testtelefonnummer
+
+I sandbox kan Merchant Demo midlertidigt sende et testtelefonnummer til PayNSync, eller PayNSync kan gemme testtelefonnummer på deltageren.
+
+Telefonnummeret må kun bruges ved oprettelse/start af payment i testflowet. Capture-loopet må aldrig bruge telefonnummer/MobilePay-id. Capture sker altid via `ParticipantPayment.ProviderPaymentId` / Vipps reference.
+
 
 ### Vipps MobilePay ePayment API
 
@@ -302,23 +378,121 @@ Webhook URL konstrueres som: `{CallbackBaseUrl}/api/payments/vipps/callbacks/{Pa
 | Auth | OAuth2 client credentials (client_id + client_secret + subscription key) |
 | Betaling endpoint | `/epayment/v1/payments` |
 | Token endpoint | `/accesstoken/get` |
-| Webhook ind mod os | `POST /api/payments/vipps/callbacks/{reference}` |
+| Webhook ind mod os | `POST /api/payments/vipps/callbacks` eller legacy `POST /api/payments/vipps/callbacks/{reference}`. Foretrukket lookup: Vipps `reference` / `ProviderPaymentId` i payload. |
 | Signatur-validering | ❌ Ikke implementeret |
 
-### Merchant callback (udgående)
+### PayNSync Merchant Integration Contract v1
 
-Efter alle betalinger er captured sender `MerchantCallbackService` en HTTP POST til `Merchant.GroupOrderUrl`:
+PayNSync v1 bruger én standardiseret **Group Order Contract** til merchant-integration. PayNSync forsøger ikke i v1 at tilpasse callback-payloads til hver merchants interne ordre-/POS-format.
+
+Arkitekturprincip:
+
+```
+Merchant draft JSON
+  → MerchantOrderService validerer ParticipantToken
+  → PayNSync gemmer normaliserede MerchantOrderDraft + MerchantOrderLine
+  → PayNSync gemmer evt. RawMerchantPayloadJson til audit/debug/fremtidige adapters
+  → PayNSync reserverer deltagerbetaling hos Vipps/MobilePay
+  → Når alle betalinger er Captured
+  → PayNSync bygger PayNSyncFinalGroupOrderDto
+  → GenericMerchantWebhookSender sender standard JSON til Merchant.GroupOrderUrl
+```
+
+V1-regel:
+
+> **Merchant mapper PayNSyncs standard JSON til sit eget ordre-/POS-system. Merchant-specific adapters er ikke en del af v1.**
+
+Foreslåede komponenter/DTOs:
+
+| Komponent | Ansvar |
+|-----------|--------|
+| `PayNSyncFinalGroupOrderDto` | Standardiseret final group order payload |
+| `PayNSyncFinalParticipantOrderDto` | Deltagergrupperet ordre med beløb, status og linjer |
+| `PayNSyncFinalOrderLineDto` | Normaliseret ordrelinje med sku/navn/quantity/pris |
+| `IMerchantOrderSender` | Interface for afsendelse af final group order |
+| `GenericMerchantWebhookSender` | V1-implementering der sender PayNSync-standard JSON til `Merchant.GroupOrderUrl` |
+| `RawMerchantPayloadJson` | Valgfrit felt på draft til at gemme merchantens originale JSON |
+
+Senere kan der tilføjes adapters uden at ændre kerneflowet:
+
+```
+PayNSyncFinalGroupOrderDto
+  → SticksSushiMerchantAdapter
+  → GasolineGrillMerchantAdapter
+  → RestaurantPosAdapter
+```
+
+### Merchant callback / final group order (udgående)
+
+Efter alle deltagerbetalinger er captured sender `MerchantCallbackService` / `IMerchantOrderSender` én HTTP POST til `Merchant.GroupOrderUrl`.
+
+Callbacken er **ikke** en almindelig statusbesked. Den er merchantens endelige ordreaccept og indeholder den samlede gruppeordre. Merchant må først lave/frigive ordren efter denne payload er modtaget med `status: "Paid"`.
+
+Eksempel på v1-standardpayload:
+
 ```json
 {
-  "orderId": 1,
-  "merchantId": "2",
+  "eventType": "GroupOrderPaid",
+  "paynsyncOrderId": 123,
+  "merchantId": 45,
   "status": "Paid",
-  "participantOrders": [
-	{ "participantId": 3, "status": "Paid", "providerTransactionId": "..." }
+  "currency": "DKK",
+  "totalAmount": 481.00,
+  "paidAtUtc": "2026-06-28T12:45:00Z",
+  "participants": [
+    {
+      "participantId": 7,
+      "displayName": "Michael",
+      "amount": 168.00,
+      "paymentStatus": "Captured",
+      "merchantDraftId": "draft-789",
+      "lines": [
+        {
+          "sku": "burger-01",
+          "name": "Burger",
+          "quantity": 1,
+          "unitPrice": 139.00,
+          "lineTotal": 139.00
+        },
+        {
+          "sku": "cola-01",
+          "name": "Cola",
+          "quantity": 1,
+          "unitPrice": 29.00,
+          "lineTotal": 29.00
+        }
+      ]
+    },
+    {
+      "participantId": 8,
+      "displayName": "Anna",
+      "amount": 224.00,
+      "paymentStatus": "Captured",
+      "merchantDraftId": "draft-790",
+      "lines": [
+        {
+          "sku": "pizza-01",
+          "name": "Pizza",
+          "quantity": 1,
+          "unitPrice": 189.00,
+          "lineTotal": 189.00
+        },
+        {
+          "sku": "water-01",
+          "name": "Danskvand",
+          "quantity": 1,
+          "unitPrice": 35.00,
+          "lineTotal": 35.00
+        }
+      ]
+    }
   ]
 }
 ```
-Fejl ignoreres (betalingerne er allerede gennemført).
+
+Fejl i merchant-callback stopper ikke capture-flowet, fordi betalingerne allerede er gennemført. Fejl skal dog logges tydeligt og kunne vises i drift/support, da merchant ellers ikke får ordren automatisk.
+
+Hvis `Merchant.GroupOrderUrl` er null/tom, springes callback over. Det bør kun være tilladt i dev/test eller for merchants uden aktiv integration.
 
 ---
 
@@ -399,6 +573,57 @@ GitHub Actions workflow: `.github/workflows/deploy-simply.yml` (manuel trigger �
 
 ## Data flows gennem systemet
 
+## Besluttet betalingsarkitektur for PayNSync v1
+
+PayNSync v1 følger model D / hybridmodellen:
+
+```text
+Merchant = menu, kurv, priser og ordrelinjer
+PayNSync = gruppeordre, participant tokens, reservation, status, capture og endelig accept
+Vipps/MobilePay = deltagerens betalingsgodkendelse
+```
+
+Merchant opretter **ikke** MobilePay/Vipps-betalingen i v1. Merchant sender en ordre-draft til PayNSync via `POST /api/merchant-orders`. PayNSync gemmer ordrelinjerne, opretter en `ParticipantPayment`, kalder `IPaymentProvider.ReserveAsync()` og sender deltageren videre til MobilePay/Vipps for at godkende reservationen.
+
+En MobilePay/Vipps-godkendelse fra én deltager må kun opdatere deltagerens betaling til `Reserved`. Den må aldrig sende/frigive den samlede ordre til merchant.
+
+Merchant-callback sker først efter dette samlede flow:
+
+```text
+Alle deltagere har Reserved
+  → Order.Status = ReadyToPay
+  → Host klikker Godkend samlet ordre
+  → PayNSync capturer alle reservationer
+  → Alle betalinger er Captured
+  → Order.Status = Paid
+  → MerchantCallbackService sender Paid callback til merchant
+```
+
+### Vigtig capture-regel
+
+Host-godkendelse starter **ikke** nye betalinger og bruger **ikke** deltagerens telefonnummer/MobilePay-id.
+
+Ved host-godkendelse looper PayNSync gennem eksisterende `ParticipantPayment`-records med status `Reserved` og kalder capture på hver betaling via dens `ProviderPaymentId` / Vipps reference.
+
+```text
+1 deltager = 1 MerchantOrderDraft
+1 deltager = 1 ParticipantPayment
+1 deltager = 1 Vipps/MobilePay reservation/reference
+1 gruppeordre = flere individuelle captures + 1 samlet merchant-callback
+```
+
+Eksempel:
+
+```text
+Michael 168 kr. → ProviderPaymentId PNS-123-7 → capture 168 kr.
+Anna    224 kr. → ProviderPaymentId PNS-123-8 → capture 224 kr.
+Peter    89 kr. → ProviderPaymentId PNS-123-9 → capture  89 kr.
+```
+
+Det er altså ikke ét samlet Vipps/MobilePay-beløb. PayNSync sender dog én samlet `Paid` callback til merchant, når alle individuelle captures er gennemført.
+
+---
+
 ### Flow 1: Bruger opretter gruppeordre
 
 ```
@@ -414,10 +639,11 @@ Angular (CreateOrderComponent)
 Angular navigerer til /orders/{id}
 ```
 
-### Flow 2: Deltager bestiller via merchant
+### Flow 2: Deltager bestiller via merchant og reserverer betaling
 
 ```
-Merchant Demo (index.html)
+Merchant Demo / rigtig merchant
+  → Deltager klikker "Bekræft min ordre" / "Gem ordre og reservér betaling"
   → POST /api/merchant-orders  [Anonymous]
   → MerchantOrdersController.InitOrder()
   → MerchantOrderService.InitOrderAsync()
@@ -425,13 +651,26 @@ Merchant Demo (index.html)
 	→ ParticipantRepository.GetByIdAsync()            [SQL]
 	→ DbContext.OrderParticipants (ParticipantToken)  [SQL]
 	→ MerchantOrderDraftRepository.AddAsync()         [SQL]
-	→ OrderService.CheckAndSetReadyToPayAsync()
-	  → Hvis alle OrderSubmitted: Order.Status = "ReadyToPay"  [SQL]
-	  → Opretter notifikations-Message til host                 [SQL]
-  ← MerchantOrderDraftDto
+	→ OrderParticipant.Status = "OrderSubmitted"     [SQL]
+	→ ReserveParticipantPaymentAsync()
+	  → Opret ParticipantPayment = Created            [SQL]
+	  → Status → ReservationStarted                   [SQL + PaymentEventLog]
+	  → IPaymentProvider.ReserveAsync()
+	    [Vipps: POST /epayment/v1/payments]
+	  → Returnér redirectUrl / MobilePay-flow til deltager
+  ← MerchantOrderDraftDto + betalings-/redirect-information
+
+Deltager swiper/godkender i MobilePay/Vipps
+  → Vipps webhook mod PayNSync
+  → ParticipantPayment.Status = Reserved
+  → PayNSync tjekker om alle ikke-merchant deltagere har ParticipantPayment.Status = Reserved
+  → Hvis alle Reserved: Order.Status = "ReadyToPay" + besked til host
+  → Hvis blot alle har OrderSubmitted, men ikke alle har Reserved: ordren forbliver Collecting/afventende
+
+Vigtigt: Merchant får ikke endelig ordre endnu. Merchant må kun vise, at deltagerens ordre er gemt og afventer resten af gruppen.
 ```
 
-### Flow 3: Host godkender betaling
+### Flow 3: Host godkender samlet ordre og PayNSync capturer betalinger
 
 ```
 Angular (OrderDetailComponent)
@@ -443,22 +682,26 @@ Angular (OrderDetailComponent)
 	→ ParticipantPaymentStateService.SetCapturePendingAsync()
 	  → PaymentEventLogRepository.AddAsync()              [SQL]
 	→ Order.Status = "Capturing"                          [SQL]
-	FOR EACH reserved payment:
-	  → IPaymentProvider.CaptureAsync()
+	FOR EACH reserved ParticipantPayment:
+	  → Brug payment.ProviderPaymentId / Vipps reference
+	  → IPaymentProvider.CaptureAsync(payment.ProviderPaymentId, payment.AmountMinorUnits)
 		[Fake: synkron success]
-		[Vipps: POST https://apitest.vipps.no/epayment/v1/payments/{id}/capture]
+		[Vipps: POST https://apitest.vipps.no/epayment/v1/payments/{reference}/capture]
 	  → ParticipantPaymentStateService.SetCapturedAsync() [SQL]
 	→ Order.Status = "Paid"                               [SQL]
 	→ MerchantCallbackService.SendPaidCallbackAsync()
-	  → POST {merchant.GroupOrderUrl}  [HTTP udgående]
+	  → POST {merchant.GroupOrderUrl} med samlet Paid/Accepted payload [HTTP udgående]
   ← ApproveAndCaptureResult
+
+Først her må merchant lave/frigive den samlede ordre.
 ```
 
 ### Flow 4: Vipps webhook
 
 ```
 Vipps MobilePay
-  → POST /api/payments/vipps/callbacks/{participantPaymentId}  [Anonymous]
+  → POST /api/payments/vipps/callbacks  [Anonymous]
+     eller legacy POST /api/payments/vipps/callbacks/{reference}
   → VippsCallbackController.VippsCallback()
 	→ ParticipantPaymentRepository.GetByProviderPaymentIdAsync()  [SQL]
 	Mapper Vipps event-navn:
@@ -479,3 +722,4 @@ Vipps MobilePay
 3. **CI/CD** — `deploy-simply.yml` er konfigureret til manuel deploy via `workflow_dispatch`. Ingen automatisk deploy ved push til `main`.
 4. **Angular environment-filer** — Tre filer: `environment.ts` (dev → `localhost:7007`), `environment.simply.ts` (prod → `https://api.paynsync.dk`), `environment.test.ts` (test). Konfigureres i `angular.json` via `fileReplacements`.
 5. **`DevController` i prod** — `DELETE /api/dev/reset` og `POST /api/dev/seed-merchant-urls` er deployet til produktion uden auth-beskyttelse.
+6. **ReadyToPay-implementering** — Hvis eksisterende kode stadig sætter `ReadyToPay` på baggrund af `OrderSubmitted`, skal den ændres. Fremadrettet må `ReadyToPay` kun sættes, når alle relevante `ParticipantPayment`-records er `Reserved`.

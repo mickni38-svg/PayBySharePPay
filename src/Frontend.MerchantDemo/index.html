@@ -148,9 +148,9 @@
 
   <div id="errorMsg"></div>
   <div id="result">
-    <div class="check">✅</div>
-    <h3>Bestilling sendt!</h3>
-    <p>Din bestilling er registreret i gruppen.<br>Du kan nu lukke denne side.</p>
+    <div class="check">⏳</div>
+    <h3>Reservation registreret</h3>
+    <p>Din bestilling er modtaget.<br>Beløbet reserveres, når alle har bestilt og værten godkender.</p>
   </div>
 
   <div id="menuSection">
@@ -215,27 +215,29 @@
     <div class="total-label">Valgt i alt</div>
     <div class="total-amount" id="totalDisplay">0 kr</div>
   </div>
-  <button id="payBtn" disabled onclick="submitOrder()">Gruppebetaling</button>
+  <button id="payBtn" disabled onclick="submitOrder()">Bekræft ordre og reservér betaling</button>
+</div>
+
+<div id="paymentExplanation" style="max-width:520px;margin:0 auto;padding:8px 16px 80px;font-size:0.82rem;color:#555;text-align:center;">
+  Du bliver sendt til MobilePay for at godkende en reservation.<br>
+  Beløbet trækkes først, når alle i gruppen har bestilt, og værten godkender den samlede ordre.
 </div>
 
 <script>
-  // Læs query params: ?orderId=1&merchantId=2&participantToken=abc123&api=...
+  // Læs query params: ?orderId=1&participantToken=abc123&testPhoneNumber=63550321
   const params = new URLSearchParams(window.location.search);
   const orderId = parseInt(params.get('orderId')) || null;
-  const merchantId = parseInt(params.get('merchantId')) || null;
   const participantToken = params.get('participantToken') || null;
 
   // API base URL – vælg automatisk baseret på hostname
-  // Lokal: localhost / 127.0.0.1
-  // TEST:  brave-flower-0026a7503.7.azurestaticapps.net
   const hostname = window.location.hostname;
   const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
   const API_BASE = isLocal
     ? 'http://localhost:5071'
-    : 'https://paybysharepay-api.azurewebsites.net';
+    : 'https://api.paynsync.dk';
 
   document.getElementById('groupLabel').textContent =
-    orderId ? `Ordre #${orderId}` : 'Mangler orderId i URL (brug ?orderId=X&merchantId=Y&participantToken=Z)';
+    orderId ? `Ordre #${orderId}` : 'Mangler orderId i URL (brug ?orderId=X&participantToken=Y)';
 
   function toggle(row) {
     const cb = row.querySelector('input[type=checkbox]');
@@ -270,19 +272,21 @@
     });
 
     const total = selected.reduce((s, l) => s + l.lineTotal, 0);
+    const testPhoneNumber = params.get('testPhoneNumber') || null;
 
     const body = {
       orderId: orderId,
-      merchantParticipantId: merchantId || 1,
       participantToken: participantToken || '',
       merchantDraftReference: 'ROMA-' + Date.now(),
       subtotalAmount: total,
       totalAmount: total,
       currency: 'DKK',
-      paymentMode: 'GroupPay',
+      paymentMode: 'AuthorizeThenCapture',
       expiresAtUtc: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       lines: selected
     };
+
+    if (testPhoneNumber) body.testPhoneNumber = testPhoneNumber;
 
     document.getElementById('payBtn').disabled = true;
     document.getElementById('payBtn').textContent = 'Sender...';
@@ -300,14 +304,24 @@
         throw new Error(err || res.statusText);
       }
 
+      const result = await res.json();
+
+      if (result.paymentRedirectUrl) {
+        window.location.href = result.paymentRedirectUrl;
+        return;
+      }
+
+      // Ingen redirectUrl (fx Fake provider) — vis bekræftelse
       document.getElementById('menuSection').style.display = 'none';
       document.getElementById('result').style.display = 'block';
       document.querySelector('.total-bar').style.display = 'none';
+      const expEl = document.getElementById('paymentExplanation');
+      if (expEl) expEl.style.display = 'none';
     } catch (e) {
       document.getElementById('errorMsg').textContent = '⚠️ Fejl: ' + e.message;
       document.getElementById('errorMsg').style.display = 'block';
       document.getElementById('payBtn').disabled = false;
-      document.getElementById('payBtn').textContent = 'Gruppebetaling';
+      document.getElementById('payBtn').textContent = 'Bekræft ordre og reservér betaling';
     }
   }
 </script>

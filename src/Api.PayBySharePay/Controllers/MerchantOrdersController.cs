@@ -19,12 +19,12 @@ public class MerchantOrdersController : ControllerBase
     }
 
     /// <summary>
-    /// Modtager ordredata fra merchant (fx ved klik på "Betal som gruppe").
-    /// Status sættes til Collecting. Ordre frigives ikke endnu.
+    /// Modtager ordredata fra merchant (fx ved klik på "Bekræft ordre og reservér betaling").
+    /// Gemmer draft, starter Vipps/MobilePay reservation og returnerer redirectUrl.
     /// </summary>
     [HttpPost]
     [AllowAnonymous]
-    [ProducesResponseType(typeof(MerchantOrderDraftDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(InitMerchantOrderResultDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> InitOrder([FromBody] InitMerchantOrderRequest request)
@@ -40,6 +40,8 @@ public class MerchantOrdersController : ControllerBase
             Currency = request.Currency,
             PaymentMode = request.PaymentMode,
             ExpiresAtUtc = request.ExpiresAtUtc,
+            TestPhoneNumber = request.TestPhoneNumber,
+            RawMerchantPayloadJson = request.RawMerchantPayloadJson,
             Lines = request.Lines.Select(l => new MerchantOrderLineDto
             {
                 LineId = l.LineId,
@@ -51,7 +53,13 @@ public class MerchantOrdersController : ControllerBase
         };
 
         var result = await _merchantOrderService.InitOrderAsync(dto);
-        return CreatedAtAction(nameof(GetByOrderId), new { orderId = result.OrderId }, result);
+
+        if (result.Status == "Failed")
+            return result.Message?.Contains("gennemført") == true
+                ? UnprocessableEntity(result)   // ALREADY_CAPTURED
+                : BadRequest(result);
+
+        return StatusCode(StatusCodes.Status201Created, result);
     }
 
     /// <summary>Henter merchant order draft for en given gruppebetaling</summary>

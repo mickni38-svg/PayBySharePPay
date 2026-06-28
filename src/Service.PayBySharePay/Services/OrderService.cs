@@ -375,4 +375,47 @@ public class OrderService : IOrderService
             await _orderRepository.SaveChangesAsync();
         }
     }
+
+    public async Task CheckAndSetReadyToPayByReservedAsync(int orderId, CancellationToken cancellationToken = default)
+    {
+        var order = await _orderRepository.GetByIdWithDetailsAsync(orderId)
+            ?? throw new KeyNotFoundException($"Ordre med id {orderId} findes ikke.");
+
+        // Kun relevant hvis ordren stadig er i Collecting (eller ReservationStarted-tilstand)
+        if (order.Status != "Collecting")
+            return;
+
+        var nonMerchantParticipants = order.OrderParticipants
+            .Where(op => op.Participant.Type != DataStorage.PayBySharePay.Entities.ParticipantType.Merchant)
+            .ToList();
+
+        if (nonMerchantParticipants.Count == 0)
+            return;
+
+        // Hent alle betalinger for ordren
+        var payments = (await _paymentRepository.GetByOrderIdAsync(orderId)).ToList();
+
+        // Alle non-merchant deltagere skal have en Reserved ParticipantPayment
+        var allReserved = nonMerchantParticipants.All(op =>
+            payments.Any(pp =>
+                pp.OrderId == orderId &&
+                pp.ParticipantId == op.ParticipantId &&
+                pp.Status == ParticipantPaymentStatus.Reserved));
+
+        if (!allReserved)
+            return;
+
+        order.Status = "ReadyToPay";
+
+        var ordreTitle = string.IsNullOrWhiteSpace(order.Title) ? order.Category ?? "ordre" : order.Title;
+        var overblikLink = $"{_frontendUrl}/orders";
+        order.Messages.Add(new Message
+        {
+            OrderId = order.Id,
+            ParticipantId = order.CreatedByParticipantId,
+            Content = $"✅ Alle har bestilt og reserveret betaling til '{ordreTitle}'. Du kan nu godkende den samlede ordre: {overblikLink}"
+        });
+
+        await _orderRepository.SaveChangesAsync();
+    }
 }

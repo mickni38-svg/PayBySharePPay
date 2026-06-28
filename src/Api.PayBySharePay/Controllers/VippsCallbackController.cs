@@ -21,15 +21,18 @@ public class VippsCallbackController : ControllerBase
 {
     private readonly IParticipantPaymentRepository _paymentRepository;
     private readonly IParticipantPaymentStateService _stateService;
+    private readonly IOrderService _orderService;
     private readonly ILogger<VippsCallbackController> _logger;
 
     public VippsCallbackController(
         IParticipantPaymentRepository paymentRepository,
         IParticipantPaymentStateService stateService,
+        IOrderService orderService,
         ILogger<VippsCallbackController> logger)
     {
         _paymentRepository = paymentRepository;
         _stateService = stateService;
+        _orderService = orderService;
         _logger = logger;
     }
 
@@ -41,7 +44,6 @@ public class VippsCallbackController : ControllerBase
     [HttpPost("callbacks/{reference}")]
     [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> VippsCallback(
         [FromRoute] string reference,
         [FromBody] VippsCallbackPayload payload,
@@ -54,8 +56,7 @@ public class VippsCallbackController : ControllerBase
         var payment = await _paymentRepository.GetByProviderPaymentIdAsync(reference);
         if (payment is null)
         {
-            _logger.LogWarning("[VippsCallback] Ingen betaling fundet for reference={Reference}", reference);
-            // Returner 200 så Vipps ikke retrier
+            _logger.LogWarning("[VippsCallback] Ingen betaling fundet for reference={Reference} — returnerer 200 for at undgå Vipps-retry", reference);
             return Ok();
         }
 
@@ -65,17 +66,29 @@ public class VippsCallbackController : ControllerBase
         {
             case "AUTHORIZED":
             case "RESERVE":
-                await _stateService.SetReservedAsync(payment.Id, correlationId);
+                await _stateService.SetReservedAsync(payment.Id, correlationId, cancellationToken);
+
+                // Tjek om alle deltagere nu er Reserved — sæt ordre ReadyToPay hvis ja
+                try
+                {
+                    await _orderService.CheckAndSetReadyToPayByReservedAsync(payment.OrderId, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex,
+                        "[VippsCallback] CheckAndSetReadyToPayByReservedAsync fejlede for ordre {OrderId} — betaling er stadig Reserved",
+                        payment.OrderId);
+                }
                 break;
 
             case "CAPTURED":
-                // Capture håndteres af vores eget flow — ingen state-ændring nødvendig her
-                _logger.LogInformation("[VippsCallback] Captured bekræftet for reference={Reference}", reference);
+                // Capture styres af vores eget approve-flow — ingen state-ændring her
+                _logger.LogInformation("[VippsCallback] CAPTURED bekræftet for reference={Reference} — ignoreres (capture håndteres af approve-flow)", reference);
                 break;
 
             case "CANCELLED":
             case "ABORTED":
-                await _stateService.SetCancelledAsync(payment.Id, correlationId);
+                await _stateService.SetCancelledAsync(payment.Id, correlationId, cancellationToken);
                 break;
 
             case "TERMINATED":
@@ -84,7 +97,8 @@ public class VippsCallbackController : ControllerBase
                     payment.Id,
                     payload.Name.ToUpperInvariant(),
                     $"Betaling {payload.Name.ToLower()} af Vipps MobilePay.",
-                    correlationId);
+                    correlationId,
+                    cancellationToken);
                 break;
 
             default:

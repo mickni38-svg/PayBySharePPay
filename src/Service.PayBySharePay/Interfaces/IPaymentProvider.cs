@@ -23,7 +23,8 @@ public sealed record ReservePaymentRequest(
     string Description,
     string ReturnUrl,
     string CallbackUrl,
-    string IdempotencyKey);
+    string IdempotencyKey,
+    string? TestPhoneNumber = null);
 
 public sealed record ReservePaymentResult(
     bool Success,

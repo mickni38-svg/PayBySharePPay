@@ -36,16 +36,20 @@ public class MerchantOrderService : IMerchantOrderService
         _apiBaseUrl = configuration["AppSettings:ApiBaseUrl"] ?? "http://localhost:5071";
     }
 
-    public async Task<MerchantOrderDraftDto> InitOrderAsync(InitMerchantOrderDto dto)
+    public async Task<InitMerchantOrderResultDto> InitOrderAsync(InitMerchantOrderDto dto)
     {
         var order = await _orderRepository.GetByIdWithDetailsAsync(dto.OrderId)
             ?? throw new KeyNotFoundException($"Ordre med id {dto.OrderId} findes ikke.");
 
-        var merchant = await _participantRepository.GetByIdAsync(dto.MerchantParticipantId)
-            ?? throw new KeyNotFoundException($"Merchant med id {dto.MerchantParticipantId} findes ikke.");
+        // Brug MerchantParticipantId fra request hvis angivet, ellers fra ordren
+        var merchantId = dto.MerchantParticipantId ?? order.MerchantParticipantId
+            ?? throw new InvalidOperationException("Ingen merchant tilknyttet ordren.");
+
+        var merchant = await _participantRepository.GetByIdAsync(merchantId)
+            ?? throw new KeyNotFoundException($"Merchant med id {merchantId} findes ikke.");
 
         if (merchant.Type != ParticipantType.Merchant)
-            throw new InvalidOperationException($"Deltager {dto.MerchantParticipantId} er ikke en merchant.");
+            throw new InvalidOperationException($"Deltager {merchantId} er ikke en merchant.");
 
         // Valider participantToken og find OrderParticipant
         var orderParticipant = await _db.OrderParticipants
@@ -71,7 +75,7 @@ public class MerchantOrderService : IMerchantOrderService
         var draft = new MerchantOrderDraft
         {
             OrderId = dto.OrderId,
-            MerchantParticipantId = dto.MerchantParticipantId,
+            MerchantParticipantId = merchantId,
             ParticipantId = orderParticipant.ParticipantId,
             MerchantDraftReference = dto.MerchantDraftReference,
             SubtotalAmount = dto.SubtotalAmount,
@@ -80,6 +84,7 @@ public class MerchantOrderService : IMerchantOrderService
             PaymentMode = dto.PaymentMode,
             Status = "Submitted",
             ExpiresAtUtc = dto.ExpiresAtUtc,
+            RawMerchantPayloadJson = dto.RawMerchantPayloadJson,
             Lines = dto.Lines.Select(l => new MerchantOrderLine
             {
                 LineId = l.LineId,
@@ -98,13 +103,11 @@ public class MerchantOrderService : IMerchantOrderService
         orderParticipant.Status = "OrderSubmitted";
         await _db.SaveChangesAsync();
 
-        // Tjek om alle deltagere har indsendt — sæt ReadyToPay hvis ja
-        await _orderService.CheckAndSetReadyToPayAsync(dto.OrderId);
-
-        // Start reservation hos betalingsudbyderen for denne deltager
+        // Start reservation hos betalingsudbyderen for denne deltager.
+        // ReadyToPay sættes IKKE her — det sker via webhook når betalingen er Reserved.
         var amountMinorUnits = (long)(draft.TotalAmount * 100);
-        var returnUrl = $"{_apiBaseUrl}/api/payment-callback/return?participantPaymentId=0";
-        var callbackUrl = $"{_apiBaseUrl}/api/payment-callback/webhook";
+        var returnUrl = $"{_apiBaseUrl}/payment-return";
+        var callbackBaseUrl = $"{_apiBaseUrl}/api/payments/vipps/callbacks";
 
         var reserveResult = await _orchestration.ReserveParticipantPaymentAsync(
             orderId: dto.OrderId,
@@ -113,11 +116,36 @@ public class MerchantOrderService : IMerchantOrderService
             amountMinorUnits: amountMinorUnits,
             currency: draft.Currency,
             returnUrl: returnUrl,
-            callbackUrl: callbackUrl);
+            callbackUrl: callbackBaseUrl,
+            testPhoneNumber: dto.TestPhoneNumber);
 
-        var draftDto = MapToDto(draft);
-        draftDto.PaymentRedirectUrl = reserveResult.Success ? reserveResult.RedirectUrl : null;
-        return draftDto;
+        if (!reserveResult.Success)
+        {
+            return new InitMerchantOrderResultDto
+            {
+                Status = "Failed",
+                OrderId = dto.OrderId,
+                ParticipantPaymentId = reserveResult.ParticipantPaymentId,
+                ProviderPaymentId = reserveResult.ProviderPaymentId,
+                PaymentRedirectUrl = null,
+                Message = reserveResult.ErrorCode == "ALREADY_CAPTURED"
+                    ? reserveResult.ErrorMessage
+                    : $"Reservation mislykkedes: {reserveResult.ErrorMessage}"
+            };
+        }
+
+        var status = reserveResult.RedirectUrl != null ? "ReservationStarted" : "Reserved";
+        return new InitMerchantOrderResultDto
+        {
+            Status = status,
+            OrderId = dto.OrderId,
+            ParticipantPaymentId = reserveResult.ParticipantPaymentId,
+            ProviderPaymentId = reserveResult.ProviderPaymentId,
+            PaymentRedirectUrl = reserveResult.RedirectUrl,
+            Message = reserveResult.RedirectUrl != null
+                ? "Ordren er gemt. Godkend reservationen i MobilePay."
+                : "Ordren er gemt. Betaling reserveret."
+        };
     }
 
     public async Task<MerchantOrderDraftDto?> GetByOrderIdAsync(int orderId)

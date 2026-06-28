@@ -30,5 +30,8 @@ public class MerchantOrderDraft
     public DateTime? ExpiresAtUtc { get; set; }
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
+    /// <summary>Rå JSON fra merchant-ordren, til auditing og debugging.</summary>
+    public string? RawMerchantPayloadJson { get; set; }
+
     public ICollection<MerchantOrderLine> Lines { get; set; } = new List<MerchantOrderLine>();
 }

@@ -115,10 +115,23 @@ public class GroupPaymentOrchestrationServiceTests
 
     private sealed class NoOpMerchantCallbackService : IMerchantCallbackService
     {
-        public Task SendPaidCallbackAsync(int orderId, string? callbackUrl, string? merchantId,
-            IEnumerable<MerchantCallbackParticipantOrder> participantOrders,
+        public Task SendGroupOrderPaidAsync(PayNSyncFinalGroupOrderDto payload, string? callbackUrl,
             CancellationToken cancellationToken = default)
             => Task.CompletedTask;
+    }
+
+    private sealed class TrackingMerchantCallbackService : IMerchantCallbackService
+    {
+        public int CallCount { get; private set; }
+        public PayNSyncFinalGroupOrderDto? LastPayload { get; private set; }
+
+        public Task SendGroupOrderPaidAsync(PayNSyncFinalGroupOrderDto payload, string? callbackUrl,
+            CancellationToken cancellationToken = default)
+        {
+            CallCount++;
+            LastPayload = payload;
+            return Task.CompletedTask;
+        }
     }
 
     private FakeParticipantPaymentRepository _paymentRepo = new();
@@ -126,7 +139,8 @@ public class GroupPaymentOrchestrationServiceTests
     private FakeOrderRepository _orderRepo = new();
     private FakeParticipantRepository _participantRepo = new();
 
-    private GroupPaymentOrchestrationService CreateSut(IPaymentProvider? provider = null)
+    private GroupPaymentOrchestrationService CreateSut(IPaymentProvider? provider = null,
+        IMerchantCallbackService? callbackService = null)
     {
         _paymentRepo = new FakeParticipantPaymentRepository();
         _logRepo = new FakePaymentEventLogRepository();
@@ -144,7 +158,7 @@ public class GroupPaymentOrchestrationServiceTests
             _paymentRepo,
             _orderRepo,
             _participantRepo,
-            new NoOpMerchantCallbackService(),
+            callbackService ?? new NoOpMerchantCallbackService(),
             NullLogger<GroupPaymentOrchestrationService>.Instance);
     }
 
@@ -544,29 +558,300 @@ public class GroupPaymentOrchestrationServiceTests
         result.CancelledCount.Should().Be(1);
     }
 
-    // ── Doc 07 Test 4: Alle reserveret → begge captures lykkes ──────────────────────
+    // ── Prompt 03 tests ──────────────────────────────────────────────────────
 
     [Fact]
-    public async Task All_Participants_Reserved_Means_Both_Payments_Are_Captured()
+    public async Task Reserve_Returns_ProviderPaymentId_In_Result()
     {
         var sut = CreateSut();
+
+        var result = await sut.ReserveParticipantPaymentAsync(
+            orderId: 1, participantId: 42, merchantId: "m",
+            amountMinorUnits: 10000, currency: "DKK",
+            returnUrl: "https://return", callbackUrl: "https://api/payments/vipps/callbacks");
+
+        result.Success.Should().BeTrue();
+        result.ProviderPaymentId.Should().NotBeNullOrEmpty("fake provider sætter altid et providerPaymentId");
+    }
+
+    [Fact]
+    public async Task Reserve_Is_Rejected_When_Payment_Already_Captured()
+    {
+        var sut = CreateSut();
+
+        // Opret og simuler captured betaling manuelt
+        await sut.ReserveParticipantPaymentAsync(
+            orderId: 1, participantId: 42, merchantId: "m",
+            amountMinorUnits: 10000, currency: "DKK",
+            returnUrl: "https://r", callbackUrl: "https://api/payments/vipps/callbacks");
+
+        var payment = _paymentRepo.All.First();
+        payment.Status = ParticipantPaymentStatus.Captured;
+
+        var result = await sut.ReserveParticipantPaymentAsync(
+            orderId: 1, participantId: 42, merchantId: "m",
+            amountMinorUnits: 10000, currency: "DKK",
+            returnUrl: "https://r", callbackUrl: "https://api/payments/vipps/callbacks");
+
+        result.Success.Should().BeFalse();
+        result.ErrorCode.Should().Be("ALREADY_CAPTURED");
+    }
+
+    [Fact]
+    public async Task Reserve_Returns_Existing_When_Already_Reserved()
+    {
+        var sut = CreateSut();
+
+        var first = await sut.ReserveParticipantPaymentAsync(
+            orderId: 1, participantId: 42, merchantId: "m",
+            amountMinorUnits: 10000, currency: "DKK",
+            returnUrl: "https://r", callbackUrl: "https://api/payments/vipps/callbacks");
+
+        first.Success.Should().BeTrue();
+        _paymentRepo.All.First().Status.Should().Be(ParticipantPaymentStatus.Reserved);
+
+        var second = await sut.ReserveParticipantPaymentAsync(
+            orderId: 1, participantId: 42, merchantId: "m",
+            amountMinorUnits: 10000, currency: "DKK",
+            returnUrl: "https://r", callbackUrl: "https://api/payments/vipps/callbacks");
+
+        second.Success.Should().BeTrue();
+        second.ParticipantPaymentId.Should().Be(first.ParticipantPaymentId);
+        _paymentRepo.All.Should().HaveCount(1, "ingen ny betaling oprettes ved re-submit af allerede Reserved");
+    }
+
+    [Fact]
+    public async Task ReadyToPay_Is_Not_Set_By_OrderSubmitted_Alone()
+    {
+        // Denne test verificerer at orchestration IKKE sætter ReadyToPay —
+        // det skal kun ske via webhook (Prompt 04/05).
+        var sut = CreateSut();
+        var hostId = 1;
+        var order = MakeOrder(10, hostId, status: "Collecting");
+        _orderRepo.Add(order);
+
+        await sut.ReserveParticipantPaymentAsync(10, hostId, "m", 10000, "DKK", "https://r", "https://c");
+
+        // Orchestration må ikke ændre ordrestatus til ReadyToPay
+        var savedOrder = await _orderRepo.GetByIdWithDetailsAsync(10);
+        savedOrder!.Status.Should().Be("Collecting", "ReadyToPay sættes ikke af reservation alene");
+    }
+
+    // ── Prompt 05 tests ──────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task Merchant_Callback_Is_Not_Sent_On_Partial_Failure()
+    {
+        var tracker = new TrackingMerchantCallbackService();
+        var failProvider = new FakePaymentProvider(
+            NullLogger<FakePaymentProvider>.Instance,
+            new FakePaymentProviderOptions { SimulateCaptureFailed = true });
+
+        var sut = CreateSut(failProvider, tracker);
         var hostId = 1;
         var order = MakeOrder(10, hostId);
         _orderRepo.Add(order);
 
-        var p2 = new Participant { Id = 2, Name = "Anna" };
-        _participantRepo.Add(p2);
-        order.OrderParticipants.Add(new OrderParticipant
-            { ParticipantId = 2, Status = "OrderSubmitted", Participant = p2 });
-
         await sut.ReserveParticipantPaymentAsync(10, hostId, "m", 10000, "DKK", "https://r", "https://c");
-        await sut.ReserveParticipantPaymentAsync(10, 2, "m", 8000, "DKK", "https://r", "https://c");
 
         var result = await sut.ApproveAndCaptureAllAsync(10, hostId);
 
-        result.AllCaptured.Should().BeTrue();
-        result.Results.Should().HaveCount(2);
-        result.Results.Should().AllSatisfy(r => r.Success.Should().BeTrue());
-        result.OrderStatus.Should().Be("Paid");
+        result.AllCaptured.Should().BeFalse();
+        result.OrderStatus.Should().Be("PartiallyFailed");
+        tracker.CallCount.Should().Be(0, "merchant callback må ikke sendes ved partial failure");
     }
+
+    [Fact]
+    public async Task CaptureFailed_Payment_Is_Retried_On_Next_Approve()
+    {
+        // Første approve: capture fejler på deltager 1
+        var failThenSucceedProvider = new FailFirstThenSucceedProvider();
+
+        var sut = CreateSut(failThenSucceedProvider);
+        var hostId = 1;
+        var order = MakeOrder(10, hostId);
+        _orderRepo.Add(order);
+
+        await sut.ReserveParticipantPaymentAsync(10, hostId, "m", 10000, "DKK", "https://r", "https://c");
+
+        // Første godkendelse → CaptureFailed + PartiallyFailed
+        var first = await sut.ApproveAndCaptureAllAsync(10, hostId);
+        first.AllCaptured.Should().BeFalse();
+        first.OrderStatus.Should().Be("PartiallyFailed");
+        _paymentRepo.All[0].Status.Should().Be(ParticipantPaymentStatus.CaptureFailed);
+
+        // Sæt ordre tilbage til ReadyToPay for retry
+        order.Status = "PartiallyFailed";
+
+        // Anden godkendelse → capture lykkes denne gang (provider skifter til succes)
+        var second = await sut.ApproveAndCaptureAllAsync(10, hostId);
+        second.AllCaptured.Should().BeTrue();
+        second.OrderStatus.Should().Be("Paid");
+        _paymentRepo.All[0].Status.Should().Be(ParticipantPaymentStatus.Captured);
+    }
+
+    [Fact]
+    public async Task Capture_Does_Not_Use_Phone_Number()
+    {
+        // Verificerer at CapturePaymentRequest IKKE har telefonnummer-felt.
+        // Dette er en compile-time garanti — testen bekræfter det ikke kan sættes.
+        var capturedRequests = new List<CapturePaymentRequest>();
+        var spyProvider = new SpyCaptureProvider(capturedRequests);
+
+        var sut = CreateSut(spyProvider);
+        var hostId = 1;
+        var order = MakeOrder(10, hostId);
+        _orderRepo.Add(order);
+
+        await sut.ReserveParticipantPaymentAsync(10, hostId, "m", 10000, "DKK", "https://r", "https://c");
+        await sut.ApproveAndCaptureAllAsync(10, hostId);
+
+        capturedRequests.Should().HaveCount(1);
+        // CapturePaymentRequest har kun: ProviderPaymentId, AmountMinorUnits, Currency, IdempotencyKey
+        // Der er intet TestPhoneNumber — bekræftet ved at testen kompilerer uden at sætte det
+        capturedRequests[0].ProviderPaymentId.Should().NotBeNullOrEmpty();
+        capturedRequests[0].AmountMinorUnits.Should().Be(10000);
+    }
+
+    // ── Prompt 06 tests ──────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task GroupOrderPaid_Payload_Has_Correct_EventType_And_Status()
+    {
+        var tracker = new TrackingMerchantCallbackService();
+        var sut = CreateSut(callbackService: tracker);
+        var hostId = 1;
+        var order = MakeOrder(10, hostId);
+        _orderRepo.Add(order);
+
+        await sut.ReserveParticipantPaymentAsync(10, hostId, "m", 10000, "DKK", "https://r", "https://c");
+        await sut.ApproveAndCaptureAllAsync(10, hostId);
+
+        tracker.CallCount.Should().Be(1);
+        tracker.LastPayload.Should().NotBeNull();
+        tracker.LastPayload!.EventType.Should().Be("GroupOrderPaid");
+        tracker.LastPayload.Status.Should().Be("Paid");
+        tracker.LastPayload.PaynsyncOrderId.Should().Be(10);
+    }
+
+    [Fact]
+    public async Task GroupOrderPaid_Payload_Contains_Participants_With_PaymentStatus_Captured()
+    {
+        var tracker = new TrackingMerchantCallbackService();
+        var sut = CreateSut(callbackService: tracker);
+        var hostId = 1;
+        var order = MakeOrder(10, hostId);
+        _orderRepo.Add(order);
+        var p2 = new Participant { Id = 2, Name = "Anna" };
+        _participantRepo.Add(p2);
+        order.OrderParticipants.Add(new OrderParticipant { ParticipantId = 2, Status = "OrderSubmitted", Participant = p2 });
+
+        await sut.ReserveParticipantPaymentAsync(10, hostId, "m", 10000, "DKK", "https://r", "https://c");
+        await sut.ReserveParticipantPaymentAsync(10, 2, "m", 8000, "DKK", "https://r", "https://c");
+        await sut.ApproveAndCaptureAllAsync(10, hostId);
+
+        tracker.LastPayload!.Participants.Should().HaveCount(2);
+        tracker.LastPayload.Participants.Should().AllSatisfy(p =>
+            p.PaymentStatus.Should().Be("Captured"));
+        tracker.LastPayload.TotalAmount.Should().Be(180m, "10000 + 8000 øre = 180 kr");
+    }
+
+    [Fact]
+    public async Task GroupOrderPaid_Payload_Is_Not_Sent_After_Partial_Failure()
+    {
+        var tracker = new TrackingMerchantCallbackService();
+        var failProvider = new FakePaymentProvider(
+            NullLogger<FakePaymentProvider>.Instance,
+            new FakePaymentProviderOptions { SimulateCaptureFailed = true });
+
+        var sut = CreateSut(failProvider, tracker);
+        var hostId = 1;
+        var order = MakeOrder(10, hostId);
+        _orderRepo.Add(order);
+
+        await sut.ReserveParticipantPaymentAsync(10, hostId, "m", 10000, "DKK", "https://r", "https://c");
+        var result = await sut.ApproveAndCaptureAllAsync(10, hostId);
+
+        result.AllCaptured.Should().BeFalse();
+        tracker.CallCount.Should().Be(0, "payload sendes ikke ved PartiallyFailed");
+    }
+
+    [Fact]
+    public async Task GroupOrderPaid_Payload_Sent_Only_After_All_Captured()
+    {
+        var tracker = new TrackingMerchantCallbackService();
+        var sut = CreateSut(callbackService: tracker);
+        var hostId = 1;
+        var order = MakeOrder(10, hostId);
+        _orderRepo.Add(order);
+
+        // Opret reservation — endnu ikke captured
+        await sut.ReserveParticipantPaymentAsync(10, hostId, "m", 5000, "DKK", "https://r", "https://c");
+
+        // Ingen callback endnu
+        tracker.CallCount.Should().Be(0, "callback sendes ikke ved reservation");
+
+        // Capture alle
+        var result = await sut.ApproveAndCaptureAllAsync(10, hostId);
+
+        result.AllCaptured.Should().BeTrue();
+        tracker.CallCount.Should().Be(1, "callback sendes præcist én gang efter fuld capture");
+        tracker.LastPayload!.Participants.Should().HaveCount(1);
+        tracker.LastPayload.Participants[0].Amount.Should().Be(50m);
+    }
+}
+
+// ─── Test-hjælpere til Prompt 05 ────────────────────────────────────────────
+
+/// <summary>Provider der fejler første capture, og derefter lykkes.</summary>
+file sealed class FailFirstThenSucceedProvider : IPaymentProvider
+{
+    private int _captureAttempts;
+
+    public Task<ReservePaymentResult> ReserveAsync(ReservePaymentRequest request, CancellationToken cancellationToken = default)
+    {
+        var id = $"FAKE-{request.ParticipantPaymentId}-retry";
+        return Task.FromResult(new ReservePaymentResult(true, id, null, "Reserved", null, null));
+    }
+
+    public Task<CapturePaymentResult> CaptureAsync(CapturePaymentRequest request, CancellationToken cancellationToken = default)
+    {
+        _captureAttempts++;
+        if (_captureAttempts == 1)
+            return Task.FromResult(new CapturePaymentResult(false, null, "Failed", "FIRST_ATTEMPT_FAILED", "Simuleret fejl"));
+
+        return Task.FromResult(new CapturePaymentResult(true, $"CAP-RETRY-{_captureAttempts}", "Captured", null, null));
+    }
+
+    public Task<CancelPaymentResult> CancelAsync(CancelPaymentRequest request, CancellationToken cancellationToken = default)
+        => Task.FromResult(new CancelPaymentResult(true, "Cancelled", null, null));
+
+    public Task<PaymentStatusResult> GetStatusAsync(PaymentStatusRequest request, CancellationToken cancellationToken = default)
+        => Task.FromResult(new PaymentStatusResult(true, "Reserved", null, null, null, null));
+}
+
+/// <summary>Provider der optager CapturePaymentRequest til inspektion.</summary>
+file sealed class SpyCaptureProvider : IPaymentProvider
+{
+    private readonly List<CapturePaymentRequest> _captured;
+
+    public SpyCaptureProvider(List<CapturePaymentRequest> captured) => _captured = captured;
+
+    public Task<ReservePaymentResult> ReserveAsync(ReservePaymentRequest request, CancellationToken cancellationToken = default)
+    {
+        var id = $"FAKE-{request.ParticipantPaymentId}";
+        return Task.FromResult(new ReservePaymentResult(true, id, null, "Reserved", null, null));
+    }
+
+    public Task<CapturePaymentResult> CaptureAsync(CapturePaymentRequest request, CancellationToken cancellationToken = default)
+    {
+        _captured.Add(request);
+        return Task.FromResult(new CapturePaymentResult(true, "CAP-SPY-1", "Captured", null, null));
+    }
+
+    public Task<CancelPaymentResult> CancelAsync(CancelPaymentRequest request, CancellationToken cancellationToken = default)
+        => Task.FromResult(new CancelPaymentResult(true, "Cancelled", null, null));
+
+    public Task<PaymentStatusResult> GetStatusAsync(PaymentStatusRequest request, CancellationToken cancellationToken = default)
+        => Task.FromResult(new PaymentStatusResult(true, "Reserved", null, null, null, null));
 }

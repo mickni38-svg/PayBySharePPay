@@ -17,7 +17,7 @@ namespace DataStorage.PayBySharePay.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.16")
+                .HasAnnotation("ProductVersion", "9.0.17")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -81,6 +81,9 @@ namespace DataStorage.PayBySharePay.Migrations
 
                     b.Property<string>("PaymentMode")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RawMerchantPayloadJson")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Status")
