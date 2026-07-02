@@ -118,3 +118,9 @@ jobs:
           password: ${{ secrets.SIMPLY_FTP_PASSWORD }}
           local-dir: src/Frontend.MerchantDemo/
           server-dir: /merchant.paynsync.dk/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/package.json
+            **/package-lock.json
+            **/staticwebapp.config.json
