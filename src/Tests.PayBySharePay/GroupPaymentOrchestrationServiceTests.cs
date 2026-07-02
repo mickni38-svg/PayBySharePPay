@@ -162,14 +162,28 @@ public class GroupPaymentOrchestrationServiceTests
             NullLogger<GroupPaymentOrchestrationService>.Instance);
     }
 
+    private static Participant MakeFakeMerchant() => new()
+    {
+        Id = 999,
+        Type = DataStorage.PayBySharePay.Entities.ParticipantType.Merchant,
+        Name = "Test Merchant",
+        VippsMerchantSerialNumber = "TEST-MSN",
+        VippsClientId = "test-client-id",
+        VippsClientSecret = "test-client-secret",
+        VippsSubscriptionKey = "test-subscription-key"
+    };
+
     private static Order MakeOrder(int id, int hostId, string status = "ReadyToPay")
     {
+        var merchant = MakeFakeMerchant();
         var order = new Order
         {
             Id = id,
             CreatedByParticipantId = hostId,
             Title = "Test ordre",
             Status = status,
+            MerchantParticipantId = merchant.Id,
+            MerchantParticipant = merchant,
             OrderParticipants =
             [
                 new OrderParticipant
@@ -185,10 +199,19 @@ public class GroupPaymentOrchestrationServiceTests
 
     // ─── Reserve tests ───────────────────────────────────────────────────────
 
+    /// <summary>Opretter en ordre med merchant og tilføjer den til _orderRepo. Bruges i tests der kun tester reservation.</summary>
+    private Order SetupOrderWithMerchant(int orderId, int participantId)
+    {
+        var order = MakeOrder(orderId, participantId, status: "Collecting");
+        _orderRepo.Add(order);
+        return order;
+    }
+
     [Fact]
     public async Task ReserveParticipantPayment_Returns_Success_And_Creates_Payment()
     {
         var sut = CreateSut();
+        SetupOrderWithMerchant(orderId: 1, participantId: 42);
 
         var result = await sut.ReserveParticipantPaymentAsync(
             orderId: 1, participantId: 42, merchantId: "merchant-1",
@@ -209,6 +232,7 @@ public class GroupPaymentOrchestrationServiceTests
     public async Task ReserveParticipantPayment_Is_Idempotent_When_Called_Twice()
     {
         var sut = CreateSut();
+        SetupOrderWithMerchant(orderId: 1, participantId: 42);
 
         var first = await sut.ReserveParticipantPaymentAsync(
             orderId: 1, participantId: 42, merchantId: "m", amountMinorUnits: 10000,
@@ -564,6 +588,7 @@ public class GroupPaymentOrchestrationServiceTests
     public async Task Reserve_Returns_ProviderPaymentId_In_Result()
     {
         var sut = CreateSut();
+        SetupOrderWithMerchant(orderId: 1, participantId: 42);
 
         var result = await sut.ReserveParticipantPaymentAsync(
             orderId: 1, participantId: 42, merchantId: "m",
@@ -601,6 +626,7 @@ public class GroupPaymentOrchestrationServiceTests
     public async Task Reserve_Returns_Existing_When_Already_Reserved()
     {
         var sut = CreateSut();
+        SetupOrderWithMerchant(orderId: 1, participantId: 42);
 
         var first = await sut.ReserveParticipantPaymentAsync(
             orderId: 1, participantId: 42, merchantId: "m",

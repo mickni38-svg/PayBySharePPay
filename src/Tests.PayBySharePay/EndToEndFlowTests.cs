@@ -117,6 +117,17 @@ public class EndToEndFlowTests
         return (orchestration, orderService, stateService);
     }
 
+    private static Participant MakeFakeMerchant() => new()
+    {
+        Id = 999,
+        Type = ParticipantType.Merchant,
+        Name = "Test Merchant",
+        VippsMerchantSerialNumber = "TEST-MSN",
+        VippsClientId = "test-client-id",
+        VippsClientSecret = "test-client-secret",
+        VippsSubscriptionKey = "test-subscription-key"
+    };
+
     private Order MakeOrderWithTwoParticipants(int orderId, int hostId, int p2Id)
     {
         var host = new Participant { Id = hostId, Name = "Host", Type = ParticipantType.Person };
@@ -124,6 +135,7 @@ public class EndToEndFlowTests
         _participantRepo.Add(host);
         _participantRepo.Add(p2);
 
+        var merchant = MakeFakeMerchant();
         var order = new Order
         {
             Id = orderId,
@@ -131,6 +143,8 @@ public class EndToEndFlowTests
             Title = "Pizza aften",
             Status = "Collecting",
             Messages = [],
+            MerchantParticipantId = merchant.Id,
+            MerchantParticipant = merchant,
             OrderParticipants =
             [
                 new OrderParticipant { ParticipantId = hostId, Status = "Accepted", Participant = host },
