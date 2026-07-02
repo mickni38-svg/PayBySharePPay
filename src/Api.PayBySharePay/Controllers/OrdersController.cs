@@ -161,7 +161,8 @@ public class OrdersController : ControllerBase
     public async Task<IActionResult> PayOrder(int id, [FromBody] PayOrderRequest request)
     {
         // 1. Kald eksternt betalings-API (dummy → altid success)
-        var overview = await _orderService.GetOrderOverviewAsync(id);
+        var overview = await _orderService.GetOrderOverviewAsync(id );
+
         var amount = request.Amount > 0 ? request.Amount : overview.TotalAmount;
 
         var paymentResult = await _externalPaymentService.ChargeAsync(new(

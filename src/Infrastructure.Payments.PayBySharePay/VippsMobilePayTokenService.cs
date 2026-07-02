@@ -4,9 +4,9 @@ using Microsoft.Extensions.Logging;
 namespace Infrastructure.Payments.PayBySharePay;
 
 /// <summary>
-/// Henter og cacher et Vipps MobilePay access token.
-/// Token er gyldigt i 1 time (test) / 24 timer (prod).
-/// Vi fornyer det 5 minutter før udløb for at undgå race conditions.
+/// Henter og cacher Vipps MobilePay access tokens.
+/// Understøtter både global config og per-merchant credentials.
+/// Tokens caches per ClientId for at undgå unødvendige token-kald.
 /// </summary>
 public sealed class VippsMobilePayTokenService
 {
@@ -14,9 +14,8 @@ public sealed class VippsMobilePayTokenService
     private readonly VippsMobilePayOptions _options;
     private readonly ILogger<VippsMobilePayTokenService> _logger;
 
-    private string? _cachedToken;
-    private DateTime _expiresAt = DateTime.MinValue;
-
+    // Cache per clientId → (token, expiresAt)
+    private readonly Dictionary<string, (string Token, DateTime ExpiresAt)> _cache = new();
     private static readonly SemaphoreSlim _lock = new(1, 1);
 
     public VippsMobilePayTokenService(
@@ -29,27 +28,39 @@ public sealed class VippsMobilePayTokenService
         _logger = logger;
     }
 
-    public async Task<string> GetAccessTokenAsync(CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Henter token med merchant-specifikke credentials hvis tilgængelige,
+    /// ellers bruges global config fra appsettings.
+    /// </summary>
+    public async Task<string> GetAccessTokenAsync(
+        string? merchantClientId = null,
+        string? merchantClientSecret = null,
+        string? merchantSubscriptionKey = null,
+        string? merchantSerialNumber = null,
+        CancellationToken cancellationToken = default)
     {
-        if (_cachedToken is not null && DateTime.UtcNow < _expiresAt)
-            return _cachedToken;
+        if (string.IsNullOrWhiteSpace(merchantClientId) || string.IsNullOrWhiteSpace(merchantClientSecret) || string.IsNullOrWhiteSpace(merchantSubscriptionKey))
+            throw new InvalidOperationException("Merchant-specifikke Vipps-credentials (ClientId/ClientSecret/SubscriptionKey) er påkrævet.");
+
+        var clientId = merchantClientId;
+        var clientSecret = merchantClientSecret;
+        var subscriptionKey = merchantSubscriptionKey;
+        var msn = merchantSerialNumber;
 
         await _lock.WaitAsync(cancellationToken);
         try
         {
-            // Double-check inden for lock
-            if (_cachedToken is not null && DateTime.UtcNow < _expiresAt)
-                return _cachedToken;
+            if (_cache.TryGetValue(clientId, out var cached) && DateTime.UtcNow < cached.ExpiresAt)
+                return cached.Token;
 
-            _logger.LogInformation("[VippsMobilePay] Henter nyt access token...");
+            _logger.LogInformation("[VippsMobilePay] Henter access token for ClientId {ClientId}...", clientId[..Math.Min(8, clientId.Length)]);
 
             var request = new HttpRequestMessage(HttpMethod.Post, $"{_options.BaseUrl}/accesstoken/get");
-            request.Headers.Add("client_id", _options.ClientId);
-            request.Headers.Add("client_secret", _options.ClientSecret);
-            request.Headers.Add("Ocp-Apim-Subscription-Key", _options.SubscriptionKey);
-
-            if (!string.IsNullOrWhiteSpace(_options.MerchantSerialNumber))
-                request.Headers.Add("Merchant-Serial-Number", _options.MerchantSerialNumber);
+            request.Headers.Add("client_id", clientId);
+            request.Headers.Add("client_secret", clientSecret);
+            request.Headers.Add("Ocp-Apim-Subscription-Key", subscriptionKey);
+            if (!string.IsNullOrWhiteSpace(msn))
+                request.Headers.Add("Merchant-Serial-Number", msn);
 
             var response = await _http.SendAsync(request, cancellationToken);
             response.EnsureSuccessStatusCode();
@@ -57,16 +68,15 @@ public sealed class VippsMobilePayTokenService
             var body = await response.Content.ReadFromJsonAsync<AccessTokenResponse>(cancellationToken: cancellationToken)
                        ?? throw new InvalidOperationException("Tom respons fra access token endpoint.");
 
-            _cachedToken = body.AccessToken;
-
-            // expires_in er i sekunder — træk 5 min fra som buffer
+            DateTime expiresAt;
             if (int.TryParse(body.ExpiresIn, out var expiresInSec))
-                _expiresAt = DateTime.UtcNow.AddSeconds(expiresInSec - 300);
+                expiresAt = DateTime.UtcNow.AddSeconds(expiresInSec - 300);
             else
-                _expiresAt = DateTime.UtcNow.AddMinutes(55);
+                expiresAt = DateTime.UtcNow.AddMinutes(55);
 
-            _logger.LogInformation("[VippsMobilePay] Access token hentet. Udløber ca. {ExpiresAt}", _expiresAt);
-            return _cachedToken;
+            _cache[clientId] = (body.AccessToken, expiresAt);
+            _logger.LogInformation("[VippsMobilePay] Token hentet for {ClientId}. Udløber ca. {ExpiresAt}", clientId[..Math.Min(8, clientId.Length)], expiresAt);
+            return body.AccessToken;
         }
         finally
         {

@@ -108,12 +108,23 @@ MerchantOrderService:
   5. Deletes any existing draft for this participant+order
   6. Creates MerchantOrderDraft + MerchantOrderLine records
   7. Sets OrderParticipant.Status = "OrderSubmitted"
-  8. Calls CheckAndSetReadyToPayAsync(orderId)
+  8. Calls GroupPaymentOrchestrationService.ReserveParticipantPaymentAsync()
+	 → Creates ParticipantPayment, calls IPaymentProvider.ReserveAsync()
 
-CheckAndSetReadyToPayAsync:
-  - If ALL non-merchant OrderParticipants have status "OrderSubmitted"
-	→ Set Order.Status = "ReadyToPay"
-	→ Send Message to host: "Alle deltagere har bestilt. Du kan nu gennemføre..."
+  Fake provider (RedirectUrl == null — reserved synchronously):
+	9. MerchantOrderService calls CheckAndSetReadyToPayByReservedAsync(orderId) directly
+	   → If ALL non-merchant participants have ParticipantPayment.Status = Reserved:
+		 → Set Order.Status = "ReadyToPay"
+		 → Send Message to host: "Alle har bestilt og reserveret betaling..."
+
+  Vipps provider (RedirectUrl != null):
+	9. Returns redirect URL to client
+	   → Merchant Demo redirects participant to MobilePay app
+	   → Participant swipes/approves in MobilePay
+	   → Vipps sends webhook → VippsCallbackController (AUTHORIZED/RESERVE)
+		 → SetReservedAsync
+		 → CheckAndSetReadyToPayByReservedAsync(orderId)
+		   → If ALL non-merchant participants Reserved → Order.Status = "ReadyToPay"
 ```
 
 ---
@@ -255,7 +266,10 @@ Response: { success, orderStatus, cancelledCount, skippedCount, errors[] }
 			  ├─► Validates token
 			  ├─► Creates MerchantOrderDraft + Lines
 			  ├─► Sets OrderParticipant.Status = "OrderSubmitted"
-			  └─► If all participants done → Order.Status = "ReadyToPay"
+			  ├─► Starts payment reservation (ReserveParticipantPaymentAsync)
+			  │   ├─► Fake: reserved synchronously → CheckAndSetReadyToPayByReservedAsync
+			  │   └─► Vipps: redirect to MobilePay → participant approves → webhook → CheckAndSetReadyToPayByReservedAsync
+			  └─► If ALL non-merchant participants now have Reserved payment → Order.Status = "ReadyToPay"
 					│
 					└─► Message sent to host
 
@@ -263,7 +277,7 @@ Response: { success, orderStatus, cancelledCount, skippedCount, errors[] }
   │
   └─► Opens order in app → sees "Klar til betaling"
 		│
-		└─► (Assumes participant payments already reserved)
+		└─► All participant payments are Reserved — host can approve and capture
 			  │
 			  └─► Clicks "Godkend og betal"
 					│
@@ -288,6 +302,8 @@ User completes payment in MobilePay app
 		├─► Lookup by reference (ProviderPaymentId)
 		├─► Map Vipps event name:
 		│   AUTHORIZED / RESERVE → SetReservedAsync
+		│                          + CheckAndSetReadyToPayByReservedAsync
+		│                            (→ Order.Status = "ReadyToPay" if all participants Reserved)
 		│   CAPTURED             → Logger og ignorerer (ingen state-ændring — capture sker via /approve-flow)
 		│   CANCELLED / ABORTED  → SetCancelledAsync
 		│   EXPIRED / TERMINATED → SetReservationFailedAsync (sætter ReservationFailed, ikke Expired)

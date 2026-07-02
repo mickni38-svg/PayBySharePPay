@@ -41,7 +41,12 @@ public sealed class MobilePaySandboxPaymentProvider : IPaymentProvider
 
     public async Task<ReservePaymentResult> ReserveAsync(ReservePaymentRequest request, CancellationToken cancellationToken = default)
     {
-        var token = await _tokenService.GetAccessTokenAsync(cancellationToken);
+        var token = await _tokenService.GetAccessTokenAsync(
+            merchantClientId: request.MerchantClientId,
+            merchantClientSecret: request.MerchantClientSecret,
+            merchantSubscriptionKey: request.MerchantSubscriptionKey,
+            merchantSerialNumber: request.MerchantSerialNumber,
+            cancellationToken: cancellationToken);
 
         // Vipps callback-URL skal pege på vores dedikerede endpoint.
         // Ignorerer hvad frontend sender for at sikre korrekt Vipps-format.
@@ -78,7 +83,7 @@ public sealed class MobilePaySandboxPaymentProvider : IPaymentProvider
             };
         }
 
-        var httpRequest = BuildRequest(HttpMethod.Post, "/epayment/v1/payments", token, request.IdempotencyKey, request.MerchantSerialNumber);
+        var httpRequest = BuildRequest(HttpMethod.Post, "/epayment/v1/payments", token, request.IdempotencyKey, request.MerchantSerialNumber, request.MerchantSubscriptionKey);
         httpRequest.Content = JsonContent.Create(body, options: _jsonOptions);
 
         _logger.LogInformation("[VippsMobilePay] Opretter betaling {Reference}", request.ParticipantPaymentId);
@@ -106,14 +111,19 @@ public sealed class MobilePaySandboxPaymentProvider : IPaymentProvider
 
     public async Task<CapturePaymentResult> CaptureAsync(CapturePaymentRequest request, CancellationToken cancellationToken = default)
     {
-        var token = await _tokenService.GetAccessTokenAsync(cancellationToken);
+        var token = await _tokenService.GetAccessTokenAsync(
+            merchantClientId: request.MerchantClientId,
+            merchantClientSecret: request.MerchantClientSecret,
+            merchantSubscriptionKey: request.MerchantSubscriptionKey,
+            merchantSerialNumber: request.MerchantSerialNumber,
+            cancellationToken: cancellationToken);
 
         var body = new
         {
             modificationAmount = new { value = request.AmountMinorUnits, currency = request.Currency }
         };
 
-        var httpRequest = BuildRequest(HttpMethod.Post, $"/epayment/v1/payments/{request.ProviderPaymentId}/capture", token, request.IdempotencyKey, request.MerchantSerialNumber);
+        var httpRequest = BuildRequest(HttpMethod.Post, $"/epayment/v1/payments/{request.ProviderPaymentId}/capture", token, request.IdempotencyKey, request.MerchantSerialNumber, request.MerchantSubscriptionKey);
         httpRequest.Content = JsonContent.Create(body, options: _jsonOptions);
 
         _logger.LogInformation("[VippsMobilePay] Capturer betaling {Reference}", request.ProviderPaymentId);
@@ -135,7 +145,7 @@ public sealed class MobilePaySandboxPaymentProvider : IPaymentProvider
 
     public async Task<CancelPaymentResult> CancelAsync(CancelPaymentRequest request, CancellationToken cancellationToken = default)
     {
-        var token = await _tokenService.GetAccessTokenAsync(cancellationToken);
+        var token = await _tokenService.GetAccessTokenAsync(cancellationToken: cancellationToken);
 
         var httpRequest = BuildRequest(HttpMethod.Post, $"/epayment/v1/payments/{request.ProviderPaymentId}/cancel", token, request.IdempotencyKey);
         httpRequest.Content = JsonContent.Create(new { }, options: _jsonOptions);
@@ -159,7 +169,7 @@ public sealed class MobilePaySandboxPaymentProvider : IPaymentProvider
 
     public async Task<PaymentStatusResult> GetStatusAsync(PaymentStatusRequest request, CancellationToken cancellationToken = default)
     {
-        var token = await _tokenService.GetAccessTokenAsync(cancellationToken);
+        var token = await _tokenService.GetAccessTokenAsync(cancellationToken: cancellationToken);
 
         var httpRequest = BuildRequest(HttpMethod.Get, $"/epayment/v1/payments/{request.ProviderPaymentId}", token);
 
@@ -186,13 +196,12 @@ public sealed class MobilePaySandboxPaymentProvider : IPaymentProvider
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private HttpRequestMessage BuildRequest(HttpMethod method, string path, string token, string? idempotencyKey = null, string? merchantSerialNumber = null)
+    private HttpRequestMessage BuildRequest(HttpMethod method, string path, string token, string? idempotencyKey = null, string? merchantSerialNumber = null, string? merchantSubscriptionKey = null)
     {
         var req = new HttpRequestMessage(method, $"{_options.BaseUrl.TrimEnd('/')}{path}");
         req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        req.Headers.Add("Ocp-Apim-Subscription-Key", _options.SubscriptionKey);
-        // Brug per-merchant MSN hvis tilgængeligt, ellers global fra config
-        req.Headers.Add("Merchant-Serial-Number", merchantSerialNumber ?? _options.MerchantSerialNumber);
+        req.Headers.Add("Ocp-Apim-Subscription-Key", string.IsNullOrWhiteSpace(merchantSubscriptionKey) ? _options.SubscriptionKey : merchantSubscriptionKey);
+        req.Headers.Add("Merchant-Serial-Number", merchantSerialNumber ?? throw new InvalidOperationException("Merchant-Serial-Number er ikke angivet."));
         req.Headers.Add("Vipps-System-Name", "paybysharepay");
         if (idempotencyKey is not null)
             req.Headers.Add("Idempotency-Key", idempotencyKey);

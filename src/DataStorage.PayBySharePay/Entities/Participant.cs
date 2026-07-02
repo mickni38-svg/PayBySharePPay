@@ -29,6 +29,15 @@ public class Participant
     /// </summary>
     public string? VippsMerchantSerialNumber { get; set; }
 
+    /// <summary>Vipps API ClientId for dette salgssted. Null = brug global fra appsettings.</summary>
+    public string? VippsClientId { get; set; }
+
+    /// <summary>Vipps API ClientSecret for dette salgssted. Null = brug global fra appsettings.</summary>
+    public string? VippsClientSecret { get; set; }
+
+    /// <summary>Vipps Ocp-Apim-Subscription-Key for dette salgssted. Null = brug global fra appsettings.</summary>
+    public string? VippsSubscriptionKey { get; set; }
+
     public ICollection<FriendRelation> FriendsInitiated { get; set; } = new List<FriendRelation>();
     public ICollection<FriendRelation> FriendsReceived { get; set; } = new List<FriendRelation>();
     public ICollection<OrderParticipant> OrderParticipants { get; set; } = new List<OrderParticipant>();

@@ -93,13 +93,29 @@ public sealed class GroupPaymentOrchestrationService(
         // Callback URL bruger den faktiske ParticipantPaymentId — ignorerer hvad caller angiver
         var resolvedCallbackUrl = $"{callbackUrl.TrimEnd('/')}/{payment.Id}";
 
-        // Hent merchant's Vipps MSN hvis tilgængeligt (ellers bruges global fra config)
         var order = await orderRepository.GetByIdWithDetailsAsync(orderId);
-        var merchantMsn = order?.MerchantParticipant?.VippsMerchantSerialNumber;
+        var merchant = order?.MerchantParticipant;
+
+        if (merchant is null)
+            return new ReserveParticipantPaymentResult(false, payment.Id, null, null, "NO_MERCHANT", $"Ordre {orderId} har ingen tilknyttet merchant.");
+
+        if (string.IsNullOrWhiteSpace(merchant.VippsMerchantSerialNumber) ||
+            string.IsNullOrWhiteSpace(merchant.VippsClientId) ||
+            string.IsNullOrWhiteSpace(merchant.VippsClientSecret) ||
+            string.IsNullOrWhiteSpace(merchant.VippsSubscriptionKey))
+        {
+            logger.LogError("[Orchestration] Merchant {MerchantId} mangler Vipps-konfiguration (MSN/ClientId/Secret/SubscriptionKey).", merchant.Id);
+            return new ReserveParticipantPaymentResult(false, payment.Id, null, null, "MERCHANT_MISSING_VIPPS_CONFIG", $"Merchant '{merchant.Name}' mangler Vipps-konfiguration.");
+        }
+
+        var merchantMsn = merchant.VippsMerchantSerialNumber;
+        var merchantClientId = merchant.VippsClientId;
+        var merchantClientSecret = merchant.VippsClientSecret;
+        var merchantSubscriptionKey = merchant.VippsSubscriptionKey;
 
         var request = new ReservePaymentRequest(
             GroupPaymentId: orderId.ToString(),
-            ParticipantPaymentId: payment.Id.ToString(),
+            ParticipantPaymentId: $"pp-{payment.Id:D8}",
             MerchantId: merchantId ?? "unknown",
             AmountMinorUnits: amountMinorUnits,
             Currency: currency,
@@ -108,7 +124,10 @@ public sealed class GroupPaymentOrchestrationService(
             CallbackUrl: resolvedCallbackUrl,
             IdempotencyKey: idempotencyKey,
             TestPhoneNumber: testPhoneNumber,
-            MerchantSerialNumber: merchantMsn);
+            MerchantSerialNumber: merchantMsn,
+            MerchantClientId: merchantClientId,
+            MerchantClientSecret: merchantClientSecret,
+            MerchantSubscriptionKey: merchantSubscriptionKey);
 
         // Sæt ReservationStarted med et temp-id indtil vi får svar fra provider
         var tempProviderId = $"pending-{payment.Id}";
@@ -237,7 +256,10 @@ public sealed class GroupPaymentOrchestrationService(
                 AmountMinorUnits: freshPayment.AmountMinorUnits,
                 Currency: freshPayment.Currency,
                 IdempotencyKey: idempotencyKey,
-                MerchantSerialNumber: order.MerchantParticipant?.VippsMerchantSerialNumber);
+                MerchantSerialNumber: order.MerchantParticipant?.VippsMerchantSerialNumber,
+                MerchantClientId: order.MerchantParticipant?.VippsClientId,
+                MerchantClientSecret: order.MerchantParticipant?.VippsClientSecret,
+                MerchantSubscriptionKey: order.MerchantParticipant?.VippsSubscriptionKey);
 
             CapturePaymentResult captureResult;
             try

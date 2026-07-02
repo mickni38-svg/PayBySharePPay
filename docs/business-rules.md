@@ -258,9 +258,9 @@ Telefonnummer/testtelefonnummer:
   2. Sæt temp `ProviderPaymentId = "pending-{id}"`, status → `ReservationStarted`
   3. Kald `IPaymentProvider.ReserveAsync`
   4. Success: opdatér `ProviderPaymentId` med rigtigt provider-ID og returnér betalings-/redirect-information til deltageren
-  5. Fake provider: sæt status → `Reserved` synkront
+  5. Fake provider: sæt status → `Reserved` synkront; kald umiddelbart `CheckAndSetReadyToPayByReservedAsync` — sætter ordre til `ReadyToPay` hvis alle ikke-merchant deltagere nu er `Reserved`
   6. Rigtig provider: status forbliver `ReservationStarted` indtil webhook fra Vipps/MobilePay
-  7. Webhook `AUTHORIZED`/`RESERVE`: status → `Reserved`
+  7. Webhook `AUTHORIZED`/`RESERVE`: status → `Reserved`; `VippsCallbackController` kalder derefter `CheckAndSetReadyToPayByReservedAsync` — sætter ordre til `ReadyToPay` hvis alle ikke-merchant deltagere nu er `Reserved`
   8. Fejl/exception: status → `ReservationFailed`
 
 ### Capture-regler
@@ -353,7 +353,7 @@ Lookup sker på `ProviderPaymentId`. Ikke fundet → 404.
 
 | Vipps `Name`-felt (case-insensitiv) | Handling |
 |-------------------------------------|----------|
-| `"AUTHORIZED"` eller `"RESERVE"` | → `SetReservedAsync` for den konkrete deltagerbetaling |
+| `"AUTHORIZED"` eller `"RESERVE"` | → `SetReservedAsync` for den konkrete deltagerbetaling; derefter `CheckAndSetReadyToPayByReservedAsync` — sætter ordre til `ReadyToPay` hvis alle ikke-merchant deltagere nu er `Reserved` |
 | `"CAPTURED"` | Logger og ignorerer — ingen state-ændring (capture sker via vores eget `/approve`-flow) |
 | `"CANCELLED"` eller `"ABORTED"` | → `SetCancelledAsync` |
 | `"TERMINATED"` eller `"EXPIRED"` | → `SetReservationFailedAsync` (sætter `ReservationFailed`, **ikke** `Expired`) |
@@ -375,7 +375,7 @@ Alle notifikationer gemmes som `Message`-records i databasen — **ingen push, i
 |----------|----------|---------------|
 | Ordre oprettet med merchant | Alle `OrderParticipants` inkl. host | Bestillingslink med `ParticipantToken` |
 | Ordre oprettet uden merchant | Alle **inviterede** (ikke host) | Generel invitationstekst |
-| Alle deltagere har bestilt (`ReadyToPay`) | Host | "Alle har bestilt. Du kan nu gennemføre betalingen: {link}" |
+| Alle deltagere har reserveret betaling (`ReadyToPay`) | Host | "✅ Alle har bestilt og reserveret betaling til '{titel}'. Du kan nu godkende den samlede ordre: {link}" |
 | Deltager betalt (legacy `PaymentService`) | Host (kun hvis betaler ≠ host) | "✅ {navn} har betalt {beløb} kr." |
 
 ### Meddelelses-regler
@@ -433,4 +433,5 @@ Alle notifikationer gemmes som `Message`-records i databasen — **ingen push, i
 5. **`Refunded`-status** — Defineret i `ParticipantPaymentStatus`-enum og tilladte transitions (`Captured → Refunded`), men ingen service-metode implementerer refundering. Er det planlagt?
 6. **Vipps `CAPTURED` callback ignoreres** — `VippsCallbackController` logger kun ved `CAPTURED` og laver ingen state-ændring. Afhænger dette af at capture altid startes fra vores eget flow, så Vipps' bekræftelse er overflødig?
 7. **FriendRelation-unikhed** — `FriendRelationRepository.RelationExistsAsync` tjekker for eksisterende relation og kaster ved duplikat. Men der er intet unikt DB-constraint — hvad sker der ved race conditions?
-8. **`MerchantOrderDraft.Status` defaultværdi vs. faktisk tildelt værdi** — Entiteten har `Status = "Draft"` som default, men `MerchantOrderService` sætter `"Submitted"`. `CheckAndSetReadyToPayAsync` tjekker `OrderParticipant.Status == "OrderSubmitted"`, ikke `MerchantOrderDraft.Status`. Er draft-status aktivt brugt?
+8. **`MerchantOrderDraft.Status` defaultværdi vs. faktisk tildelt værdi** — Entiteten har `Status = "Draft"` som default, men `MerchantOrderService` sætter `"Submitted"`. Er `MerchantOrderDraft.Status` aktivt brugt nogen steder?
+9. **`CheckAndSetReadyToPayAsync` er effektivt ubrugt i produktionsflowet** — Metoden tjekker `OrderParticipant.Status == "OrderSubmitted"` og er tilgængelig via `IOrderService`, men kaldes ingen steder i produktionskode. `ReadyToPay` sættes i stedet via `CheckAndSetReadyToPayByReservedAsync` (Reserved-baseret). Bør metoden fjernes eller erstattes?

@@ -347,9 +347,6 @@ public class OrderService : IOrderService
         var order = await _orderRepository.GetByIdWithDetailsAsync(orderId)
             ?? throw new KeyNotFoundException($"Ordre med id {orderId} findes ikke.");
 
-        if (order.Status != "Collecting")
-            return;
-
         var nonMerchantParticipants = order.OrderParticipants
             .Where(op => op.Participant.Type != DataStorage.PayBySharePay.Entities.ParticipantType.Merchant)
             .ToList();
@@ -357,8 +354,9 @@ public class OrderService : IOrderService
         if (nonMerchantParticipants.Count == 0)
             return;
 
-        var allSubmitted = nonMerchantParticipants.All(op => op.Status == "OrderSubmitted");
-        if (allSubmitted)
+        var allReady = nonMerchantParticipants.All(op => op.Status == "OrderSubmitted");
+
+        if (allReady)
         {
             order.Status = "ReadyToPay";
 
@@ -395,10 +393,8 @@ public class OrderService : IOrderService
         // Hent alle betalinger for ordren
         var payments = (await _paymentRepository.GetByOrderIdAsync(orderId)).ToList();
 
-        // Alle non-merchant deltagere skal have en Reserved ParticipantPayment
         var allReserved = nonMerchantParticipants.All(op =>
             payments.Any(pp =>
-                pp.OrderId == orderId &&
                 pp.ParticipantId == op.ParticipantId &&
                 pp.Status == ParticipantPaymentStatus.Reserved));
 

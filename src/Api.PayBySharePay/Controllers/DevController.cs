@@ -3,6 +3,7 @@ using DataStorage.PayBySharePay.Context;
 using DataStorage.PayBySharePay.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Service.PayBySharePay.Interfaces;
 
 namespace Api.PayBySharePay.Controllers;
 
@@ -12,11 +13,17 @@ public class DevController : ControllerBase
 {
     private readonly PayBySharePayDbContext _context;
     private readonly ILastMerchantCallbackStore _callbackStore;
+    private readonly IConfiguration _configuration;
+    private readonly IParticipantPaymentStateService _stateService;
+    private readonly IOrderService _orderService;
 
-    public DevController(PayBySharePayDbContext context, ILastMerchantCallbackStore callbackStore)
+    public DevController(PayBySharePayDbContext context, ILastMerchantCallbackStore callbackStore, IConfiguration configuration, IParticipantPaymentStateService stateService, IOrderService orderService)
     {
         _context = context;
         _callbackStore = callbackStore;
+        _configuration = configuration;
+        _stateService = stateService;
+        _orderService = orderService;
     }
 
     /// <summary>
@@ -28,6 +35,7 @@ public class DevController : ControllerBase
     {
         _context.MerchantOrderLines.RemoveRange(_context.MerchantOrderLines);
         _context.MerchantOrderDrafts.RemoveRange(_context.MerchantOrderDrafts);
+        _context.ParticipantPayments.RemoveRange(_context.ParticipantPayments);
         _context.Payments.RemoveRange(_context.Payments);
         _context.OrderParticipants.RemoveRange(_context.OrderParticipants);
         _context.Messages.RemoveRange(_context.Messages);
@@ -42,10 +50,12 @@ public class DevController : ControllerBase
     /// </summary>
     [HttpPost("seed-merchant-urls")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> SeedMerchantUrls([FromQuery] string merchantDemoUrl = "https://brave-flower-0026a7503.7.azurestaticapps.net/" )
+    public async Task<IActionResult> SeedMerchantUrls([FromQuery] string? merchantDemoUrl = null, [FromQuery] bool force = false)
     {
+        merchantDemoUrl ??= _configuration["AppSettings:MerchantDemoUrl"] ?? "https://merchant.paynsync.dk/";
+
         var merchants = await _context.Participants
-            .Where(p => p.Type == ParticipantType.Merchant && p.GroupOrderUrl == null)
+            .Where(p => p.Type == ParticipantType.Merchant && (force || p.GroupOrderUrl == null))
             .ToListAsync();
 
         foreach (var m in merchants)
@@ -56,7 +66,28 @@ public class DevController : ControllerBase
     }
 
     /// <summary>
-    /// DEV/TEST ONLY – returnerer den seneste GroupOrderPaid-payload sendt til merchant for en given ordre.
+    /// TEST ONLY – simulerer Vipps AUTHORIZED-callback for en betaling.
+    /// Bruges til at godkende en betaling i testmiljøet uden MobilePay-appen.
+    /// </summary>
+    [HttpPost("simulate-authorized")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SimulateAuthorized([FromQuery] int participantPaymentId, CancellationToken cancellationToken)
+    {
+        var payment = await _context.ParticipantPayments.FindAsync([participantPaymentId], cancellationToken);
+        if (payment is null)
+            return NotFound(new { message = $"Ingen betaling fundet med id {participantPaymentId}" });
+
+        var correlationId = $"dev-simulate-authorized-{participantPaymentId}";
+        await _stateService.SetReservedAsync(payment.Id, correlationId, cancellationToken);
+
+        await _orderService.CheckAndSetReadyToPayByReservedAsync(payment.OrderId, cancellationToken);
+
+        return Ok(new { participantPaymentId, orderId = payment.OrderId, status = "Reserved" });
+    }
+
+    /// <summary>
+    /// DEV/TEST ONLY – returnerer den seneste GroupOrderPaid-payload
     /// Bruges til at verificere final callback indhold uden et rigtigt merchant-endpoint.
     /// </summary>
     [HttpGet("merchant-callbacks/latest")]

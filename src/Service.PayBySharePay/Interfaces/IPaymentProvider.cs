@@ -25,7 +25,10 @@ public sealed record ReservePaymentRequest(
     string CallbackUrl,
     string IdempotencyKey,
     string? TestPhoneNumber = null,
-    string? MerchantSerialNumber = null);
+    string? MerchantSerialNumber = null,
+    string? MerchantClientId = null,
+    string? MerchantClientSecret = null,
+    string? MerchantSubscriptionKey = null);
 
 public sealed record ReservePaymentResult(
     bool Success,
@@ -42,7 +45,10 @@ public sealed record CapturePaymentRequest(
     long AmountMinorUnits,
     string Currency,
     string IdempotencyKey,
-    string? MerchantSerialNumber = null);
+    string? MerchantSerialNumber = null,
+    string? MerchantClientId = null,
+    string? MerchantClientSecret = null,
+    string? MerchantSubscriptionKey = null);
 
 public sealed record CapturePaymentResult(
     bool Success,

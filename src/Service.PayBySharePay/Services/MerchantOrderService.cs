@@ -103,6 +103,9 @@ public class MerchantOrderService : IMerchantOrderService
         orderParticipant.Status = "OrderSubmitted";
         await _db.SaveChangesAsync();
 
+        // Tjek om alle deltagere nu er OrderSubmitted og sæt ordre til ReadyToPay hvis ja.
+        await _orderService.CheckAndSetReadyToPayAsync(dto.OrderId);
+
         // Start reservation hos betalingsudbyderen for denne deltager.
         // ReadyToPay sættes IKKE her — det sker via webhook når betalingen er Reserved.
         var amountMinorUnits = (long)(draft.TotalAmount * 100);
@@ -132,6 +135,14 @@ public class MerchantOrderService : IMerchantOrderService
                     ? reserveResult.ErrorMessage
                     : $"Reservation mislykkedes: {reserveResult.ErrorMessage}"
             };
+        }
+
+        // Synkron reservation (FakePaymentProvider): RedirectUrl er null — betalingen er allerede Reserved.
+        // Tjek om alle deltagere nu er Reserved og sæt ordre til ReadyToPay hvis ja.
+        // (For Vipps/MobilePay sker dette i stedet via webhook i VippsCallbackController.)
+        if (reserveResult.RedirectUrl == null)
+        {
+            await _orderService.CheckAndSetReadyToPayByReservedAsync(dto.OrderId);
         }
 
         var status = reserveResult.RedirectUrl != null ? "ReservationStarted" : "Reserved";
