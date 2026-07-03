@@ -1,170 +1,192 @@
-# UC-02 — Log ind
+# Use Case: Authentication with Google or Apple Login
 
-**Version:** 1.0  
-**Kilde:** Reverse-engineered fra kodebase  
-**Branch:** Create-usecases  
+## Goal
 
----
-
-## Overblik
-
-| Felt | Værdi |
-|------|-------|
-| Use Case ID | UC-02 |
-| Navn | Log ind |
-| Primær aktør | Registreret bruger (Person) |
-| Formål | Autentificere sig i PayNSync og modtage en JWT-session |
-| Trigger | Brugeren åbner `/login` eller bliver omdirigeret hertil ved 401 |
+Allow users to authenticate with PayNSync using either **Google Login** or **Apple Login** without requiring a traditional username/password. The solution must work for both the current web application and a future native mobile application while using PayNSync's own internal user identity.
 
 ---
 
-## Aktører
+# Actors
 
-| Aktør | Rolle |
-|-------|-------|
-| **Person** | Registreret bruger der vil logge ind |
-| **API** | `Api.PayBySharePay` — validerer credentials og udsteder JWT |
-| **Database** | SQL Server — opslag af `Participant` via e-mail |
-
----
-
-## Prækonditioner
-
-- Brugeren har en registreret konto (type `Person`) med den pågældende e-mail.
-- Systemet er tilgængeligt.
+- User
+- PayNSync Web Application
+- PayNSync Backend API
+- Google Identity Provider
+- Apple Identity Provider
 
 ---
 
-## Postkonditioner (succes)
+# Preconditions
 
-- JWT-token er gemt i `localStorage` (`sbys_token`).
-- Brugerinfo er gemt i `localStorage` (`sbys_user`).
-- `AuthService.isLoggedIn` signal er `true`.
-- Brugeren er navigeret til `/home` via `window.location.href = '/home'` (hard reload).
-
----
-
-## Normalforløb
-
-| Trin | Aktør | Handling |
-|------|-------|----------|
-| 1 | Bruger | Åbner `/login` i Angular SPA |
-| 2 | Frontend | Viser login-formular med e-mail-felt og "Log ind"-knap |
-| 3 | Bruger | Indtaster sin e-mail og trykker "Log ind" |
-| 4 | Frontend | Kalder `AuthService.login(email)` → `POST /api/auth/login` med `{ email }` |
-| 5 | API | `AuthController.Login()` søger efter `Person` med den givne e-mail via `SearchParticipantsAsync()` |
-| 6 | API | Henter entity med `GetByEmailAsync()` for at få adgang til `PasswordHash` |
-| 7 | API | Da `password` ikke er sendt i request, springes BCrypt-verifikation over |
-| 8 | API | Genererer JWT via `JwtTokenService.GenerateToken(id, name)` |
-| 9 | API | Returnerer `HTTP 200` med `{ token, participantId, name, expiresAt }` |
-| 10 | Frontend | `AuthService._storeSession()` gemmer token + brugerinfo i `localStorage` |
-| 11 | Frontend | `window.location.href = '/home'` — hard reload for frisk app-state |
+- The user opens the PayNSync application.
+- The user has either a Google account or an Apple ID.
+- Google and Apple authentication have been configured.
 
 ---
 
-## Alternative forløb
+# Main Flow
 
-### A1 — Login med password (når `PasswordHash` er sat)
-- **Trin 3:** Bruger sender både e-mail og password i body.
-- **Trin 7:** `!string.IsNullOrEmpty(request.Password) && personWithHash.PasswordHash is not null` → BCrypt.Verify() køres.
-- Hvis korrekt: forløbet fortsætter fra trin 8.
-- Hvis forkert: se E2.
-
-### A2 — Token udløbet, bruger omdirigeres til login
-- `apiInterceptor` modtager `HTTP 401` på et API-kald.
-- `auth.logout()` kaldes → `localStorage` ryddes.
-- Bruger navigeres til `/login`.
-- Normalforløbet starter fra trin 1.
-
----
-
-## Undtagelsesforløb
-
-### E1 — E-mail ikke fundet
-- **Trin 5:** `SearchParticipantsAsync()` returnerer ingen `Person` med e-mailen.
-- API returnerer `HTTP 401` med `{ error: "Ingen bruger fundet med denne email." }`.
-- Frontend viser: *"Ingen konto fundet med den e-mail."*
-
-### E2 — Forkert adgangskode
-- **Trin 7:** `BCrypt.Verify()` returnerer `false`.
-- API returnerer `HTTP 401` med `{ error: "Forkert adgangskode." }`.
-- Frontend viser: *"Ingen konto fundet med den e-mail."* *(samme generiske fejlbesked som E1 — ingen skelnen i frontend)*
-
-### E3 — Netværksfejl
-- Frontend viser: *"Noget gik galt. Prøv igen."*
+1. The user opens PayNSync.
+2. The login page is displayed.
+3. The user can choose one of the following options:
+   - Continue with Google
+   - Continue with Apple
+4. The user authenticates with the selected provider.
+5. The provider returns an identity token.
+6. The frontend sends the token to the PayNSync Backend.
+7. The backend validates the token.
+8. The backend searches for an existing PayNSync user linked to the provider.
+9. If the user exists:
+   - The existing PayNSync account is loaded.
+10. If the user does not exist:
+    - A new PayNSync account is created automatically.
+11. The backend issues a PayNSync session (JWT + Refresh Token or secure session cookie).
+12. The frontend stores the session securely.
+13. The user is redirected to the Home page.
 
 ---
 
-## Datamodel
+# Alternative Flow – First Login
 
-### Request
-| Felt | Type | Påkrævet | Beskrivelse |
-|------|------|----------|-------------|
-| `email` | string | ✅ | Brugerens e-mail |
-| `password` | string? | ❌ | Valgfri — kun brugt hvis `PasswordHash` er sat |
+If no PayNSync account exists:
 
-### Response (HTTP 200)
-| Felt | Type | Beskrivelse |
-|------|------|-------------|
-| `token` | string | JWT Bearer token |
-| `participantId` | int | Brugerens ID |
-| `name` | string | Brugerens navn |
-| `expiresAt` | DateTime | `UtcNow + 480 min` (8 timer) |
-
-### JWT-claims
-| Claim | Indhold |
-|-------|---------|
-| `sub` | `participantId` |
-| `name` | Brugerens navn |
-| `jti` | Nyt `Guid` pr. token |
+1. Create a new PayNSyncUser.
+2. Store the selected Login Provider.
+3. Continue with the normal login flow.
 
 ---
 
-## API-endpoints
+# Alternative Flow – Existing Account
 
-| Endpoint | Metode | Auth | Response |
-|----------|--------|------|----------|
-| `/api/auth/login` | POST | Anonym | 200 + JWT, 401 ved ukendt e-mail eller forkert password |
+If another PayNSync account already exists using the same email address:
 
----
-
-## Implementeringsstatus
-
-| Del | Status | Detaljer |
-|-----|--------|----------|
-| Frontend — login-formular | ✅ | E-mail-felt + adgangskode-felt + submit-knap |
-| Frontend — 401-håndtering | ✅ | Viser dansk fejlbesked |
-| Frontend — session-lagring | ✅ | `localStorage` via `AuthService._storeSession()` |
-| Frontend — hard reload ved login | ✅ | `window.location.href = '/home'` |
-| API — `POST /api/auth/login` | ✅ | E-mail-opslag + BCrypt-verifikation |
-| API — JWT-udstedelse | ✅ | `JwtTokenService.GenerateToken()` |
-| Frontend — password-felt i login | ✅ | Password-felt tilføjet med vis/skjul-knap — sendes med til API |
-| JWT-interceptor — 401 → logout | ✅ | `apiInterceptor` kalder `auth.logout()` |
+- Do **not** automatically merge accounts.
+- Require explicit verification before linking providers.
 
 ---
 
-## Kendte mangler og gaps
+# Business Rules
 
-| # | Mangel | Prioritet | Beskrivelse |
-|---|--------|-----------|-------------|
-| G1 | ~~**Password-felt manglede i login-formular**~~ | ~~🔴 Høj~~ | **Implementeret** — password-felt tilføjet med vis/skjul-knap. `AuthService.login()` sender nu password med når det er udfyldt. |
-| G2 | **Merchant kan ikke logge ind** | 🔴 Høj | `AuthController.Login()` søger kun efter `Person`-type. En merchant kan ikke logge ind via login-flowet. |
-| G3 | **Fejlbesked skelner ikke mellem ukendt e-mail og forkert password** | 🟡 Medium | Frontend viser samme besked for E1 og E2 — brugeren kan ikke se om det er e-mail eller password der er forkert. |
-| G4 | **Token refresh ikke implementeret** | 🟡 Medium | Når token udløber efter 8 timer (eller reelt 43200 min jf. config — se G5 i UC-01), skal brugeren logge ind igen manuelt. |
-| G5 | **Hard reload ved login** | 🟢 Lav | `window.location.href = '/home'` foretager et fuldt side-reload. Angular Router kunne bruges i stedet for en mere flydende UX. |
+## BR-001
 
----
+A PayNSync user shall always have an internal unique identifier.
 
-## Tekniske noter
+Example:
 
-- **Ingen CSRF-beskyttelse**: Login sker via JSON POST uden CSRF-token.
-- **Merchant-login via legacy seed**: Merchants oprettet via seed-scripts har ingen `PasswordHash` — de kan tilgås via e-mail alene da password-tjekket springes over når hash er null.
-- **`LoginRequest.Password` er defineret men bruges ikke i frontend**: Server-siden er klar til password-validering, men frontend sender det aldrig.
+```
+UserId = 42
+```
+
+Google or Apple identifiers must never be used as primary keys throughout the application.
 
 ---
 
-## Relaterede use cases
+## BR-002
 
-- [UC-01 — Opret Bruger](UC-01-opret-bruger.md)
-- [UC-03 — Log ud](UC-03-log-ud.md) *(ikke oprettet endnu)*
-- [UC-04 — Opdater Profil](UC-04-opdater-profil.md) *(ikke oprettet endnu)*
+Authentication providers are only used to verify identity.
+
+They are **not** considered the application's user identity.
+
+---
+
+## BR-003
+
+A user may later connect multiple authentication providers to the same PayNSync account.
+
+Example:
+
+- Google
+- Apple
+
+Both providers should authenticate the same PayNSync user.
+
+---
+
+## BR-004
+
+The user should remain signed in on the same device until:
+
+- Logout
+- Refresh token expires
+- Session is revoked
+
+The user should not need to authenticate every time the application is opened.
+
+---
+
+## BR-005
+
+The authentication architecture must support:
+
+- Angular Web App (current)
+- Native iOS App (future)
+- Native Android App (future)
+
+without changing the backend authentication model.
+
+---
+
+# Data Model
+
+## PayNSyncUser
+
+| Property | Description |
+|----------|-------------|
+| Id | Internal User Id |
+| DisplayName | User display name |
+| Email | Primary email |
+| CreatedAtUtc | Creation timestamp |
+| LastLoginAtUtc | Last successful login |
+
+---
+
+## UserLoginProvider
+
+| Property | Description |
+|----------|-------------|
+| Id | Identifier |
+| UserId | Reference to PayNSyncUser |
+| Provider | Google / Apple |
+| ProviderUserId | External provider identifier |
+| Email | Email returned by provider |
+| CreatedAtUtc | Linked date |
+
+---
+
+# Acceptance Criteria
+
+- User can choose Google Login.
+- User can choose Apple Login.
+- First login automatically creates a PayNSync account.
+- Existing users are recognized.
+- Users remain signed in after browser refresh.
+- Users remain signed in on future visits.
+- The entire PayNSync domain uses the internal PayNSyncUserId.
+- Authentication provider IDs are never used as business identifiers.
+- The same backend authentication flow can later be reused by native mobile applications.
+
+---
+
+# Future Extensions
+
+Possible future authentication providers:
+
+- Microsoft
+- Facebook
+- GitHub
+- Phone Number (OTP)
+- Passkeys (FIDO2/WebAuthn)
+
+These providers should plug into the same authentication architecture without requiring changes to the domain model.
+
+---
+
+# Out of Scope
+
+The following are intentionally excluded from the MVP:
+
+- Username/password authentication
+- Email magic links
+- MitID authentication
+- Two-factor authentication
+- Enterprise Single Sign-On (SAML/OIDC)
