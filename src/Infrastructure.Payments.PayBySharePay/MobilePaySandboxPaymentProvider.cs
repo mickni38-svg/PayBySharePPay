@@ -200,7 +200,9 @@ public sealed class MobilePaySandboxPaymentProvider : IPaymentProvider
     {
         var req = new HttpRequestMessage(method, $"{_options.BaseUrl.TrimEnd('/')}{path}");
         req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        req.Headers.Add("Ocp-Apim-Subscription-Key", string.IsNullOrWhiteSpace(merchantSubscriptionKey) ? _options.SubscriptionKey : merchantSubscriptionKey);
+        if (string.IsNullOrWhiteSpace(merchantSubscriptionKey))
+            throw new InvalidOperationException("merchantSubscriptionKey er ikke angivet.");
+        req.Headers.Add("Ocp-Apim-Subscription-Key", merchantSubscriptionKey);
         req.Headers.Add("Merchant-Serial-Number", merchantSerialNumber ?? throw new InvalidOperationException("Merchant-Serial-Number er ikke angivet."));
         req.Headers.Add("Vipps-System-Name", "paybysharepay");
         if (idempotencyKey is not null)
