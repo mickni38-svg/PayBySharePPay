@@ -1,4 +1,4 @@
-﻿using DataStorage.PayBySharePay.Entities;
+using DataStorage.PayBySharePay.Entities;
 using DataStorage.PayBySharePay.Repositories;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
@@ -85,6 +85,8 @@ public class VippsWebhookAndReadyToPayTests
         public Task SaveChangesAsync() => Task.CompletedTask;
         public Task UpdateAsync(Participant p) => Task.CompletedTask;
         public Task<IEnumerable<Participant>> SearchAsync(string q, int? exclude = null)
+            => Task.FromResult(Enumerable.Empty<Participant>());
+        public Task<IEnumerable<Participant>> GetAllPersonsAsync()
             => Task.FromResult(Enumerable.Empty<Participant>());
     }
 

@@ -109,6 +109,9 @@ public class GroupPaymentOrchestrationServiceTests
 
         public Task<IEnumerable<Participant>> SearchAsync(string query, int? excludeParticipantId = null)
             => Task.FromResult(Enumerable.Empty<Participant>());
+
+        public Task<IEnumerable<Participant>> GetAllPersonsAsync()
+            => Task.FromResult<IEnumerable<Participant>>(_store.Where(p => p.Type == DataStorage.PayBySharePay.Entities.ParticipantType.Person).ToList());
     }
 
     // ─── Helpers ────────────────────────────────────────────────────────────

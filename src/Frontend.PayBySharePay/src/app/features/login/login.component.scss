@@ -79,6 +79,29 @@
 
 .login__error { color: #e57373; font-size: .82rem; margin: 0; }
 
+.login__social {
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+  align-items: center;
+}
+
+.login__divider {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  color: #555;
+  font-size: .8rem;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #333;
+  }
+}
+
 .login__btn {
   background: #7c5cbf;
   border: none;

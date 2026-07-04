@@ -61,3 +61,6 @@ TestResults/
 publish/
 **/publish/
 /Ny mappe
+
+# Local SSL certificates (mkcert)
+src/Frontend.PayBySharePay/ssl/

@@ -94,4 +94,28 @@ public class ParticipantsController : ControllerBase
         var result = await _participantService.UpdateProfileAsync(dto);
         return Ok(result);
     }
+
+    [HttpGet("vipps-test-users")]
+    [ProducesResponseType(typeof(IEnumerable<Service.PayBySharePay.DTOs.VippsTestPersonDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetVippsTestUsers()
+    {
+        var result = await _participantService.GetVippsTestPersonsAsync();
+        return Ok(result);
+    }
+
+    [HttpPatch("{id:int}/vipps-test-user")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SetVippsTestUser(int id, [FromBody] SetVippsTestUserRequest request)
+    {
+        try
+        {
+            await _participantService.SetVippsTestUserAsync(id, request.VippsTestUserId);
+            return NoContent();
+        }
+        catch (InvalidOperationException)
+        {
+            return NotFound();
+        }
+    }
 }

@@ -33,6 +33,10 @@ export interface RegisterMerchantRequest {
   companyAddress?: string;
 }
 
+export interface ExternalLoginRequest {
+  idToken: string;
+}
+
 const TOKEN_KEY = 'sbys_token';
 const USER_KEY = 'sbys_user';
 
@@ -65,6 +69,13 @@ export class AuthService {
   registerMerchant(req: RegisterMerchantRequest): Observable<LoginResponse> {
     return this.http
       .post<LoginResponse>(`${environment.apiUrl}/api/auth/register-merchant`, req)
+      .pipe(tap(res => this._storeSession(res)));
+  }
+
+  googleLogin(idToken: string): Observable<LoginResponse> {
+    const body: ExternalLoginRequest = { idToken };
+    return this.http
+      .post<LoginResponse>(`${environment.apiUrl}/api/auth/google-login`, body)
       .pipe(tap(res => this._storeSession(res)));
   }
 

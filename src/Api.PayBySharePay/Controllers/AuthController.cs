@@ -1,6 +1,7 @@
 using Api.PayBySharePay.Auth;
 using Api.PayBySharePay.DTOs;
 using Microsoft.AspNetCore.Mvc;
+using Service.PayBySharePay;
 using Service.PayBySharePay.DTOs;
 using Service.PayBySharePay.Interfaces;
 
@@ -12,11 +13,16 @@ public class AuthController : ControllerBase
 {
     private readonly IParticipantService _participantService;
     private readonly JwtTokenService _tokenService;
+    private readonly IExternalAuthService _externalAuthService;
 
-    public AuthController(IParticipantService participantService, JwtTokenService tokenService)
+    public AuthController(
+        IParticipantService participantService,
+        JwtTokenService tokenService,
+        IExternalAuthService externalAuthService)
     {
         _participantService = participantService;
         _tokenService = tokenService;
+        _externalAuthService = externalAuthService;
     }
 
     /// <summary>
@@ -124,5 +130,38 @@ public class AuthController : ControllerBase
             Name = merchant.Name,
             ExpiresAt = expiresAt
         });
+    }
+
+    [HttpPost("google-login")]
+    [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> GoogleLogin([FromBody] ExternalLoginRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.IdToken))
+            return BadRequest(new { error = "IdToken må ikke være tomt." });
+
+        try
+        {
+            var person = await _externalAuthService.GoogleLoginAsync(request.IdToken);
+            var expiresAt = DateTime.UtcNow.AddMinutes(480);
+            var token = _tokenService.GenerateToken(person.Id, person.Name);
+
+            return Ok(new LoginResponse
+            {
+                Token = token,
+                ParticipantId = person.Id,
+                Name = person.Name,
+                ExpiresAt = expiresAt
+            });
+        }
+        catch (ExternalLoginEmailConflictException ex)
+        {
+            return Conflict(new { error = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 }

@@ -63,6 +63,7 @@ public class EndToEndFlowTests
         public Task SaveChangesAsync() => Task.CompletedTask;
         public Task UpdateAsync(Participant p) => Task.CompletedTask;
         public Task<IEnumerable<Participant>> SearchAsync(string q, int? exclude = null) => Task.FromResult(Enumerable.Empty<Participant>());
+        public Task<IEnumerable<Participant>> GetAllPersonsAsync() => Task.FromResult(Enumerable.Empty<Participant>());
     }
 
     private sealed class TrackingCallbackService : IMerchantCallbackService

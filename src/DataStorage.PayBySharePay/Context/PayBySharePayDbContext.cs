@@ -17,9 +17,19 @@ public class PayBySharePayDbContext : DbContext
     public DbSet<MerchantOrderLine> MerchantOrderLines => Set<MerchantOrderLine>();
     public DbSet<ParticipantPayment> ParticipantPayments => Set<ParticipantPayment>();
     public DbSet<PaymentEventLog> PaymentEventLogs => Set<PaymentEventLog>();
+    public DbSet<ParticipantExternalLogin> ParticipantExternalLogins => Set<ParticipantExternalLogin>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Participant>(entity =>
+        {
+            entity.HasOne(p => p.VippsTestUser)
+                .WithMany()
+                .HasForeignKey(p => p.VippsTestUserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .IsRequired(false);
+        });
+
         modelBuilder.Entity<Order>(entity =>
         {
             entity.HasOne(o => o.CreatedBy)
@@ -154,6 +164,21 @@ public class PayBySharePayDbContext : DbContext
                 .HasForeignKey(l => l.ParticipantId)
                 .OnDelete(DeleteBehavior.Restrict)
                 .IsRequired(false);
+        });
+
+        modelBuilder.Entity<ParticipantExternalLogin>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Provider).HasMaxLength(50);
+            entity.Property(e => e.ProviderUserId).HasMaxLength(256);
+            entity.Property(e => e.Email).HasMaxLength(256);
+
+            entity.HasIndex(e => new { e.Provider, e.ProviderUserId }).IsUnique();
+
+            entity.HasOne(e => e.Participant)
+                .WithMany(p => p.ExternalLogins)
+                .HasForeignKey(e => e.ParticipantId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

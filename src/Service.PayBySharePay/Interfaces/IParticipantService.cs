@@ -13,4 +13,6 @@ public interface IParticipantService
     Task<ParticipantDto> UpdateProfileAsync(UpdateProfileDto dto);
     Task<ParticipantDto?> GetByEmailAsync(string email);
     bool VerifyPassword(string password, string passwordHash);
+    Task<IEnumerable<VippsTestPersonDto>> GetVippsTestPersonsAsync();
+    Task SetVippsTestUserAsync(int participantId, int? vippsTestUserId);
 }

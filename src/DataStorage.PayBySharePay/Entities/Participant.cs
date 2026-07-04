@@ -38,7 +38,15 @@ public class Participant
     /// <summary>Vipps Ocp-Apim-Subscription-Key for dette salgssted. Null = brug global fra appsettings.</summary>
     public string? VippsSubscriptionKey { get; set; }
 
+    /// <summary>
+    /// Midlertidig dev-mapping: hvilken testperson i databasen repræsenterer denne bruger i Vipps sandbox.
+    /// Null = ingen mapping sat endnu.
+    /// </summary>
+    public int? VippsTestUserId { get; set; }
+    public Participant? VippsTestUser { get; set; }
+
     public ICollection<FriendRelation> FriendsInitiated { get; set; } = new List<FriendRelation>();
     public ICollection<FriendRelation> FriendsReceived { get; set; } = new List<FriendRelation>();
     public ICollection<OrderParticipant> OrderParticipants { get; set; } = new List<OrderParticipant>();
+    public ICollection<ParticipantExternalLogin> ExternalLogins { get; set; } = new List<ParticipantExternalLogin>();
 }

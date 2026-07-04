@@ -20,6 +20,7 @@ public static class DataStorageServiceExtensions
         services.AddScoped<IMerchantOrderDraftRepository, MerchantOrderDraftRepository>();
         services.AddScoped<IParticipantPaymentRepository, ParticipantPaymentRepository>();
         services.AddScoped<IPaymentEventLogRepository, PaymentEventLogRepository>();
+        services.AddScoped<IParticipantExternalLoginRepository, ParticipantExternalLoginRepository>();
 
         return services;
     }

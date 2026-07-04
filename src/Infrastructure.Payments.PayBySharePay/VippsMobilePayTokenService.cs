@@ -63,7 +63,12 @@ public sealed class VippsMobilePayTokenService
                 request.Headers.Add("Merchant-Serial-Number", msn);
 
             var response = await _http.SendAsync(request, cancellationToken);
-            response.EnsureSuccessStatusCode();
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
+                _logger.LogError("[VippsMobilePay] Token-kald fejlede: {StatusCode} – {Body}", (int)response.StatusCode, errorBody);
+                response.EnsureSuccessStatusCode();
+            }
 
             var body = await response.Content.ReadFromJsonAsync<AccessTokenResponse>(cancellationToken: cancellationToken)
                        ?? throw new InvalidOperationException("Tom respons fra access token endpoint.");

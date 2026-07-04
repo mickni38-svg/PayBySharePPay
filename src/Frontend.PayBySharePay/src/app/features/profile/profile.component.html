@@ -39,6 +39,33 @@
           </button>
         </div>
         <div class="profile__divider"></div>
+        <div class="profile__section-title">🧪 Vipps testperson</div>
+        <p class="profile__section-desc">Vælg hvilken testperson du er i Vipps sandbox</p>
+        <div class="profile__field">
+          <select class="profile__input profile__select"
+            [ngModel]="selectedVippsTestUserId()"
+            (ngModelChange)="selectedVippsTestUserId.set($event === 'null' ? null : +$event)"
+            name="vippsTestUser">
+            <option [ngValue]="null">— Ingen —</option>
+            @for (person of vippsTestPersons(); track person.id) {
+              <option [ngValue]="person.id"
+                      [disabled]="isVippsPersonDisabled(person)">
+                {{ person.name }}
+                @if (person.phone) { ({{ person.phone }}) }
+                @if (isVippsPersonDisabled(person)) { — optaget }
+              </option>
+            }
+          </select>
+        </div>
+        @if (vippsSaveSuccess()) {
+          <div class="profile__feedback profile__feedback--success">✓ Mapping gemt</div>
+        }
+        <button type="button" class="profile__save-btn profile__save-btn--secondary"
+          [disabled]="vippsSaving()"
+          (click)="saveVippsMapping()">
+          {{ vippsSaving() ? 'Gemmer…' : 'Gem Vipps-mapping' }}
+        </button>
+        <div class="profile__divider"></div>
         <div class="profile__section-title">Tema</div>
         <div class="profile__themes">
           <button type="button" class="profile__theme-btn"

@@ -54,6 +54,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   loginLoading = signal(false);
   resetLoading = signal(false);
   resetMessage = signal<string | null>(null);
+  devPanelOpen = signal(false);
 
   private routerSub?: Subscription;
 
@@ -185,7 +186,11 @@ export class HomeComponent implements OnInit, OnDestroy {
     });
   }
 
-  devLogin(): void {
+  toggleDevPanel(): void {
+      this.devPanelOpen.update(v => !v);
+    }
+
+    devLogin(): void {
     if (!this.selectedEmail) return;
     this.loginLoading.set(true);
     this.loginError.set(null);

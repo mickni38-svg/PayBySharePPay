@@ -28,7 +28,7 @@ builder.Services.AddSingleton<Api.PayBySharePay.Services.ILastMerchantCallbackSt
 builder.Services.AddScoped<Service.PayBySharePay.Interfaces.IMerchantCallbackService,
     Api.PayBySharePay.Services.MerchantCallbackService>();
 
-if (builder.Environment.IsDevelopment())
+if (builder.Environment.IsDevelopment() || builder.Environment.EnvironmentName == "Local")
 {
     builder.Services.AddHostedService<MerchantDemoHostedService>();
 }

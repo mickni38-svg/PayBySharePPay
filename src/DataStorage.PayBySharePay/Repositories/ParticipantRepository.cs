@@ -42,6 +42,14 @@ public class ParticipantRepository : IParticipantRepository
         return await _context.Participants.FindAsync(id);
     }
 
+    public async Task<IEnumerable<Participant>> GetAllPersonsAsync()
+    {
+        return await _context.Participants
+            .Where(p => p.Type == ParticipantType.Person)
+            .OrderBy(p => p.Name)
+            .ToListAsync();
+    }
+
     public async Task<Participant?> GetByEmailAsync(string email)
     {
         return await _context.Participants

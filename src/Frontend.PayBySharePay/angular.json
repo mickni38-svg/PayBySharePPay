@@ -1,4 +1,4 @@
-﻿{
+{
     "$schema":  "./node_modules/@angular/cli/lib/config/schema.json",
     "version":  1,
     "newProjectRoot":  "projects",
@@ -28,14 +28,19 @@
                                                                                                                    {
                                                                                                                        "glob":  "**/*",
                                                                                                                        "input":  "public"
-                                                                                                                   }
+                                                                                                                   },
+                                                                                                                   "src/favicon.ico",
+                                                                                                                   "src/assets",
+                                                                                                                   "src/manifest.webmanifest"
                                                                                                                ],
                                                                                                     "styles":  [
                                                                                                                    "src/styles.css"
                                                                                                                ],
                                                                                                     "scripts":  [
 
-                                                                                                                ]
+                                                                                                                ],
+                                                                                                                "serviceWorker": true,
+                                                                                                                "ngswConfigPath": "ngsw-config.json"
                                                                                                 },
                                                                                     "configurations":  {
                                                                                                            "production":  {
@@ -110,7 +115,10 @@
                                                                                                                               "buildTarget":  "Frontend.PayBySharePay:build:production"
                                                                                                                           },
                                                                                                            "development":  {
-                                                                                                                               "buildTarget":  "Frontend.PayBySharePay:build:development"
+                                                                                                                               "buildTarget":  "Frontend.PayBySharePay:build:development",
+                                                                                                                               "ssl":  true,
+                                                                                                                               "sslCert":  "ssl/localhost+1.pem",
+                                                                                                                               "sslKey":  "ssl/localhost+1-key.pem"
                                                                                                                            }
                                                                                                        },
                                                                                     "defaultConfiguration":  "development"
@@ -130,7 +138,10 @@
                                                                                                                   {
                                                                                                                       "glob":  "**/*",
                                                                                                                       "input":  "public"
-                                                                                                                  }
+                                                                                                                  },
+                                                                                                                  "src/favicon.ico",
+                                                                                                                  "src/assets",
+                                                                                                                  "src/manifest.webmanifest"
                                                                                                               ],
                                                                                                    "styles":  [
                                                                                                                   "src/styles.css"

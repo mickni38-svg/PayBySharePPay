@@ -2,7 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
-import { ProfileService, UpdateProfileRequest } from '../../core/services/profile.service';
+import { ProfileService, UpdateProfileRequest, VippsTestPersonDto } from '../../core/services/profile.service';
 import { ParticipantApiDto } from '../../core/models/participant.model';
 import { ThemeService } from '../../core/services/theme.service';
 
@@ -26,6 +26,11 @@ export class ProfileComponent implements OnInit {
   phone = signal('');
   notificationsEnabled = signal(true);
 
+  vippsTestPersons = signal<VippsTestPersonDto[]>([]);
+  selectedVippsTestUserId = signal<number | null>(null);
+  vippsSaving = signal(false);
+  vippsSaveSuccess = signal(false);
+
   constructor(
     private readonly auth: AuthService,
     private readonly profileService: ProfileService,
@@ -48,6 +53,38 @@ export class ProfileComponent implements OnInit {
       },
       error: () => {
         this.isLoading.set(false);
+      }
+    });
+
+    this.profileService.getVippsTestPersons().subscribe({
+      next: (persons) => {
+        this.vippsTestPersons.set(persons);
+        const myMapping = persons.find(p => p.mappedByParticipantId === userId);
+        this.selectedVippsTestUserId.set(myMapping?.id ?? null);
+      }
+    });
+  }
+
+  isVippsPersonDisabled(person: VippsTestPersonDto): boolean {
+    const userId = this.auth.currentUserId();
+    return person.mappedByParticipantId != null && person.mappedByParticipantId !== userId;
+  }
+
+  saveVippsMapping(): void {
+    const userId = this.auth.currentUserId();
+    if (!userId) return;
+    this.vippsSaving.set(true);
+    this.vippsSaveSuccess.set(false);
+    this.profileService.setVippsTestUser(userId, this.selectedVippsTestUserId()).subscribe({
+      next: () => {
+        this.vippsSaving.set(false);
+        this.vippsSaveSuccess.set(true);
+        setTimeout(() => this.vippsSaveSuccess.set(false), 3000);
+        // Opdatér local state så disable-logikken er korrekt
+        this.profileService.getVippsTestPersons().subscribe(persons => this.vippsTestPersons.set(persons));
+      },
+      error: () => {
+        this.vippsSaving.set(false);
       }
     });
   }

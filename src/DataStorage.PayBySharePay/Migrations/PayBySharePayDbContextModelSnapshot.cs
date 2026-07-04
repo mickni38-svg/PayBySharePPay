@@ -330,9 +330,52 @@ namespace DataStorage.PayBySharePay.Migrations
                     b.Property<string>("VippsSubscriptionKey")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("VippsTestUserId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("VippsTestUserId");
+
                     b.ToTable("Participants");
+                });
+
+            modelBuilder.Entity("DataStorage.PayBySharePay.Entities.ParticipantExternalLogin", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<int>("ParticipantId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ProviderUserId")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParticipantId");
+
+                    b.HasIndex("Provider", "ProviderUserId")
+                        .IsUnique();
+
+                    b.ToTable("ParticipantExternalLogins");
                 });
 
             modelBuilder.Entity("DataStorage.PayBySharePay.Entities.ParticipantPayment", b =>
@@ -610,6 +653,26 @@ namespace DataStorage.PayBySharePay.Migrations
                     b.Navigation("Participant");
                 });
 
+            modelBuilder.Entity("DataStorage.PayBySharePay.Entities.Participant", b =>
+                {
+                    b.HasOne("DataStorage.PayBySharePay.Entities.Participant", "VippsTestUser")
+                        .WithMany()
+                        .HasForeignKey("VippsTestUserId");
+
+                    b.Navigation("VippsTestUser");
+                });
+
+            modelBuilder.Entity("DataStorage.PayBySharePay.Entities.ParticipantExternalLogin", b =>
+                {
+                    b.HasOne("DataStorage.PayBySharePay.Entities.Participant", "Participant")
+                        .WithMany("ExternalLogins")
+                        .HasForeignKey("ParticipantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Participant");
+                });
+
             modelBuilder.Entity("DataStorage.PayBySharePay.Entities.ParticipantPayment", b =>
                 {
                     b.HasOne("DataStorage.PayBySharePay.Entities.Order", "Order")
@@ -666,6 +729,8 @@ namespace DataStorage.PayBySharePay.Migrations
 
             modelBuilder.Entity("DataStorage.PayBySharePay.Entities.Participant", b =>
                 {
+                    b.Navigation("ExternalLogins");
+
                     b.Navigation("FriendsInitiated");
 
                     b.Navigation("FriendsReceived");

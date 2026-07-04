@@ -409,21 +409,43 @@
   border-top-left-radius: var(--radius-md);
   border-top-right-radius: var(--radius-md);
   border-bottom: none;
-  padding: 12px 16px;
+  padding: 0 16px;
   opacity: 0.45;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  transition: opacity 0.2s;
 }
 
 .home__dev-panel:hover { opacity: 1; }
+.home__dev-panel--open { opacity: 1; padding-bottom: 12px; }
 
 .dev-panel__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 0;
+  background: none;
+  border: none;
+  cursor: pointer;
   font-size: 11px;
   font-weight: 700;
   color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.6px;
+  text-align: left;
+}
+
+.dev-panel__chevron {
+  font-size: 9px;
+  transform: rotate(180deg);
+  transition: transform 0.2s;
+  color: var(--color-text-muted);
+}
+
+.dev-panel__chevron--open {
+  transform: rotate(0deg);
 }
 
 .dev-panel__info {

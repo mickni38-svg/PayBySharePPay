@@ -2,14 +2,14 @@
 
 ## Goal
 
-Allow users to authenticate with PayNSync using either **Google Login** or **Apple Login** without requiring a traditional username/password. The solution must work for both the current web application and a future native mobile application while using PayNSync's own internal user identity.
+Allow users to authenticate with PayNSync using either **Google Login** or **Apple Login** without requiring a traditional username/password. The solution must work for both the current web application and future native mobile apps.
 
 ---
 
 # Actors
 
 - User
-- PayNSync Web Application
+- PayNSync Web Frontend
 - PayNSync Backend API
 - Google Identity Provider
 - Apple Identity Provider
@@ -18,7 +18,7 @@ Allow users to authenticate with PayNSync using either **Google Login** or **App
 
 # Preconditions
 
-- The user opens the PayNSync application.
+- The user opens the PayNSync web frontend application.
 - The user has either a Google account or an Apple ID.
 - Google and Apple authentication have been configured.
 
@@ -26,7 +26,7 @@ Allow users to authenticate with PayNSync using either **Google Login** or **App
 
 # Main Flow
 
-1. The user opens PayNSync.
+1. The user opens the PayNSync web frontend application.
 2. The login page is displayed.
 3. The user can choose one of the following options:
    - Continue with Google
@@ -164,6 +164,7 @@ without changing the backend authentication model.
 - The entire PayNSync domain uses the internal PayNSyncUserId.
 - Authentication provider IDs are never used as business identifiers.
 - The same backend authentication flow can later be reused by native mobile applications.
+- Det er kun den rigtige bruger login funktionalitet der skal ændres. (der hvor man logger ind med email og password)
 
 ---
 
@@ -190,3 +191,4 @@ The following are intentionally excluded from the MVP:
 - MitID authentication
 - Two-factor authentication
 - Enterprise Single Sign-On (SAML/OIDC)
+- Udvikler login funktionalieteten skal ikke ændres.

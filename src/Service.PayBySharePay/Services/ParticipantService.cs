@@ -139,6 +139,34 @@ public class ParticipantService : IParticipantService
     public bool VerifyPassword(string password, string passwordHash)
         => BCrypt.Net.BCrypt.Verify(password, passwordHash);
 
+    public async Task<IEnumerable<VippsTestPersonDto>> GetVippsTestPersonsAsync()
+    {
+        var allPersons = await _participantRepository.GetAllPersonsAsync();
+
+        // Byg et map: vippsTestUserId → hvem der har valgt den
+        var mappedBy = allPersons
+            .Where(p => p.VippsTestUserId.HasValue)
+            .ToDictionary(p => p.VippsTestUserId!.Value, p => p.Id);
+
+        return allPersons.Select(p => new VippsTestPersonDto
+        {
+            Id = p.Id,
+            Name = p.Name,
+            Phone = p.Phone,
+            MappedByParticipantId = mappedBy.TryGetValue(p.Id, out var mappedById) ? mappedById : null
+        });
+    }
+
+    public async Task SetVippsTestUserAsync(int participantId, int? vippsTestUserId)
+    {
+        var participant = await _participantRepository.GetByIdAsync(participantId)
+            ?? throw new InvalidOperationException($"Deltager {participantId} ikke fundet.");
+
+        participant.VippsTestUserId = vippsTestUserId;
+        await _participantRepository.UpdateAsync(participant);
+        await _participantRepository.SaveChangesAsync();
+    }
+
     private static ParticipantDto MapToDto(Participant p) => new()
     {
         Id = p.Id,

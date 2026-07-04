@@ -21,7 +21,7 @@ public class MerchantDemoHostedService : IHostedService, IDisposable
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        if (!_env.IsDevelopment()) return Task.CompletedTask;
+        if (!_env.IsDevelopment() && _env.EnvironmentName != "Local") return Task.CompletedTask;
 
         var merchantDemoPath = Path.GetFullPath(
             Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Frontend.MerchantDemo"));
