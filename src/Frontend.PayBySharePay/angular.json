@@ -44,7 +44,13 @@
                                                                                                 },
                                                                                     "configurations":  {
                                                                                                            "production":  {
-                                                                                                                              "budgets":  [
+                                                                                                                               "fileReplacements":  [
+                                                                                                                                                    {
+                                                                                                                                                        "replace":  "src/environments/environment.ts",
+                                                                                                                                                        "with":  "src/environments/environment.simply.ts"
+                                                                                                                                                    }
+                                                                                                                                                ],
+                                                                                                                               "budgets":  [
                                                                                                                                               {
                                                                                                                                                   "type":  "initial",
                                                                                                                                                   "maximumWarning":  "500kB",

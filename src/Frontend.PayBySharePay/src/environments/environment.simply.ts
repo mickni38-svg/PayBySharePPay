@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
   apiUrl: 'https://api.paynsync.dk',
-  googleClientId: 'REPLACE-WITH-YOUR-GOOGLE-CLIENT-ID.apps.googleusercontent.com'
+  googleClientId: '516791096558-4ltojonqocaenjgjrdguak8oj3fac47u.apps.googleusercontent.com'
 };

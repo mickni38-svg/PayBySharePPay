@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://paybysharepay-api.azurewebsites.net',
-  googleClientId: 'REPLACE-WITH-YOUR-GOOGLE-CLIENT-ID.apps.googleusercontent.com'
+  apiUrl: 'https://api.paynsync.dk',
+  googleClientId: '516791096558-4ltojonqocaenjgjrdguak8oj3fac47u.apps.googleusercontent.com'
 };

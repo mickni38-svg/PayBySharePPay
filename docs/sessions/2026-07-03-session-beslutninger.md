@@ -114,7 +114,39 @@ Vipps sandbox-brugere har andre navne end app-brugere. Mapping-feature lader en 
 
 ---
 
-## 6. Hvad mangler stadig (kendte gaps)
+## 6. Miljø-oversigt: Lokal vs. Produktion (Simply.com)
+
+| Indstilling | Lokal (`Local`) | Produktion (`Simply`) |
+|---|---|---|
+| **Angular build-kommando** | `ng serve` (development) | `ng build --configuration simply` |
+| **Angular environment-fil** | `environment.ts` | `environment.simply.ts` |
+| **Frontend URL** | `https://localhost:4200` | `https://mobil.paynsync.dk` |
+| **API URL (frontend)** | `https://localhost:7007` | `https://api.paynsync.dk` |
+| **API URL (appsettings)** | `https://localhost:7007` | `https://api.paynsync.dk` |
+| **MerchantDemo URL** | `http://localhost:8081` | `https://merchant.paynsync.dk` |
+| **ASPNETCORE_ENVIRONMENT** | `Local` | `Simply` *(injectet via deploy-workflow)* |
+| **appsettings-fil der loades** | `appsettings.json` + `appsettings.Local.json` | `appsettings.json` + `appsettings.Simply.json` |
+| **Connection string** | `appsettings.json` (DESKTOP-HNI6DDI\\SQLEXPRESS) | Injectet fra GitHub Secret `SIMPLY_DB_CONNECTION_STRING` |
+| **JWT Key** | `appsettings.json` (dev placeholder) | Injectet fra GitHub Secret `SIMPLY_JWT_KEY` |
+| **Google ClientId (API)** | `appsettings.Local.json` | `appsettings.Simply.json` |
+| **Google ClientId (Angular)** | `environment.ts` | `environment.simply.ts` |
+| **Vipps Provider** | `appsettings.Local.json` → `"MobilePay"` | `appsettings.Simply.json` → `"MobilePay"` |
+| **Vipps BaseUrl** | `https://apitest.vipps.no` | `https://apitest.vipps.no` *(sandbox)* |
+| **Vipps CallbackBaseUrl** | `https://<ngrok>.ngrok-free.dev` | `https://api.paynsync.dk` |
+| **HTTPS certifikat (Angular)** | mkcert (`ssl/localhost+1.pem`) – ikke i Git | Ikke relevant (bygges statisk) |
+| **Service Worker** | Deaktiveret (`isDevMode() = true`) | Aktiveret (`isDevMode() = false`) |
+| **Deploy-mekanisme** | Kør lokalt med VS / `dotnet run` | GitHub Actions → FTP til Simply.com |
+| **MerchantDemo autostart** | Ja, via `MerchantDemoHostedService` | Nej (statisk deploy på `merchant.paynsync.dk`) |
+
+### Vigtige noter
+- `appsettings.Local.json` er **ikke i Git** (`.gitignore`) – indeholder lokale secrets og ngrok-URL
+- `ssl/`-mappen er **ikke i Git** – mkcert-certifikater genereres lokalt én gang
+- Produktion bruger `appsettings.Simply.json` som base + GitHub Secrets for `ConnectionStrings` og `Jwt.Key`
+- Google ClientId er den **samme** i alle miljøer (samme Google Cloud projekt) – kun URL-origine adskiller
+
+---
+
+## 7. Hvad mangler stadig (kendte gaps)
 
 | Emne | Prioritet |
 |---|---|

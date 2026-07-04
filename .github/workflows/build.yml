@@ -46,7 +46,7 @@ jobs:
         working-directory: src/Frontend.PayBySharePay
         run: npm ci
 
-      - name: Build (production)
+      - name: Build (simply)
         working-directory: src/Frontend.PayBySharePay
-        run: npx ng build --configuration production
+        run: npx ng build --configuration simply
 
