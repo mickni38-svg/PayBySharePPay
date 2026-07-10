@@ -52,6 +52,15 @@ public class MessagesController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>Markér én besked som læst</summary>
+    [HttpPost("{id}/mark-read")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> MarkRead(int id)
+    {
+        await _messageService.MarkReadAsync(id);
+        return NoContent();
+    }
+
     [HttpPost]
     [ProducesResponseType(typeof(MessageDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

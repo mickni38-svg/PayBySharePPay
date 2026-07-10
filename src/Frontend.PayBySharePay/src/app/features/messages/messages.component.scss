@@ -1,103 +1,129 @@
-.messages {
-  background: var(--color-bg);
-  min-height: 100dvh;
-  padding-bottom: 80px;
-  font-family: var(--font-family);
+@use '../../../styles/design-tokens' as t;
+@use '../../../styles/components' as c;
+
+// ── Side-shell ────────────────────────────────────────────────────────────
+
+.notif {
+  @include c.page-shell;
 }
 
-.messages__header {
-  padding: 20px var(--space-page) 12px;
-  border-bottom: 1px solid var(--color-border);
-  h2 {
-    font-size: 22px;
-    font-weight: 700;
+// ── Header ────────────────────────────────────────────────────────────────
+
+.notif__header {
+  padding: 24px var(--space-page) 8px;
+}
+
+.notif__title {
+  @include c.page-title;
+}
+
+// ── Filter chips ──────────────────────────────────────────────────────────
+
+.notif__filters {
+  display: flex;
+  gap: t.$space-gap-sm;
+  padding: 10px var(--space-page) 14px;
+  overflow-x: auto;
+  @include c.hide-scrollbar;
+}
+
+.notif__chip {
+  @include c.chip;
+
+  &--active {
+    @include c.chip-active;
+  }
+
+  &:not(&--active):hover {
+    border-color: var(--color-cyan);
     color: var(--color-text-primary);
-    margin: 0;
   }
 }
 
-.messages__body {
-  padding: 12px var(--space-page);
+// ── Body ──────────────────────────────────────────────────────────────────
+
+.notif__body {
+  padding: 0 var(--space-page);
 }
 
-.messages__loading {
+.notif__loading {
   text-align: center;
   color: var(--color-text-secondary);
-  padding: 40px 0;
+  padding: 48px 0;
+  font-size: t.$text-sm;
 }
 
-.messages__list {
+// ── Liste ─────────────────────────────────────────────────────────────────
+
+.notif__list {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: t.$space-gap-sm;
 }
 
-.messages__item {
+// ── Enkelt notifikation ───────────────────────────────────────────────────
+
+.notif__item {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  background: var(--color-surface, #161929);
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 12px;
-  padding: 14px;
-  position: relative;
+  transition: border-color 0.15s;
+  text-decoration: none;   // når elementet er <a>
+  cursor: pointer;
 
-  &--unread {
-    border-color: rgba(0, 200, 200, 0.35);
-    background: rgba(0, 200, 200, 0.05);
-  }
-}
-
-.messages__item-icon {
-  font-size: 26px;
-  line-height: 1;
-  flex-shrink: 0;
-}
-
-.messages__item-body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.messages__item-text {
-  color: var(--color-text-primary);
-  font-size: 14px;
-  margin: 0;
-  line-height: 1.5;
-}
-
-.messages__item-link {
-  display: inline-block;
-  background: var(--color-primary, #2ecc71);
-  color: #000;
-  font-weight: 600;
-  font-size: 13px;
-  padding: 7px 14px;
-  border-radius: 8px;
-  text-decoration: none;
-  width: fit-content;
-
-  &:hover {
+  &:active {
     opacity: 0.85;
   }
+
+  &--unread {
+    border-left: 3px solid t.$color-accent-blue;
+    padding-left: 9px;   // kompenser for den ekstra border-width
+    background: rgba(t.$color-accent-blue, 0.06);
+  }
 }
 
-.messages__item-time {
-  font-size: 11px;
+// ── Midterste kolonne: tekst ─────────────────────────────────────────────
+
+.notif__content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.notif__text {
+  font-size: t.$text-sm;
+  font-weight: t.$weight-regular;
   color: var(--color-text-secondary);
+  line-height: 1.4;
+  margin: 0;
+
+  &--unread {
+    color: var(--color-text-primary);
+  }
 }
 
-.messages__item-dot {
-  width: 9px;
-  height: 9px;
-  background: #00c8c8;
-  border-radius: 50%;
+.notif__time {
+  font-size: t.$text-xs;
+  font-weight: t.$weight-regular;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+// ── Højre kolonne: dato ───────────────────────────────────────────────────
+
+.notif__action-col {
   flex-shrink: 0;
-  margin-top: 3px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
 }
-

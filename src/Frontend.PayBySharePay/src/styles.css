@@ -70,6 +70,13 @@ button, a, input, select, textarea {
   touch-action: manipulation;
 }
 
+/* Reset browser UA bold på button */
+button {
+  font-weight: inherit;
+  font-family: inherit;
+  font-size: inherit;
+}
+
 /* -- Utility: Layout -- */
 .page-shell {
   background: var(--color-bg);

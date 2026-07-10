@@ -55,6 +55,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
   private _detailsCache = signal<Map<number, OrderOverviewApiDto>>(new Map());
   private _expandedIds = signal<Set<number>>(new Set());
   private _loadingIds = signal<Set<number>>(new Set());
+  private _detailsOpenIds = signal<Set<number>>(new Set());
 
   private readonly AVATAR_COLORS = [
     '#7c5cbf','#2e7d32','#1565c0','#ad1457',
@@ -271,6 +272,21 @@ export class OrdersComponent implements OnInit, OnDestroy {
 
   isLoadingDetails(id: number): boolean {
     return this._loadingIds().has(id);
+  }
+
+  isDetailsOpen(id: number): boolean {
+    return this._detailsOpenIds().has(id);
+  }
+
+  toggleDetails(id: number): void {
+    const current = this._detailsOpenIds();
+    const next = new Set(current);
+    if (next.has(id)) {
+      next.delete(id);
+    } else {
+      next.add(id);
+    }
+    this._detailsOpenIds.set(next);
   }
 
   payOrder(vm: { id: number; totalOrderedAmount: number }): void {

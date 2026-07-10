@@ -47,6 +47,11 @@ export class MessageService {
     return this.http.post<void>(`${this.apiUrl}/mark-read?participantId=${participantId}`, {});
   }
 
+  // POST /api/messages/{id}/mark-read
+  markRead(messageId: number): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${messageId}/mark-read`, {});
+  }
+
   // POST /api/messages
   createMessage(request: CreateMessageRequest): Observable<Message> {
     return this.http.post<Message>(this.apiUrl, request);

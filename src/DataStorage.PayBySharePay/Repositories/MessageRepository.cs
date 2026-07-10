@@ -31,6 +31,11 @@ public class MessageRepository : IMessageRepository
             .ToListAsync();
     }
 
+    public async Task<Message?> GetByIdAsync(int messageId)
+    {
+        return await _context.Messages.FindAsync(messageId);
+    }
+
     public async Task<Message> AddAsync(Message message)
     {
         _context.Messages.Add(message);

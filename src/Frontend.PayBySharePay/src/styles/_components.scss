@@ -1,0 +1,108 @@
+// ═══════════════════════════════════════════════════════════════
+//  PayNSync – Genbrugelige komponent-styles
+//  Import: @use '../../../styles/components' as *;
+// ═══════════════════════════════════════════════════════════════
+@use './design-tokens' as t;
+
+// ── Page shell ──────────────────────────────────────────────────
+@mixin page-shell {
+  background: var(--color-bg);
+  min-height: 100dvh;
+  padding-bottom: 88px;
+  font-family: var(--font-family);
+}
+
+// ── Page header ─────────────────────────────────────────────────
+@mixin page-title {
+  font-size: t.$text-2xl;
+  font-weight: t.$weight-title;
+  color: var(--color-text-primary);
+  letter-spacing: -0.5px;
+  margin: 0;
+}
+
+// ── Card ────────────────────────────────────────────────────────
+@mixin card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: t.$radius-md;
+  padding: t.$space-card;
+}
+
+// ── Chip / filter-pill ──────────────────────────────────────────
+@mixin chip {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 15px;
+  border-radius: t.$radius-pill;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: t.$text-sm;
+  font-weight: t.$weight-regular;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  min-height: 34px;
+}
+
+@mixin chip-active {
+  background: t.$color-accent-blue;
+  border-color: t.$color-accent-blue;
+  color: #fff;
+  font-weight: t.$weight-regular;
+}
+
+// ── Action-knap (inline i card) ─────────────────────────────────
+@mixin action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: t.$color-accent-blue;
+  color: #fff;
+  font-size: t.$text-sm;
+  font-weight: t.$weight-regular;
+  padding: 7px 18px;
+  border-radius: t.$radius-sm;
+  text-decoration: none;
+  min-height: auto;
+  white-space: nowrap;
+  transition: background 0.15s;
+
+  &:hover { background: t.$color-accent-blue-hover; }
+}
+
+// ── Ulæst-dot ───────────────────────────────────────────────────
+@mixin unread-dot($size: 9px, $color: t.$color-accent-blue) {
+  flex-shrink: 0;
+  width: $size;
+  height: $size;
+  background: $color;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba($color, 0.7);
+}
+
+// ── Ikoncirkel ──────────────────────────────────────────────────
+@mixin icon-circle($size: 44px) {
+  flex-shrink: 0;
+  width: $size;
+  height: $size;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// ── Scrollbar-skjul ─────────────────────────────────────────────
+@mixin hide-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+// ── Tekst-truncate ──────────────────────────────────────────────
+@mixin truncate {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

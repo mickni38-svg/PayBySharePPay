@@ -1,43 +1,83 @@
-<div class="messages">
-  <div class="messages__header">
-    <h2>Notifikationer</h2>
+<div class="notif">
+
+  <!-- Header -->
+  <div class="notif__header">
+    <h1 class="notif__title">Notifikationer</h1>
   </div>
 
-  <div class="messages__body">
+  <!-- Filter chips -->
+  <div class="notif__filters">
+    <button class="notif__chip" [class.notif__chip--active]="activeFilter() === 'alle'" (click)="setFilter('alle')">
+      Alle
+    </button>
+    <button class="notif__chip" [class.notif__chip--active]="activeFilter() === 'bestillinger'" (click)="setFilter('bestillinger')">
+      🍕 Bestillinger
+    </button>
+    <button class="notif__chip" [class.notif__chip--active]="activeFilter() === 'beskeder'" (click)="setFilter('beskeder')">
+      💬 Beskeder
+    </button>
+  </div>
+
+  <!-- Liste -->
+  <div class="notif__body">
     @if (isLoading()) {
-      <div class="messages__loading">Henter beskeder…</div>
-    } @else if (messages().length === 0) {
+      <div class="notif__loading">Henter beskeder…</div>
+    } @else if (filteredMessages().length === 0) {
       <app-empty-state
         icon="💬"
-        title="Ingen beskeder endnu"
+        title="Ingen beskeder"
         subtitle="Beskeder vises her, når der er aktivitet i dine gruppebetalinger."
       />
     } @else {
-      <ul class="messages__list">
-        @for (msg of messages(); track msg.id) {
-          <li class="messages__item" [class.messages__item--unread]="!msg.isRead">
-            <div class="messages__item-icon">🍕</div>
-            <div class="messages__item-body">
-              <p class="messages__item-text">{{ textWithoutUrl(msg.content) }}</p>
-              @if (extractUrl(msg.content); as url) {
-                @if (internalPath(url); as path) {
-                  <a [routerLink]="path" class="messages__item-link">
-                    👆 Gå til Overblik
-                  </a>
-                } @else {
-                  <a [href]="url" target="_blank" rel="noopener" class="messages__item-link">
-                    👆 Klik her for at bestille
-                  </a>
-                }
-              }
-              <span class="messages__item-time">{{ msg.createdAt | date:'d. MMM HH:mm' }}</span>
-            </div>
-            @if (!msg.isRead) {
-              <span class="messages__item-dot"></span>
-            }
-          </li>
+      <ul class="notif__list">
+        @for (msg of filteredMessages(); track msg.id) {
+          @let url = extractUrl(msg.content);
+          @let path = url ? internalPath(url) : null;
+
+          @if (path) {
+            <a [routerLink]="path"
+               class="notif__item"
+               [class.notif__item--unread]="!msg.isRead"
+               (click)="onCardClick(msg)">
+              <div class="notif__content">
+                <p class="notif__text" [class.notif__text--unread]="!msg.isRead">
+                  {{ textWithoutUrl(msg.content) }}
+                </p>
+              </div>
+              <div class="notif__action-col">
+                <span class="notif__time">{{ msg.createdAt | date:'d. MMM HH:mm' }}</span>
+              </div>
+            </a>
+          } @else if (url) {
+            <a [href]="url" target="_blank" rel="noopener"
+               class="notif__item"
+               [class.notif__item--unread]="!msg.isRead"
+               (click)="onCardClick(msg)">
+              <div class="notif__content">
+                <p class="notif__text" [class.notif__text--unread]="!msg.isRead">
+                  {{ textWithoutUrl(msg.content) }}
+                </p>
+              </div>
+              <div class="notif__action-col">
+                <span class="notif__time">{{ msg.createdAt | date:'d. MMM HH:mm' }}</span>
+              </div>
+            </a>
+          } @else {
+            <li class="notif__item" [class.notif__item--unread]="!msg.isRead"
+                (click)="onCardClick(msg)">
+              <div class="notif__content">
+                <p class="notif__text" [class.notif__text--unread]="!msg.isRead">
+                  {{ textWithoutUrl(msg.content) }}
+                </p>
+              </div>
+              <div class="notif__action-col">
+                <span class="notif__time">{{ msg.createdAt | date:'d. MMM HH:mm' }}</span>
+              </div>
+            </li>
+          }
         }
       </ul>
     }
   </div>
 </div>
+

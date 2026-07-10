@@ -60,20 +60,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Usecases", "Usecases", "{83
 		docs\usecases\UC-15-dev-og-seed-tools.md = docs\usecases\UC-15-dev-og-seed-tools.md
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Stories", "Stories", "{9637ED3B-78A9-4699-82E0-555E4B42F55B}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UC-01", "UC-01", "{E9AA68C8-09A6-4FF3-8F06-8BAD67F4B895}"
-	ProjectSection(SolutionItems) = preProject
-		docs\Stories\UC-01\UC-01-S01-registrer-privat-bruger.md = docs\Stories\UC-01\UC-01-S01-registrer-privat-bruger.md
-		docs\Stories\UC-01\UC-01-S02-valider-adgangskoder-matcher.md = docs\Stories\UC-01\UC-01-S02-valider-adgangskoder-matcher.md
-		docs\Stories\UC-01\UC-01-S03-haandter-duplikat-email-person.md = docs\Stories\UC-01\UC-01-S03-haandter-duplikat-email-person.md
-		docs\Stories\UC-01\UC-01-S04-registrer-merchant.md = docs\Stories\UC-01\UC-01-S04-registrer-merchant.md
-		docs\Stories\UC-01\UC-01-S05-haandter-duplikat-email-merchant.md = docs\Stories\UC-01\UC-01-S05-haandter-duplikat-email-merchant.md
-		docs\Stories\UC-01\UC-01-S06-haandter-netvaerksfejl-ved-registrering.md = docs\Stories\UC-01\UC-01-S06-haandter-netvaerksfejl-ved-registrering.md
-		docs\Stories\UC-01\UC-01-S07-merchant-adgangskode.md = docs\Stories\UC-01\UC-01-S07-merchant-adgangskode.md
-		docs\Stories\UC-01\UC-01-S08-saet-merchant-grouporderurl-ved-oprettelse.md = docs\Stories\UC-01\UC-01-S08-saet-merchant-grouporderurl-ved-oprettelse.md
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -167,7 +153,6 @@ Global
 		{E6C9E751-5F98-81B9-BA74-E896211850F5} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{398A0D78-3CF4-A73D-F4E0-A8FA26EC7BC9} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{1D6C0AA3-9C1B-4739-A1A0-CB9B9AC11EE4} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
-		{E9AA68C8-09A6-4FF3-8F06-8BAD67F4B895} = {9637ED3B-78A9-4699-82E0-555E4B42F55B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {BA30F0F2-60FE-42BD-B247-35C9335F6B02}

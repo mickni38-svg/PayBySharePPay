@@ -9,4 +9,5 @@ public interface IMessageService
     Task<IEnumerable<MessageDto>> GetByParticipantAsync(int participantId);
     Task<int> GetUnreadCountAsync(int participantId);
     Task MarkAllReadAsync(int participantId);
+    Task MarkReadAsync(int messageId);
 }

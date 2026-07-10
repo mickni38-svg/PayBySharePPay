@@ -6,6 +6,7 @@ public interface IMessageRepository
 {
     Task<IEnumerable<Message>> GetByOrderIdAsync(int orderId);
     Task<IEnumerable<Message>> GetByParticipantIdAsync(int participantId);
+    Task<Message?> GetByIdAsync(int messageId);
     Task<Message> AddAsync(Message message);
     Task SaveChangesAsync();
 }

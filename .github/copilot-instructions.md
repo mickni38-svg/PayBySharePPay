@@ -42,8 +42,7 @@ Før du implementerer en feature:
 6. Implementér løsningen.
 7. Kør build og tests.
 8. Ret eventuelle fejl.
-9. Opdater `docs/current-state.md` og den relevante `docs/usecases/UC-XX-*.md` hvis funktionaliteten er ændret og den relevante `docs/stories/UC-XX/UC-XX-*.md` hvis funktionaliteten er ændret..
-
+9. Opdater `docs/current-state.md` og den relevante `docs/usecases/UC-XX-*.md` hvis funktionaliteten er ændret 
 ---
 
 # PayNSync – Solution Knowledge
@@ -70,7 +69,8 @@ PayNSync is a group payment platform. A Host creates a group order at a Merchant
 * Currency defaults to `"DKK"`.
 
 ## Core domain objects
-* `Participant` — Person or Merchant (single table, `ParticipantType` enum)
+* `Participant` — Person or Merchant (single table, `ParticipantType` enum). Has nullable `VippsTestUserId` (self-ref FK) for sandbox test-user mapping.
+* `ParticipantExternalLogin` — links a `Participant` to an external provider (e.g. Google) via `Provider` + `ProviderUserId`
 * `Order` — group order, created by Host, optional `MerchantParticipantId`
 * `OrderParticipant` — join record with `Status` and `ParticipantToken` (unique GUID)
 * `ParticipantPayment` — provider-backed payment per participant per order (`ParticipantPaymentStatus` enum)
@@ -94,6 +94,9 @@ Failure paths: `ReservationFailed`, `CaptureFailed`, `Cancelled`, `Expired`, `Re
 
 ## API authentication
 * `OrdersController` — `[Authorize]` (JWT required)
+* `POST /api/auth/register` — `[AllowAnonymous]` (opret bruger med email/password)
+* `POST /api/auth/login` — `[AllowAnonymous]` (email/password login, returnerer JWT)
+* `POST /api/auth/google-login` — `[AllowAnonymous]` (Google ID-token validering, returnerer JWT)
 * `POST /api/merchant-orders` — `[AllowAnonymous]` (merchant websites call this)
 * `POST /api/payments/webhooks/*` — `[AllowAnonymous]` (no signature validation yet)
 * `ParticipantsController`, `FriendsController`, `MessagesController`, `DirectoryController` — no `[Authorize]` at class level
@@ -104,6 +107,9 @@ Switch via `AddPaymentInfrastructure(config)` in `PaymentInfrastructureExtension
 
 ## Frontend routes (Angular)
 `/home`, `/orders`, `/orders/create`, `/orders/:id`, `/messages`, `/profile`, `/pending-participants`, `/find-participants`, `/login`, `/register`
+
+## PWA
+Frontend er konfigureret som Progressive Web App med `manifest.webmanifest`, service worker (`ngsw-config.json`), og ikoner under `public/icons/`. IIS `web.config` har MIME-type mappings for `.webmanifest` og `.woff2`. Lokal HTTPS bruger mkcert-genererede certifikater.
 
 ## Deployed Environments
 **Hosting: Simply.com (nt31.unoeuro.com) — IKKE Azure.**
@@ -126,6 +132,9 @@ API-deploy bruger `app_offline.htm`-tricket for at frigøre fillåse under deplo
 4. Webhook signature validation not implemented
 5. `ExternalPaymentService` (used in `/pay`) always returns success — legacy stub
 6. `ParticipantsController` has no auth — may be intentional for public search
+7. Apple Login not implemented (only Google is done)
+8. `CheckAndSetReadyToPayAsync` fires too early in `MerchantOrderService` for MobilePay/Vipps flows — notification sent before reservation is confirmed (see `docs/bugs/BUG-01-readytopay-besked-for-tidlig.md`)
+9. Vipps test-user mapping (`VippsTestUserId`) is a sandbox workaround — not for production
 
 ## Documentation files
 * `docs/project-overview.md` — what the system is, projects, tech stack, deployed URLs
@@ -134,6 +143,7 @@ API-deploy bruger `app_offline.htm`-tricket for at frigøre fillåse under deplo
 * `docs/glossary.md` — domain term definitions
 * `docs/current-state.md` — feature-by-feature ✅/⚠️/❌ implementation status
 * `docs/flows.md` — step-by-step description of all major flows
+* `docs/bugs/BUG-01-readytopay-besked-for-tidlig.md` — timing bug: ReadyToPay notification sendes før reservation er bekræftet
 * `docs/usecases/UC-XX-navn.md` — one file per use case (see format below)
 
 ## Use case format (`docs/usecases/`)
@@ -146,9 +156,9 @@ Each use case follows this structure and naming:
 
 ### Oprettede use cases
 * `docs/usecases/UC-01-opret-bruger.md` — Registrering af Person og Merchant
-* `docs/usecases/UC-02-log-ind.md` — Login med e-mail og password
+* `docs/usecases/UC-02-log-ind.md` — Login med e-mail/password og Google login
 * `docs/usecases/UC-03-log-ud.md` — Manuel og automatisk logout
-* `docs/usecases/UC-04-opdater-profil.md` — Rediger navn, e-mail og telefon
+* `docs/usecases/UC-04-opdater-profil.md` — Rediger navn, e-mail, telefon og Vipps test-user mapping
 * `docs/usecases/UC-05-find-deltagere-tilfoj-ven.md` — Katalog-søgning og vennehåndtering
 * `docs/usecases/UC-06-opret-ordre.md` — Opret gruppeordre og invitér deltagere
 * `docs/usecases/UC-07-se-ordrer-og-overblik.md` — Se ordreliste og ordreoverblik
@@ -160,4 +170,5 @@ Each use case follows this structure and naming:
 * `docs/usecases/UC-13-payment-webhook.md` — Modtag async betalingsstatus fra provider
 * `docs/usecases/UC-14-legacy-betaling.md` — Manuelt betalingsflow (stub, pre-provider)
 * `docs/usecases/UC-15-dev-og-seed-tools.md` — DevController og seed-CLI til testdata
+* `docs/usecases/UC-16-vipps-testbruger-mapping.md` — Sandbox: map Vipps testbruger til Participant
 

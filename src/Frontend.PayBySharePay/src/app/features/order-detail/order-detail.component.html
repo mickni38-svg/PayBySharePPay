@@ -1,211 +1,195 @@
-<div class="detail">
+<div class="od">
 
-  <!-- Header med titel -->
-  <header class="detail__header">
-    <button class="detail__back" (click)="goBack()">&#8249;</button>
-    @if (order()) {
-      <h1 class="detail__title">{{ order()!.title }} {{ activeCategoryIcon() }}</h1>
-    } @else {
-      <h1 class="detail__title">Ordre</h1>
-    }
-    <div class="detail__header-end"></div>
+  <!-- Header -->
+  <header class="od__header">
+    <button class="od__back" (click)="goBack()">&#8249;</button>
+    <h1 class="od__title">
+      @if (order()) { {{ order()!.title }} } @else { Ordre }
+    </h1>
+    <div class="od__header-end"></div>
   </header>
 
-  <!-- Overblik / Detaljer tabs -->
-  <div class="detail__tabs">
-    <button class="detail__tab" [class.detail__tab--active]="activeTab() === 'overview'" (click)="activeTab.set('overview')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14">
-        <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
-      </svg>
-      Overblik
-    </button>
-    <button class="detail__tab" [class.detail__tab--active]="activeTab() === 'details'" (click)="activeTab.set('details')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14">
-        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
-        <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
-      </svg>
-      Detaljer
-    </button>
-  </div>
-
   @if (isLoading()) {
-    <p class="detail__state">Henter ordre...</p>
+    <p class="od__state">Henter ordre...</p>
   } @else if (errorMessage()) {
-    <p class="detail__state detail__state--error">{{ errorMessage() }}</p>
-  } @else if (activeTab() === 'overview') {
-
-    <!-- Deltagere -->
-    <div class="detail__section-header">Deltagere ({{ participants().length }})</div>
-    <div class="detail__participants">
-      @for (p of participants(); track p.participantId) {
-        <div class="participant-block">
-          <div class="participant" (click)="toggleExpand(p.participantId)">
-            <div class="participant__avatar" [style.background]="p.avatarColor">
-              {{ p.initials }}
-            </div>
-            <div class="participant__info">
-              <span class="participant__name">
-                {{ p.participantName }}
-                @if (isCurrentUser(p.participantId)) { <span class="participant__you">(dig)</span> }
-              </span>
-            </div>
-            <div class="participant__right">
-              <span [class]="'status-chip ' + participantChipClass(p)">{{ participantChipLabel(p) }}</span>
-              <span class="participant__arrow" [class.participant__arrow--open]="isExpanded(p.participantId)">&#8250;</span>
-            </div>
-          </div>
-
-          <div class="order-lines" [class.order-lines--open]="isExpanded(p.participantId)">
-            @if (p.orderLines.length === 0) {
-              <p class="order-lines__empty">Ingen bestilling endnu</p>
-            } @else {
-              @for (line of p.orderLines; track line.name) {
-                <div class="order-line">
-                  <span class="order-line__qty">{{ line.quantity }}x</span>
-                  <span class="order-line__name">{{ line.name }}</span>
-                  <span class="order-line__price">{{ line.quantity * line.unitPrice | number:'1.2-2' }} kr.</span>
-                </div>
-              }
-              <div class="order-line order-line--total">
-                <span></span>
-                <span>Total</span>
-                <span>{{ lineTotal(p.orderLines) | number:'1.2-2' }} kr.</span>
-              </div>
-            }
-            @if (participantPaymentStatus(p.participantId)) {
-              <div class="order-line order-line--payment">
-                <span class="order-line__label">Betaling</span>
-                <span [class]="'payment-chip payment-chip--' + participantPaymentStatus(p.participantId).toLowerCase()">
-                  {{ paymentStatusLabel(participantPaymentStatus(p.participantId)) }}
-                </span>
-              </div>
-            }
-          </div>
-        </div>
-      }
-    </div>
-
-    <!-- Bestilling samlet -->
-    <div class="detail__section-header">Bestilling</div>
-    <div class="detail__order-summary">
-      @if (activeCategoryIcon()) {
-        <div class="order-summary-line">
-          <span class="order-summary-line__icon">{{ activeCategoryIcon() }}</span>
-          <span class="order-summary-line__name">{{ activeCategoryLabel() }}</span>
-          <span class="order-summary-line__price"></span>
-        </div>
-      }
-      <div class="order-summary-line order-summary-line--total">
-        <span>I alt</span>
-        <span></span>
-        <span>{{ grandTotal() | number:'1.2-2' }} kr.</span>
-      </div>
-      <p class="order-summary__note">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13">
-          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-        Ingen har betalt endnu
-      </p>
-    </div>
-
-    <!-- Doc 06 §6: Alle reserveret → Godkend ordre -->
-    @if (isCurrentUser(createdByParticipantId())) {
-
-      @if (canApprove()) {
-        <div class="detail__approve-banner">
-          <p class="detail__approve-banner-title">Alle betalinger er reserveret</p>
-          <button class="btn btn--primary detail__approve-btn" (click)="approveOrder()">
-            Godkend ordre
-          </button>
-          <p class="detail__approve-sub">
-            Når du godkender ordren, gennemfører PayNSync de reserverede betalinger for alle deltagere.
-            Du betaler kun din egen bestilling.
-          </p>
-        </div>
-      }
-
-      <!-- Doc 06 §7: Capture i gang -->
-      @if (isCapturing() && captureResults().length > 0) {
-        <div class="detail__capture-progress">
-          <p class="detail__capture-title">Gennemfører betalinger...</p>
-          @for (r of captureResults(); track r.participantId) {
-            <div class="capture-row">
-              <span class="capture-row__name">{{ r.participantName }}</span>
-              @if (r.success) {
-                <span class="capture-row__status capture-row__status--ok">Gennemført</span>
-              } @else {
-                <span class="capture-row__status capture-row__status--fail">Fejlet</span>
-              }
-            </div>
-          }
-        </div>
-      }
-
-      @if (isApproving() && captureResults().length === 0) {
-        <p class="detail__state">Gennemfører betalinger...</p>
-      }
-
-      <!-- Doc 06 §8: Delvis fejlet -->
-      @if (isPartiallyFailed()) {
-        <div class="detail__partial-fail">
-          <p class="detail__partial-fail-title">Ordren kunne ikke gennemføres fuldt ud.</p>
-          @for (r of captureResults(); track r.participantId) {
-            @if (!r.success) {
-              <p class="detail__partial-fail-line">{{ r.participantName }}'s betaling fejlede.</p>
-            }
-          }
-          <p class="detail__partial-fail-note">
-            Allerede gennemførte betalinger er markeret som betalt.
-            Du kan prøve igen eller annullere de resterende reservationer.
-          </p>
-          <button class="btn btn--primary detail__approve-btn" (click)="approveOrder()">
-            Prøv igen
-          </button>
-        </div>
-      }
-
-      @if (approveError()) {
-        <p class="detail__state detail__state--error">{{ approveError() }}</p>
-      }
-    }
-
+    <p class="od__state od__state--error">{{ errorMessage() }}</p>
   } @else {
 
-    <!-- Detaljer tab -->
-    @if (order()?.message) {
-      <div class="detail__section-header">Besked</div>
-      <div class="detail__message-box">{{ order()?.message }}</div>
-    }
-    <div class="detail__info-list">
-      <div class="detail__info-row">
-        <span class="detail__info-label">Kategori</span>
-        <span class="detail__info-value">{{ activeCategoryIcon() }} {{ activeCategoryLabel() || '-' }}</span>
+    <!-- ① Overblik accordion (default åben) -->
+    <div class="od__card" [class.od__card--open]="isSummaryOpen()">
+      <button class="od__accordion-hdr" (click)="isSummaryOpen.set(!isSummaryOpen())">
+        <div class="od__accordion-left">
+          <span class="od__cat-icon">{{ activeCategoryIcon() }}</span>
+          <span class="od__accordion-title">{{ order()!.title }}</span>
+        </div>
+        <span class="od__chevron" [class.od__chevron--open]="isSummaryOpen()">&#8250;</span>
+      </button>
+
+      <div class="od__accordion-body">
+        <div class="od__summary-row">
+          <span class="od__amount">{{ grandTotal() | number:'1.2-2' }} kr.</span>
+          <span class="od__sub">{{ orderedCount() }} af {{ totalCount() }} har bestilt</span>
+        </div>
+
+        @if (canApprove()) {
+          <div class="od__approve-banner">
+            <p class="od__approve-title">Alle betalinger er reserveret</p>
+            <button class="od__approve-btn" (click)="approveOrder()">Godkend ordre</button>
+            <p class="od__approve-sub">Når du godkender ordren, gennemfører PayNSync de reserverede betalinger for alle deltagere.</p>
+          </div>
+        }
+
+        @if (isCapturing() && captureResults().length > 0) {
+          <div class="od__capture-progress">
+            <p class="od__capture-title">Gennemfører betalinger...</p>
+            @for (r of captureResults(); track r.participantId) {
+              <div class="od__capture-row">
+                <span>{{ r.participantName }}</span>
+                @if (r.success) {
+                  <span class="od__capture-ok">Gennemført</span>
+                } @else {
+                  <span class="od__capture-fail">Fejlet</span>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        @if (isApproving() && captureResults().length === 0) {
+          <p class="od__state">Gennemfører betalinger...</p>
+        }
+
+        @if (isPartiallyFailed()) {
+          <div class="od__partial-fail">
+            <p class="od__partial-fail-title">Ordren kunne ikke gennemføres fuldt ud.</p>
+            @for (r of captureResults(); track r.participantId) {
+              @if (!r.success) { <p class="od__partial-fail-line">{{ r.participantName }}'s betaling fejlede.</p> }
+            }
+            <button class="od__approve-btn" (click)="approveOrder()">Prøv igen</button>
+          </div>
+        }
+
+        @if (approveError()) {
+          <p class="od__state od__state--error">{{ approveError() }}</p>
+        }
       </div>
-      <div class="detail__info-row">
-        <span class="detail__info-label">Status</span>
-        <span class="detail__info-value">{{ order()?.status }}</span>
+    </div>
+
+    <!-- ② Ordredetaljer accordion (default lukket) -->
+    <div class="od__card" [class.od__card--open]="isDetailsOpen()">
+      <button class="od__accordion-hdr" (click)="isDetailsOpen.set(!isDetailsOpen())">
+        <div class="od__accordion-left">
+          <svg class="od__section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <rect x="5" y="2" width="14" height="20" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="15" x2="12" y2="15"/>
+          </svg>
+          <span class="od__accordion-title">Ordredetaljer</span>
+        </div>
+        <span class="od__chevron" [class.od__chevron--open]="isDetailsOpen()">&#8250;</span>
+      </button>
+
+      <div class="od__accordion-body">
+        <div class="od__info-list">
+          <div class="od__info-row">
+            <span class="od__info-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="13" height="13"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
+              Ordrenr.
+            </span>
+            <span class="od__info-value">#{{ order()!.id }}</span>
+          </div>
+          <div class="od__info-row">
+            <span class="od__info-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="13" height="13"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Oprettet
+            </span>
+            <span class="od__info-value">{{ order()!.createdDate | date:'d. MMMM yyyy' }}</span>
+          </div>
+          @if (merchantName()) {
+            <div class="od__info-row">
+              <span class="od__info-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="13" height="13"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                Sted
+              </span>
+              <span class="od__info-value">{{ merchantName() }}</span>
+            </div>
+          }
+          <div class="od__info-row od__info-row--last">
+            <span class="od__info-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="13" height="13"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              Samlet bestilt
+            </span>
+            <span class="od__info-value">{{ grandTotal() | number:'1.2-2' }} kr.</span>
+          </div>
+        </div>
       </div>
-      <div class="detail__info-row">
-        <span class="detail__info-label">Oprettet</span>
-        <span class="detail__info-value">{{ order()?.createdDate | date:'dd. MMM yyyy' }}</span>
+    </div>
+
+    <!-- ③ Bestillinger section -->
+    <div class="od__card od__card--open">
+      <div class="od__section-hdr">
+        <svg class="od__section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        <span class="od__accordion-title">Bestillinger</span>
+      </div>
+
+      <div class="od__participants">
+        @for (p of participants(); track p.participantId) {
+          <div class="od__participant-block">
+            <div class="od__participant" (click)="toggleExpand(p.participantId)">
+              <div class="od__avatar" [style.background]="p.avatarColor">{{ p.initials }}</div>
+              <div class="od__participant-info">
+                <span class="od__participant-name">
+                  {{ p.participantName }}
+                  @if (isCurrentUser(p.participantId)) { <span class="od__you">(dig)</span> }
+                </span>
+              </div>
+              <div class="od__participant-right">
+                <span [class]="'od__chip od__chip--' + participantChipClass(p)">{{ participantChipLabel(p) }}</span>
+                <span class="od__arrow" [class.od__arrow--open]="isExpanded(p.participantId)">&#8250;</span>
+              </div>
+            </div>
+
+            <div class="od__order-lines" [class.od__order-lines--open]="isExpanded(p.participantId)">
+              @if (p.orderLines.length === 0) {
+                <p class="od__lines-empty">har ikke bestilt endnu.</p>
+              } @else {
+                @for (line of p.orderLines; track line.name) {
+                  <div class="od__line">
+                    <span class="od__line-qty">{{ line.quantity }}x</span>
+                    <span class="od__line-name">{{ line.name }}</span>
+                    <span class="od__line-price">{{ line.quantity * line.unitPrice | number:'1.2-2' }} kr.</span>
+                  </div>
+                }
+                <div class="od__line od__line--total">
+                  <span></span><span>Total</span>
+                  <span>{{ lineTotal(p.orderLines) | number:'1.2-2' }} kr.</span>
+                </div>
+              }
+              @if (participantPaymentStatus(p.participantId)) {
+                <div class="od__line od__line--payment">
+                  <span class="od__payment-label">Betaling</span>
+                  <span [class]="'od__payment-chip od__payment-chip--' + participantPaymentStatus(p.participantId).toLowerCase()">
+                    {{ paymentStatusLabel(participantPaymentStatus(p.participantId)) }}
+                  </span>
+                </div>
+              }
+            </div>
+          </div>
+        }
       </div>
     </div>
 
   }
 
-  <!-- Footer: Send pamindelse -->
-  <div class="detail__footer">
-    <button class="detail__reminder-btn" (click)="sendReminder()" [class.detail__reminder-btn--sent]="reminderSent()">
+  <!-- Footer -->
+  <div class="od__footer">
+    <button class="od__reminder-btn" (click)="sendReminder()" [class.od__reminder-btn--sent]="reminderSent()">
       @if (reminderSent()) {
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="18" height="18">
-          <polyline points="20 6 9 17 4 12"/>
-        </svg>
-        Pamindelser sendt!
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="20 6 9 17 4 12"/></svg>
+        Påmindelser sendt!
       } @else {
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18">
-          <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-        </svg>
-        Send pamindelse til alle
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Send påmindelse til alle
       }
     </button>
   </div>

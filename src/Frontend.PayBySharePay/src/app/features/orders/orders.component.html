@@ -106,46 +106,54 @@
                 <p class="accordion-loading">Henter detaljer…</p>
               } @else {
 
-                <!-- Ordredetaljer -->
-                <div class="order-detail">
-                  <div class="order-detail__row">
-                    <span class="order-detail__label">Ordrenr.</span>
-                    <span class="order-detail__value">#{{ vm.id }}</span>
-                  </div>
-                  <div class="order-detail__row">
-                    <span class="order-detail__label">Oprettet</span>
-                    <span class="order-detail__value">{{ formatDate(vm.createdAt) }}</span>
-                  </div>
-                  @if (vm.merchantName) {
-                    <div class="order-detail__row">
-                      <span class="order-detail__label">Sted</span>
-                      <span class="order-detail__value">{{ vm.merchantName }}</span>
-                    </div>
-                  }
-                  @if (vm.merchantAddress) {
-                    <div class="order-detail__row">
-                      <span class="order-detail__label">Adresse</span>
-                      <span class="order-detail__value">{{ vm.merchantAddress }}</span>
-                    </div>
-                  }
-                  @if (vm.isHost) {
-                    <div class="order-detail__row">
-                      <span class="order-detail__label">Samlet bestilt</span>
-                      <span class="order-detail__value order-detail__value--amount">{{ vm.totalOrderedAmount | number:'1.2-2' }} kr</span>
-                    </div>
-                    @if (vm.paidAmount > 0) {
+                <!-- Ordredetaljer accordion -->
+                <div class="order-detail-accordion" [class.order-detail-accordion--open]="isDetailsOpen(vm.id)">
+                  <button class="order-detail-accordion__hdr" (click)="toggleDetails(vm.id)">
+                    <span class="order-detail-accordion__title">Ordredetaljer</span>
+                    <span class="order-detail-accordion__chevron" [class.order-detail-accordion__chevron--open]="isDetailsOpen(vm.id)">&#8250;</span>
+                  </button>
+                  <div class="order-detail-accordion__body">
+                    <div class="order-detail">
                       <div class="order-detail__row">
-                        <span class="order-detail__label">Heraf betalt</span>
-                        <span class="order-detail__value order-detail__value--amount">{{ vm.paidAmount | number:'1.2-2' }} kr</span>
+                        <span class="order-detail__label">Ordrenr.</span>
+                        <span class="order-detail__value">#{{ vm.id }}</span>
                       </div>
-                    }
-                  }
-                  @if (!vm.isHost && vm.myOwnAmount !== null) {
-                    <div class="order-detail__row">
-                      <span class="order-detail__label">Dit beløb</span>
-                      <span class="order-detail__value order-detail__value--amount">{{ vm.myOwnAmount | number:'1.2-2' }} kr</span>
+                      <div class="order-detail__row">
+                        <span class="order-detail__label">Oprettet</span>
+                        <span class="order-detail__value">{{ formatDate(vm.createdAt) }}</span>
+                      </div>
+                      @if (vm.merchantName) {
+                        <div class="order-detail__row">
+                          <span class="order-detail__label">Sted</span>
+                          <span class="order-detail__value">{{ vm.merchantName }}</span>
+                        </div>
+                      }
+                      @if (vm.merchantAddress) {
+                        <div class="order-detail__row">
+                          <span class="order-detail__label">Adresse</span>
+                          <span class="order-detail__value">{{ vm.merchantAddress }}</span>
+                        </div>
+                      }
+                      @if (vm.isHost) {
+                        <div class="order-detail__row">
+                          <span class="order-detail__label">Samlet bestilt</span>
+                          <span class="order-detail__value order-detail__value--amount">{{ vm.totalOrderedAmount | number:'1.2-2' }} kr</span>
+                        </div>
+                        @if (vm.paidAmount > 0) {
+                          <div class="order-detail__row">
+                            <span class="order-detail__label">Heraf betalt</span>
+                            <span class="order-detail__value order-detail__value--amount">{{ vm.paidAmount | number:'1.2-2' }} kr</span>
+                          </div>
+                        }
+                      }
+                      @if (!vm.isHost && vm.myOwnAmount !== null) {
+                        <div class="order-detail__row">
+                          <span class="order-detail__label">Dit beløb</span>
+                          <span class="order-detail__value order-detail__value--amount">{{ vm.myOwnAmount | number:'1.2-2' }} kr</span>
+                        </div>
+                      }
                     </div>
-                  }
+                  </div>
                 </div>
 
                 <!-- Bestillinger -->

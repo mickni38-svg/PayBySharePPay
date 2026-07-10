@@ -97,4 +97,13 @@ public class MessageService : IMessageService
             m.IsRead = true;
         await _messageRepository.SaveChangesAsync();
     }
+
+    public async Task MarkReadAsync(int messageId)
+    {
+        var message = await _messageRepository.GetByIdAsync(messageId);
+        if (message is null) return;
+        if (message.IsRead) return;
+        message.IsRead = true;
+        await _messageRepository.SaveChangesAsync();
+    }
 }

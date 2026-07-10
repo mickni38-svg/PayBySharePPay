@@ -54,7 +54,8 @@ export class OrderDetailComponent implements OnInit {
   expandedIds = signal<Set<number>>(new Set());
   isLoading = signal(true);
   errorMessage = signal<string | null>(null);
-  activeTab = signal<'overview' | 'details'>('overview');
+  isSummaryOpen = signal(true);
+  isDetailsOpen = signal(false);
   createdByParticipantId = signal<number>(0);
   reminderSent = signal(false);
   currentUserId = signal<number | null>(null);
@@ -116,6 +117,21 @@ export class OrderDetailComponent implements OnInit {
 
   activeCategoryIcon(): string { return CATEGORIES.find(c => c.key === this.order()?.category)?.icon ?? ""; }
   activeCategoryLabel(): string { return CATEGORIES.find(c => c.key === this.order()?.category)?.label ?? ""; }
+
+  merchantName(): string {
+    const o = this.order();
+    if (!o) return '';
+    const merchant = o.orderParticipants.find(p => p.participantType === ParticipantType.Merchant);
+    return merchant?.participantName ?? '';
+  }
+
+  orderedCount(): number {
+    return this.participants().filter(p => p.orderLines.length > 0).length;
+  }
+
+  totalCount(): number {
+    return this.participants().length;
+  }
 
   toggleExpand(id: number): void {
     this.expandedIds.update(set => {
