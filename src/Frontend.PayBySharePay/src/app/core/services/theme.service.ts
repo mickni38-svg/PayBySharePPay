@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 
-export type Theme = 'default' | 'dark' | 'pink';
+export type Theme = 'default' | 'dark';
 
 const THEME_KEY = 'sbys_theme';
 
@@ -9,8 +9,10 @@ export class ThemeService {
   readonly current = signal<Theme>('default');
 
   init(): void {
-    const stored = localStorage.getItem(THEME_KEY) as Theme | null;
-    this.apply(stored ?? 'default');
+    const stored = localStorage.getItem(THEME_KEY);
+    // Guard: hvis et gammelt 'pink'-tema er gemt, nulstil til default
+    const valid: Theme[] = ['default', 'dark'];
+    this.apply(valid.includes(stored as Theme) ? (stored as Theme) : 'default');
   }
 
   setTheme(theme: Theme): void {

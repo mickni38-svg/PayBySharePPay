@@ -39,31 +39,31 @@
           </button>
         </div>
         <div class="profile__divider"></div>
-        <div class="profile__section-title">🧪 Vipps testperson</div>
-        <p class="profile__section-desc">Vælg hvilken testperson du er i Vipps sandbox</p>
+        <div class="profile__section-title">&#x1F9EA; Vipps testperson</div>
+        <p class="profile__section-desc">V&#230;lg hvilken testperson du er i Vipps sandbox</p>
         <div class="profile__field">
           <select class="profile__input profile__select"
             [ngModel]="selectedVippsTestUserId()"
             (ngModelChange)="selectedVippsTestUserId.set($event === 'null' ? null : +$event)"
             name="vippsTestUser">
-            <option [ngValue]="null">— Ingen —</option>
+            <option [ngValue]="null">&#8212; Ingen &#8212;</option>
             @for (person of vippsTestPersons(); track person.id) {
               <option [ngValue]="person.id"
                       [disabled]="isVippsPersonDisabled(person)">
                 {{ person.name }}
                 @if (person.phone) { ({{ person.phone }}) }
-                @if (isVippsPersonDisabled(person)) { — optaget }
+                @if (isVippsPersonDisabled(person)) { &#8212; optaget }
               </option>
             }
           </select>
         </div>
         @if (vippsSaveSuccess()) {
-          <div class="profile__feedback profile__feedback--success">✓ Mapping gemt</div>
+          <div class="profile__feedback profile__feedback--success">&#10003; Mapping gemt</div>
         }
         <button type="button" class="profile__save-btn profile__save-btn--secondary"
           [disabled]="vippsSaving()"
           (click)="saveVippsMapping()">
-          {{ vippsSaving() ? 'Gemmer…' : 'Gem Vipps-mapping' }}
+          {{ vippsSaving() ? 'Gemmer&#8230;' : 'Gem Vipps-mapping' }}
         </button>
         <div class="profile__divider"></div>
         <div class="profile__section-title">Tema</div>
@@ -79,12 +79,6 @@
             (click)="themeService.setTheme('dark')">
             <span class="profile__theme-preview profile__theme-preview--dark"></span>
             <span class="profile__theme-name">M&#248;rk</span>
-          </button>
-          <button type="button" class="profile__theme-btn"
-            [class.profile__theme-btn--active]="themeService.current() === 'pink'"
-            (click)="themeService.setTheme('pink')">
-            <span class="profile__theme-preview profile__theme-preview--pink"></span>
-            <span class="profile__theme-name">Pink</span>
           </button>
         </div>
         <div class="profile__divider"></div>
