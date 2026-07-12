@@ -3,6 +3,7 @@ import { RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/ro
 import { CommonModule } from '@angular/common';
 import { MessageService } from '../../core/services/message.service';
 import { AuthService } from '../../core/services/auth.service';
+import { ThemeService } from '../../core/services/theme.service';
 import { Subscription, interval } from 'rxjs';
 import { filter } from 'rxjs/operators';
 
@@ -34,15 +35,17 @@ import { filter } from 'rxjs/operators';
         </svg>
         <span>Opret</span>
       </a>
-      <a routerLink="/find-participants" routerLinkActive="active" class="bottom-nav__item">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-        </svg>
-        <span>Brugere</span>
-      </a>
+      @if (themeService.current() !== 'dark') {
+        <a routerLink="/find-participants" routerLinkActive="active" class="bottom-nav__item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          <span>Brugere</span>
+        </a>
+      }
       <a routerLink="/messages" routerLinkActive="active" class="bottom-nav__item">
         <div class="bottom-nav__icon-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -57,6 +60,15 @@ import { filter } from 'rxjs/operators';
         </div>
         <span>Beskeder</span>
       </a>
+      @if (themeService.current() === 'dark') {
+        <a routerLink="/profile" routerLinkActive="active" class="bottom-nav__item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+          </svg>
+          <span>Profil</span>
+        </a>
+      }
     </nav>
   `,
   styles: [`
@@ -122,6 +134,7 @@ export class BottomNavComponent implements OnInit, OnDestroy {
 
   constructor(
     readonly messageService: MessageService,
+    protected readonly themeService: ThemeService,
     private auth: AuthService,
     private router: Router
   ) {
@@ -158,4 +171,3 @@ export class BottomNavComponent implements OnInit, OnDestroy {
     this.routerSub?.unsubscribe();
   }
 }
-

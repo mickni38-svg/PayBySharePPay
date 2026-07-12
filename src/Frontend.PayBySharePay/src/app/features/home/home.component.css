@@ -153,6 +153,11 @@
   opacity: 0.85;
 }
 
+.action-card--hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .action-card__icon {
   width: 44px;
   height: 44px;

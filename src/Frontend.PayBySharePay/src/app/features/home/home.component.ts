@@ -10,6 +10,7 @@ import { OrderService } from '../../core/services/order.service';
 import { MessageService } from '../../core/services/message.service';
 import { DevService } from '../../core/services/dev.service';
 import { FriendService } from '../../core/services/friend.service';
+import { ThemeService } from '../../core/services/theme.service';
 import { DirectoryEntry } from '../../core/models/directory.model';
 import { computePendingSummary } from '../../core/models/order.model';
 
@@ -63,6 +64,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     private directory: DirectoryService,
     private orderService: OrderService,
     readonly messageService: MessageService,
+    protected readonly themeService: ThemeService,
     private friendService: FriendService,
     private devService: DevService,
     private router: Router
