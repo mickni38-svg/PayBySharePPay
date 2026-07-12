@@ -67,7 +67,10 @@
   <!-- 2x2 Action cards -->
   <section class="home__cards home__cards--spaced">
     @for (card of actionCards; track card.route) {
-      <a class="action-card" [routerLink]="card.route" [style.--card-accent]="card.accent">
+      <a class="action-card"
+         [class.action-card--hidden]="themeService.current() === 'dark' && (card.icon === 'users' || card.icon === 'activity')"
+         [routerLink]="card.route"
+         [style.--card-accent]="card.accent">
         <div class="action-card__top">
           <div class="action-card__icon" [style.background]="card.iconBg">
             @switch (card.icon) {
@@ -181,4 +184,3 @@
   </section>
 
 </div>
-
