@@ -20,6 +20,8 @@ Statusoversigt over PayNSync pr. seneste kode-gennemgang.
 | Password hashing med BCrypt | ✅ | `Participant.PasswordHash` + `BCrypt.Verify()` |
 | JWT udstedelse (HS256) | ✅ | Claims: `sub`, `name`, `jti` |
 | JWT-validering i controllers | ⚠️ | Kun `OrdersController` har `[Authorize]` — se Security-sektion |
+| Google login (`POST /api/auth/google-login`) | ✅ | `ExternalAuthService` — validerer Google ID-token via `Google.Apis.Auth`; opretter/finder `Participant` + `ParticipantExternalLogin` — *(NYT)* |
+| `ParticipantExternalLogin` (Google-tilknytning) | ✅ | Tabel til externe OAuth-logins; Provider + ProviderUserId + Email — *(NYT)* |
 | Profilopdatering (navn, email, telefon) | ✅ | `PUT /api/participants/{id}/profile` |
 | Token refresh | ❌ | Ikke implementeret |
 | Roller/claims (host vs. deltager) | ❌ | Host-tjek sker i service-laget via sammenligning af IDs, ikke JWT-claims |
@@ -39,7 +41,8 @@ Statusoversigt over PayNSync pr. seneste kode-gennemgang.
 | Hent alle ordrer / ordrer for én bruger | ✅ | `GET /api/orders?participantId=X` |
 | Hent ordre-overblik (deltagere, linjer, betalinger, beskeder) | ✅ | `GET /api/orders/{id}/overview` |
 | Ordre-statusmaskine | ✅ | `Collecting → ReadyToPay → HostApproved → Capturing → Paid / PartiallyFailed / Cancelled` |
-| Auto-overgang til `ReadyToPay` ved alle `OrderSubmitted` | ✅ | `CheckAndSetReadyToPayAsync()` |
+| Auto-overgang til `ReadyToPay` når alle deltagerbetalinger er `Reserved` | ✅ | `CheckAndSetReadyToPayByReservedAsync()` — kaldes fra Vipps-webhook og FakeProvider |
+| `CheckAndSetReadyToPayAsync` (OrderSubmitted-baseret) | ⚠️ | Metoden eksisterer i `IOrderService` men kaldes ingen steder i produktionskode — `ReadyToPay` sættes via den Reserved-baserede metode |
 | Tilføj deltagere efter ordreoprettelse | ❌ | Ingen endpoint |
 | Join ordre via `JoinToken`-link | ❌ | `JoinToken` genereres men ingen endpoint bruger det |
 
@@ -56,7 +59,9 @@ Statusoversigt over PayNSync pr. seneste kode-gennemgang.
 | Alle ordrelinjer tildeles `ParticipantId` | ✅ | Fra den validerede `OrderParticipant` |
 | Betalingsreservation startes automatisk ved draft-indsendelse | ✅ | `MerchantOrderService` kalder `ReserveParticipantPaymentAsync()` |
 | Hent draft for en ordre | ✅ | `GET /api/merchant-orders/by-order/{orderId}` |
-| Merchant modtager callback ved `Paid` | ✅ | `MerchantCallbackService` sender HTTP POST |
+| Merchant modtager callback ved `Paid` | ✅ | `MerchantCallbackService` sender HTTP POST med `PayNSyncFinalGroupOrderDto` |
+| `FinalGroupOrderDtos` (PayNSyncFinalGroupOrderDto m.fl.) | ✅ | Implementeret — standard GroupOrderPaid-payload til merchant-callback — *(NYT)* |
+| `RawMerchantPayloadJson` på `MerchantOrderDraft` | ✅ | Gemmer merchantens originale JSON til audit/debugging (nullable) — *(NYT)* |
 | Hardcodet Pizzeria Roma-menu i demo | ⚠️ | Kun én fast menu — ikke konfigurerbar |
 | Kun én merchant per ordre | ⚠️ | Arkitekturen understøtter ikke flere merchants pr. ordre |
 
@@ -73,6 +78,8 @@ Statusoversigt over PayNSync pr. seneste kode-gennemgang.
 | `MobilePaySandboxPaymentProvider` — cancel | ✅ | `POST /epayment/v1/payments/{id}/cancel` |
 | `MobilePaySandboxPaymentProvider` — status | ✅ | `GET /epayment/v1/payments/{id}` |
 | Vipps OAuth2 token-caching (SemaphoreSlim) | ✅ | Fornys 5 min før udløb |
+| Vipps test-user mapping (`VippsTestUserId` self-ref FK) | ✅ | `GET /api/participants/vipps-test-users` + `PATCH /api/participants/{id}/vipps-test-user` — *(NYT)* |
+| Per-merchant Vipps-credentials (VippsClientId, ClientSecret, SubscriptionKey, MSN) | ✅ | Felter på `Participant` — null = brug global fra appsettings — *(NYT)* |
 | Reserver betaling pr. deltager | ✅ | `POST /api/orders/{id}/reserve` |
 | Idempotent reserve (returnerer eksisterende) | ✅ | Springer over hvis ikke-cancelled/failed betaling eksisterer |
 | Host godkender + capture alle reserverede betalinger | ✅ | `POST /api/orders/{id}/approve` |
@@ -214,6 +221,8 @@ Statusoversigt over PayNSync pr. seneste kode-gennemgang.
 | `FriendRelation` race condition | `RelationExistsAsync` tjekker for duplikat i service, men der er inget unikt DB-constraint. Samtidige kald kan oprette dubletter. |
 | `UnitTest1` er tom | Testklassen eksisterer med en tom `Test1()`-metode — placeholder uden indhold. |
 | `MerchantOrderDraft.Status` bruges ikke aktivt | Entiteten har `Status = "Draft"` som default, men `MerchantOrderService` sætter `"Submitted"`. Systemets `ReadyToPay`-logik tjekker `OrderParticipant.Status`, ikke `MerchantOrderDraft.Status`. |
+| `Google:ClientId` tom i `appsettings.json` | `appsettings.json` har `"Google": {"ClientId": ""}`. Google-login virker kun, når `ClientId` er sat i `appsettings.Local.json` eller `appsettings.Simply.json`. — *(NYT)* |
+| Per-merchant Vipps-credentials i database | `VippsClientId`, `VippsClientSecret`, `VippsSubscriptionKey` gemmes som klartekst på `Participant`-entiteten. Ingen kryptering. — *(NYT)* |
 
 ---
 

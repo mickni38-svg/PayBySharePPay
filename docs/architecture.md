@@ -143,16 +143,24 @@ Swagger → ExceptionHandlingMiddleware → CORS → (HTTPS redirect i prod) →
 | `OrdersController` | `/api/orders` | `[Authorize]` på klassen | CRUD + reserve/approve/cancel/pay |
 | `PaymentsController` | `/api/payments` | Ingen klasse-attr. | Register betaling, webhooks |
 | `MerchantOrdersController` | `/api/merchant-orders` | `[Authorize]` på klassen, `[AllowAnonymous]` kun på `POST InitOrder` | Merchant draft-indsendelse (anonym) + `GET by-order/{id}` (kræver JWT) |
-| `ParticipantsController` | `/api/participants` | Ingen | Søg, opret, opdatér profil |
+| `ParticipantsController` | `/api/participants` | Ingen | Søg, opret, opdatér profil, Vipps test-user mapping *(NYT)* |
 | `FriendsController` | `/api/friends` | Ingen | Venneliste-håndtering |
 | `DirectoryController` | `/api/directory` | Ingen | Tværgående søgning (person + merchant) |
 | `MessagesController` | `/api/messages` | Ingen | Ordrebeskeder + ulæst-count |
 | `VippsCallbackController` | `/api/payments/vipps` | `[AllowAnonymous]` | Vipps MobilePay webhook-modtagelse |
 | `DevController` | `/api/dev` | Ingen | `DELETE /reset` + `POST /seed-merchant-urls` (test only) |
 
+**Nye endpoints i eksisterende controllere** *(NYT)*:
+
+| Controller | Endpoint | Beskrivelse |
+|-----------|----------|-------------|
+| `AuthController` | `POST /api/auth/google-login` | Google ID-token validering → returnerer JWT |
+| `ParticipantsController` | `GET /api/participants/vipps-test-users` | Hent alle Vipps sandbox-testpersoner med mapping-status |
+| `ParticipantsController` | `PATCH /api/participants/{id}/vipps-test-user` | Sæt Vipps sandbox test-user mapping for en deltager |
+
 ### Hosted Services
 
-- `MerchantDemoHostedService` — starter kun i `Development`. Kører `npx http-server` i `Frontend.MerchantDemo`-mappen på port 8081.
+- `MerchantDemoHostedService` — starter i `Development` **og** `Local` *(ÆNDRET)*. Kører `npx http-server` i `Frontend.MerchantDemo`-mappen på port 8081.
 
 ### CORS
 
@@ -172,6 +180,10 @@ Produktions-origins injiceres fra `AppSettings:CorsOrigins` i `appsettings.Simpl
 ## Service-lag (`Service.PayBySharePay`)
 
 Alle services registreres som `Scoped` via `AddServiceLayer()`.
+
+### Repository-mønster (tilføjelse)
+
+Nyt repository *(NYT)*: `IParticipantExternalLoginRepository` + `ParticipantExternalLoginRepository` — `GetByProviderAsync(provider, providerUserId)`, `AddAsync`, `SaveChangesAsync`.
 
 ### Nøgle-services
 
@@ -202,6 +214,11 @@ Modtager merchant draft (anonym). Validerer `ParticipantToken`, opretter `Mercha
 
 Vigtigt: `MerchantOrderService` må ikke frigive ordren til merchant, og `OrderSubmitted` må ikke gøre gruppeordren `ReadyToPay`. Det sker først, når alle deltageres betalinger er `Reserved`.
 
+**`ExternalAuthService`** *(NY SERVICE)*  
+Implementerer `IExternalAuthService`. Validerer Google ID-tokens via `GoogleJsonWebSignature.ValidateAsync()` (pakken `Google.Apis.Auth`). Finder eller opretter `Participant` og `ParticipantExternalLogin`. Kaster `ExternalLoginEmailConflictException` hvis en e-mail allerede er registreret med adgangskode — ingen automatisk sammenslåning af konto.
+
+Konfigurationsnøgle: `Google:ClientId` — skal sættes i `appsettings.json` / `appsettings.Simply.json`.
+
 **`PaymentService`** (legacy)  
 Opretter `Payment`-record og sender host-notifikation. Bruges af det gamle manuelle betalingsflow.
 
@@ -222,7 +239,16 @@ Participant (Person | Merchant)
   ├── FriendRelation (selv-ref. many-to-many via InitiatorId / ReceiverId)
   ├── OrderParticipant ──► Order  (unik ParticipantToken-index)
   ├── Payment ──► Order           (legacy)
-  └── ParticipantPayment ──► Order  (provider-backed, RowVersion for concurrency)
+  ├── ParticipantPayment ──► Order  (provider-backed, RowVersion for concurrency)
+  ├── ParticipantExternalLogin[]  (Provider + ProviderUserId — fx Google)  *(NYT)*
+  └── VippsTestUser? ──► Participant  (self-ref nullable FK — sandbox-mapping)  *(NYT)*
+
+ParticipantExternalLogin  *(NY ENTITET)*
+  ├── ParticipantId ──► Participant  (Cascade delete)
+  ├── Provider  (fx "Google" | "Apple")
+  ├── ProviderUserId  (subject claim fra udbyderen)
+  ├── Email?  (e-mail returneret af udbyderen)
+  └── CreatedAtUtc
 
 Order
   ├── CreatedBy ──► Participant   (Restrict delete)
@@ -235,6 +261,14 @@ Order
 
 PaymentEventLog  (immutable audit trail — ingen navigationsegenskaber fra Order)
 ```
+
+**Nye Participant-felter (Merchant-specific)** *(NYT)*:
+- `VippsMerchantSerialNumber` — per-merchant MSN; null = brug global fra appsettings
+- `VippsClientId`, `VippsClientSecret`, `VippsSubscriptionKey` — per-merchant Vipps API-credentials; null = brug global fra appsettings
+- `VippsTestUserId` — self-ref FK til sandbox-testperson (kun dev/sandbox-brug)
+
+**Ny MerchantOrderDraft-felt** *(NYT)*:
+- `RawMerchantPayloadJson` — valgfri nullable string; gemmer merchantens originale JSON til audit/debugging
 
 ### Repository-mønster
 
@@ -253,6 +287,11 @@ Hvert entity har sit eget `IXxxRepository`-interface og en `XxxRepository`-imple
 | `AddMessageIsRead` | 2026-05-16 | `Message.IsRead` flag |
 | `AddParticipantPasswordHash` | 2026-05-24 | `Participant.PasswordHash` |
 | `AddParticipantPaymentAndEventLog` | 2026-05-25 | `ParticipantPayment` + `PaymentEventLog` tabeller |
+| `AddRawMerchantPayloadJson` | 2026-06-28 | `MerchantOrderDraft.RawMerchantPayloadJson` (nullable) — *(NYT)* |
+| `AddVippsMerchantSerialNumber` | 2026-06-28 | `Participant.VippsMerchantSerialNumber` — *(NYT)* |
+| `AddMerchantVippsCredentials` | 2026-06-28 | `Participant.VippsClientId/ClientSecret/SubscriptionKey` — *(NYT)* |
+| `AddParticipantExternalLogin` | 2026-07-03 | Ny tabel `ParticipantExternalLogins` til OAuth-logins (Google) — *(NYT)* |
+| `AddVippsTestUserId` | 2026-07-03 | `Participant.VippsTestUserId` (self-ref FK til sandbox test-user) — *(NYT)* |
 
 ---
 
@@ -522,9 +561,16 @@ Hvis `Merchant.GroupOrderUrl` er null/tom, springes callback over. Det bør kun 
   - `localhost` / `127.0.0.1` → `http://localhost:5071`
   - Andre → `https://api.paynsync.dk`
 
-### CI/CD
+### CI/CD *(OPDATERET)*
 
-GitHub Actions workflow: `.github/workflows/deploy-simply.yml` (manuel trigger — `workflow_dispatch`).
+To GitHub Actions workflows:
+
+| Workflow | Trigger | Formål |
+|----------|---------|--------|
+| `.github/workflows/build.yml` | Auto ved push til `main` + PR mod `main` | Build + test (.NET + Angular) |
+| `.github/workflows/deploy-simply.yml` | Manuel (`workflow_dispatch`) | Byg + deploy til Simply.com |
+
+**GitHub Secrets der kræves for deploy:** `SIMPLY_FTP_USERNAME`, `SIMPLY_FTP_PASSWORD`, `SIMPLY_DB_CONNECTION_STRING`, `SIMPLY_JWT_KEY`, `SIMPLY_VIPPS_CLIENT_ID`, `SIMPLY_VIPPS_CLIENT_SECRET`, `SIMPLY_VIPPS_SUB_KEY`, `SIMPLY_VIPPS_MSN` *(de 4 Vipps-secrets er NYE)*
 
 | Trin | Beskrivelse |
 |------|-------------|
@@ -546,7 +592,7 @@ GitHub Actions workflow: `.github/workflows/deploy-simply.yml` (manuel trigger �
 
 ```jsonc
 // appsettings.json (nøglestier)
-"AppSettings:ApiBaseUrl"               // http://localhost:5071
+"AppSettings:ApiBaseUrl"               // https://localhost:7007  (ÆNDRET fra http://localhost:5071)
 "AppSettings:MerchantDemoUrl"          // http://localhost:8081
 "AppSettings:FrontendUrl"              // http://localhost:4200
 "Payments:Provider"                    // "Fake" | "MobilePay"
@@ -567,6 +613,11 @@ GitHub Actions workflow: `.github/workflows/deploy-simply.yml` (manuel trigger �
 "Jwt:Issuer"                           // sbys-api
 "Jwt:Audience"                         // sbys-frontend
 "Jwt:ExpiresInMinutes"                 // 43200 (i appsettings; 480 bruges i kode)
+"Google:ClientId"                      // Google OAuth2 client ID — nødvendig for /api/auth/google-login  *(NYT)*
+"Payments:VippsMobilePay:ClientId"     // Global Vipps client ID (override per merchant muligt)  *(NYT i simply)*
+"Payments:VippsMobilePay:ClientSecret" // Global Vipps client secret  *(NYT i simply)*
+"Payments:VippsMobilePay:SubscriptionKey" // Global Vipps Ocp-Apim-Subscription-Key  *(NYT i simply)*
+"Payments:VippsMobilePay:MerchantSerialNumber" // Global Vipps MSN  *(NYT i simply)*
 ```
 
 ---

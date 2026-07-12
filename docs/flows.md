@@ -314,3 +314,62 @@ User completes payment in MobilePay app
 **For Fake provider:**  
 Fake provider sets status synchronously during `ReserveAsync` — no webhook needed.  
 Generic webhook endpoints (`/webhooks/provider`, `/webhooks/mobilepay`) exist for testing.
+
+---
+
+## 11. Google Login Flow *(NYT)*
+
+**Actor:** Person (ny eller eksisterende Google-bruger)  
+**Entry point:** `POST /api/auth/google-login`
+
+```
+Klient (Angular frontend) sender Google ID-token (fra Google Sign-In)
+  → POST /api/auth/google-login
+  → AuthController.GoogleLogin(ExternalLoginRequest)
+  → ExternalAuthService.GoogleLoginAsync(idToken)
+
+ExternalAuthService:
+  1. Læser Google:ClientId fra konfiguration (krævet)
+  2. GoogleJsonWebSignature.ValidateAsync(idToken)
+     → Returnerer payload: Subject (userId), Email, Name
+  3. Slår op i ParticipantExternalLogins:
+     Provider = "Google" + ProviderUserId = payload.Subject
+     → Fundet: hent eksisterende Participant → returner JWT
+  4. Tjekker om payload.Email allerede er registreret med PasswordHash
+     → Ja: kast ExternalLoginEmailConflictException → HTTP 409
+       (ingen automatisk sammenslåning af konto)
+  5. Opretter ny Participant (Type = Person, Name = displayName, Email = email)
+  6. Opretter ny ParticipantExternalLogin (Provider="Google", ProviderUserId, Email)
+  7. Returnerer ParticipantDto
+
+AuthController: returnerer JWT + ParticipantId + Name + ExpiresAt (= now + 480 min)
+```
+
+---
+
+## 12. Vipps Test-User Mapping Flow *(NYT)*
+
+**Actor:** Deltager (i sandbox/dev-miljø)  
+**Entry point:** `GET /api/participants/vipps-test-users` + `PATCH /api/participants/{id}/vipps-test-user`
+
+```
+Deltager åbner Vipps test-user valg i frontend (sandbox-miljø):
+  → GET /api/participants/vipps-test-users
+  → ParticipantsController.GetVippsTestUsers()
+  → ParticipantService.GetVippsTestPersonsAsync()
+  ← VippsTestPersonDto[] med Id, Name, Phone, MappedByParticipantId
+     (MappedByParticipantId = null → ledig testperson)
+
+Deltager vælger en ledig testperson:
+  → PATCH /api/participants/{id}/vipps-test-user
+     body: { vippsTestUserId: 5 }
+  → ParticipantsController.SetVippsTestUser()
+  → ParticipantService.SetVippsTestUserAsync(participantId, vippsTestUserId)
+  ← 204 No Content
+
+Herefter bruges testpersonens telefonnummer når PayNSync starter
+en Vipps MobilePay-reservation for deltageren i sandbox.
+
+Note: VippsTestUserId-feltet er kun relevant i sandbox.
+Feltet bruges ikke i produktionsflowet.
+```

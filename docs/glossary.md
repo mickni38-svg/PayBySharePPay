@@ -352,4 +352,98 @@ Statisk HTML-side (`Frontend.MerchantDemo/index.html`) der simulerer en rigtig m
 
 Bruges til at demonstrere og teste deltager-bestillingsflowet. Læser `orderId`, `merchantId` og `participantToken` fra URL-query-parametre og poster til `/api/merchant-orders`.
 
-Kører på port 8081 i development (startes automatisk af `MerchantDemoHostedService`).
+Kører på port 8081 i development og Local-miljø (startes automatisk af `MerchantDemoHostedService`).
+
+---
+
+### ParticipantExternalLogin *(NYT)*
+Entitet der knytter en `Participant` til et eksternt login-system (fx Google).
+
+Indeholder:
+- `Provider` — udbyderens navn, fx `"Google"` eller `"Apple"`
+- `ProviderUserId` — brugerens unikke ID hos udbyderen (subject claim, fx Google sub)
+- `Email` — e-mail returneret af udbyderen på tilknytningstidspunktet
+- `CreatedAtUtc`
+
+Bruges af `ExternalAuthService.GoogleLoginAsync()` til at slå en Google-bruger op og knytte den til en `Participant`.
+
+Én `Participant` kan have flere `ParticipantExternalLogin`-poster (én pr. udbyder).
+
+> Kode: `ParticipantExternalLogin`, `IParticipantExternalLoginRepository`
+
+---
+
+### ExternalAuthService / IExternalAuthService *(NYT)*
+Service der håndterer login via eksterne OAuth-udbydere (i v1 kun Google).
+
+Validerer Google ID-tokens via `GoogleJsonWebSignature.ValidateAsync()` fra pakken `Google.Apis.Auth`.  
+Finder eksisterende `Participant` via `ParticipantExternalLogin`, eller opretter ny ved første Google-login.  
+Kaster `ExternalLoginEmailConflictException` hvis e-mailen allerede er registreret med adgangskode — ingen automatisk kontosammenslåning.
+
+Konfigurationsafhængighed: `Google:ClientId` i `appsettings.json`.
+
+> Kode: `ExternalAuthService`, `IExternalAuthService`  
+> Endpoint: `POST /api/auth/google-login`
+
+---
+
+### ExternalLoginEmailConflictException *(NYT)*
+Custom exception kastet af `ExternalAuthService`, når en bruger forsøger Google-login med en e-mail der allerede er registreret med adgangskode.
+
+Resulterer i HTTP 409 Conflict med en fejlbesked til klienten.  
+Ingen automatisk sammenslåning af eksisterende konto med Google-login.
+
+> Kode: `ExternalLoginEmailConflictException`
+
+---
+
+### VippsTestUserId *(NYT)*
+Et nullable self-reference FK-felt på `Participant`. Peger på en anden `Participant` i databasen der repræsenterer brugeren i Vipps sandbox.
+
+Bruges i sandbox-testflowet: når en deltager skal reservere betaling via Vipps MobilePay i testmiljøet, bruges testpersonens telefonnummer til at starte reservationen.
+
+**Vigtigt:** Kun til sandbox-brug. Feltet har ingen effekt i produktionsflowet.
+
+> Kode: `Participant.VippsTestUserId`  
+> Endpoints: `GET /api/participants/vipps-test-users`, `PATCH /api/participants/{id}/vipps-test-user`
+
+---
+
+### Per-merchant Vipps-credentials *(NYT)*
+Fire nullable felter på `Participant` (kun relevant for Merchant-type):
+
+| Felt | Formål |
+|------|--------|
+| `VippsMerchantSerialNumber` | MSN (Merchant Serial Number) for dette salgssted |
+| `VippsClientId` | Vipps API client ID |
+| `VippsClientSecret` | Vipps API client secret |
+| `VippsSubscriptionKey` | Vipps Ocp-Apim-Subscription-Key |
+
+`null`-værdier bevirker at den globale konfiguration fra `appsettings.json` bruges i stedet.  
+`VippsMerchantSerialNumber` er **påkrævet** ved registrering af ny merchant via `POST /api/auth/register-merchant`.
+
+> Kode: `Participant.VippsMerchantSerialNumber`, `.VippsClientId`, `.VippsClientSecret`, `.VippsSubscriptionKey`
+
+---
+
+### RawMerchantPayloadJson *(NYT)*
+Nullable felt på `MerchantOrderDraft`. Gemmer merchantens originale JSON-request-body som modtaget via `POST /api/merchant-orders`.
+
+Formål: audit, debugging og fremtidig brug til merchant-specifikke adapters.  
+Indholdet er uændret fra hvad merchant sendte — PayNSync normaliserer og gemmer data separat i `MerchantOrderLine`-records.
+
+> Kode: `MerchantOrderDraft.RawMerchantPayloadJson`
+
+---
+
+### PayNSyncFinalGroupOrderDto *(NYT)*
+Standard JSON-payload som PayNSync sender til merchant (`Merchant.GroupOrderUrl`) efter alle deltagerbetalinger er captured og ordren er `Paid`.
+
+Indeholder:
+- `eventType: "GroupOrderPaid"`
+- `paynsyncOrderId`, `merchantId`, `status: "Paid"`, `currency`, `totalAmount`, `paidAtUtc`
+- `participants[]` — liste af `PayNSyncFinalParticipantOrderDto`
+
+Merchant mapper dette format til sit eget ordre-/POS-system. PayNSync forsøger ikke at tilpasse payloaden per merchant i v1.
+
+> Kode: `PayNSyncFinalGroupOrderDto`, `PayNSyncFinalParticipantOrderDto`, `PayNSyncFinalOrderLineDto`

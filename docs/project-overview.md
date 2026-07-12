@@ -53,6 +53,7 @@ Der er desuden en demo-merchant (Pizzeria Roma) indbygget i løsningen til test 
 | Funktion | Implementeret |
 |----------|---------------|
 | Opret konto og login (email + password) | ✅ |
+| Login med Google (Google ID-token) | ✅ | *(NYT)* |
 | Opret gruppeordre med titel, kategori og besked | ✅ |
 | Vælg merchant (restaurant) til ordren | ✅ |
 | Invitér venner som deltagere | ✅ |
@@ -219,7 +220,7 @@ Koden afspejler en ambition om et fuldt integreret betalingsflow, hvor:
 **Backend:** ASP.NET Core 9, Entity Framework Core, JWT Bearer auth, Swagger/OpenAPI  
 **Frontend:** Angular 19 (standalone components, signals, lazy-loaded routes, mobil-first)  
 **Payments:** Vipps MobilePay ePayment API (OAuth2 client credentials)  
-**Auth:** JWT HS256. `JwtTokenService` læser `Jwt:ExpiresInMinutes` fra config (default fallback `480`, `appsettings.json` sætter `43200` = 30 dage). Token-levetiden er dermed **43200 min (30 dage)**. `AuthController` returnerer dog `ExpiresAt = now + 480 min` hardkodet i response-body — dette er en fejl (se Open Questions #3).  
+**Auth:** JWT HS256. `JwtTokenService` læser `Jwt:ExpiresInMinutes` fra config (default fallback `480`, `appsettings.json` sætter `43200` = 30 dage). Token-levetiden er dermed **43200 min (30 dage)**. `AuthController` returnerer dog `ExpiresAt = now + 480 min` hardkodet i response-body — dette er en fejl (se Open Questions #3). Google login implementeret via `ExternalAuthService` + `Google.Apis.Auth`; `POST /api/auth/google-login` validerer Google ID-token og returnerer JWT. *(NYT: Google login)*
 **Tests:** xUnit, FluentAssertions, in-memory fakes (ingen EF InMemory)
 
 ---

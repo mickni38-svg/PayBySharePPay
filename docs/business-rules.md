@@ -33,7 +33,8 @@ Merchant-knappen bør derfor ikke hedde `Betal`. Den bør hedde fx `Bekræft min
 - En `Participant` er enten `Person` eller `Merchant` (`ParticipantType` enum — enkelt tabel, single-table inheritance).
 - En **Person** kræver et navn (`Name` må ikke være tomt eller whitespace).
 - En **Merchant** kræver et firmanavn (`CompanyName` må ikke være tomt eller whitespace).
-- Password hashes med BCrypt ved oprettelse. Hvis password er tomt/null, gemmes `PasswordHash = null`.
+- En **Merchant** kræver et Vipps MSN-nummer (`VippsMerchantSerialNumber`) ved registrering via `POST /api/auth/register-merchant` — *(NYT)*. Per-merchant kan også sættes `VippsClientId`, `VippsClientSecret` og `VippsSubscriptionKey`; null-værdier bevirker at global konfiguration bruges.
+- Password hashes med BCrypt ved oprettelse.
 - Email er ikke påkrævet ved oprettelse, men bruges som login-identifikator og til unikhedstjek ved registrering.
 
 ### Login
@@ -42,6 +43,21 @@ Merchant-knappen bør derfor ikke hedde `Betal`. Den bør hedde fx `Bekræft min
 - Hvis `PasswordHash` er sat og et password er angivet, skal BCrypt-verifikation bestå.
 - Hvis `PasswordHash` er null, tillades login **uden** password (legacy seed-brugere).
 - Vellykkede logins returnerer JWT med `sub` = `participantId`, `name` = navn, `jti` = nyt GUID. Token-levetid styres af `Jwt:ExpiresInMinutes` i konfigurationen (default **43200 min / 30 dage** i `appsettings.json`). `AuthController` returnerer en hardkodet `ExpiresAt = now + 480 min` i response-body — dette afspejler **ikke** den faktiske token-levetid (se Open Questions #2 i arkitektur-dokumentet).
+
+### Google-login *(NYT)*
+
+- `POST /api/auth/google-login` modtager et Google ID-token og validerer det via `GoogleJsonWebSignature.ValidateAsync()` (kræver `Google:ClientId` i konfigurationen).
+- Hvis Google-subjekt allerede er knyttet til en `ParticipantExternalLogin` med `Provider = "Google"`, bruges den eksisterende `Participant`.
+- Hvis e-mailen allerede er registreret hos en `Participant` med `PasswordHash`, kastes `ExternalLoginEmailConflictException` → HTTP 409. Ingen automatisk sammenslåning af konti.
+- Hvis ingen matchende login-tilknytning eller konto findes, oprettes en ny `Participant` (type `Person`) og en ny `ParticipantExternalLogin`-post.
+- Vellykkede Google-logins returnerer JWT på samme format som email-login.
+
+### Vipps test-user mapping *(NYT)*
+
+- `Participant.VippsTestUserId` er en nullable self-ref FK. Den peger på en anden `Participant` der repræsenterer brugeren i Vipps sandbox.
+- `GET /api/participants/vipps-test-users` returnerer liste af alle testpersoner med mappings-status (`MappedByParticipantId`).
+- `PATCH /api/participants/{id}/vipps-test-user` sætter `VippsTestUserId` for én deltager.
+- Mapping er udelukkende til sandbox-brug og bruges ikke i produktionsflowet.
 
 ### Profilopdatering
 
@@ -392,7 +408,8 @@ Alle notifikationer gemmes som `Message`-records i databasen — **ingen push, i
 
 | Endpoint-gruppe | Adgangskrav |
 |----------------|-------------|
-| `POST /api/auth/login` + `register` | Anonymous |
+| `POST /api/auth/login` + `register` + `register-merchant` | Anonymous |
+| `POST /api/auth/google-login` | Anonymous — validerer Google ID-token, ingen JWT påkrævet *(NYT)* |
 | Alle `OrdersController`-endpoints | JWT påkrævet (`[Authorize]` på klassen) |
 | `POST /api/merchant-orders` (InitOrder) | Anonymous (`[AllowAnonymous]` på action) |
 | `GET /api/merchant-orders/by-order/{id}` | JWT påkrævet (klasse-level `[Authorize]`) |
