@@ -39,10 +39,10 @@ interface StatusCard {
 })
 export class HomeComponent implements OnInit, OnDestroy {
   actionCards: ActionCard[] = [
-    { label: 'Overblik',    subtitle: 'Se igangværende gruppebetalinger', route: '/orders',           accent: '#22C55E', iconBg: 'rgba(34,197,94,0.15)',  icon: 'chart'     },
-    { label: 'Beskeder',    subtitle: 'Se dine anmodninger',             route: '/messages',          accent: '#F59E0B', iconBg: 'rgba(245,158,11,0.15)', icon: 'chat'      },
-    { label: 'Deltagere',   subtitle: 'Find og tilføj venner',           route: '/find-participants', accent: '#06B6D4', iconBg: 'rgba(6,182,212,0.15)',  icon: 'users'     },
-    { label: 'Profil',       subtitle: 'Se og rediger dine oplysninger', route: '/profile',   accent: '#FFCCFF', iconBg: 'rgba(255,204,255,0.15)', icon: 'activity'  },
+    { label: 'Overblik',  subtitle: 'Se igangværende gruppebetalinger', route: '/orders',           accent: '#38BDF8', iconBg: 'rgba(56,189,248,0.15)',  icon: 'chart'    },
+    { label: 'Beskeder',  subtitle: 'Se dine anmodninger',             route: '/messages',          accent: '#F472B6', iconBg: 'rgba(244,114,182,0.15)', icon: 'chat'     },
+    { label: 'Deltagere', subtitle: 'Find og tilføj venner',           route: '/find-participants', accent: '#06B6D4', iconBg: 'rgba(6,182,212,0.15)',   icon: 'users'    },
+    { label: 'Profil',    subtitle: 'Se og rediger dine oplysninger',   route: '/profile',           accent: '#FFCCFF', iconBg: 'rgba(255,204,255,0.15)', icon: 'activity' },
   ];
 
   statusCards = signal<StatusCard[]>([]);

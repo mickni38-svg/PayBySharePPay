@@ -10,6 +10,31 @@
 .orders__state { padding: 40px var(--space-page); text-align: center; color: var(--color-text-muted); font-size: t.$text-sm; margin: 0; }
 .orders__state--error { color: t.$color-danger; }
 
+.orders__header {
+  padding: 16px var(--space-page) 4px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.orders__title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.page-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  svg { width: 16px; height: 16px; }
+  &:active { opacity: 0.7; }
+}
+
 .orders__pay-error {
   margin: 8px var(--space-page);
   padding: 10px 14px;

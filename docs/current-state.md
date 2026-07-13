@@ -155,6 +155,8 @@ Statusoversigt over PayNSync pr. seneste kode-gennemgang.
 | Send påmindelser til afventende deltagere | ⚠️ | Knap og dialog eksisterer — `sendReminders()` logger kun til console, ingen API-kald |
 | Beskedindbakke | ✅ | |
 | Brugerprofil | ✅ | |
+| Dark theme navigation (UC-07) | ✅ | Mørkt tema skjuler Deltagere+Profil-kort, giver neon-glow border på kort, forenkler bottom nav til Hjem/Deltagere/Mere |
+| PayNSync hero-logo på forsiden (dark mode) | ✅ | SVG-kreditkortsillustration + Pay/NSync branding øverst på HomeComponent |
 | Mobil-first responsivt design | ✅ | |
 | JWT-interceptor (token + 401-håndtering) | ✅ | Omdirigerer til `/login` ved 401 |
 | Session i `localStorage` (`sbys_token`, `sbys_user`) | ✅ | |

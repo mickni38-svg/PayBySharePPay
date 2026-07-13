@@ -1,5 +1,13 @@
 <div class="find">
 
+  <div class="find__header">
+    <a class="page-back" routerLink="/home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Hjem
+    </a>
+    <h1 class="find__title">Deltagere</h1>
+  </div>
+
   <div class="find__search">
     <div class="find__search-wrap">
       <input class="find__input" type="search" placeholder="Sog navn eller sted..." [(ngModel)]="searchTerm" (ngModelChange)="onSearch()" />

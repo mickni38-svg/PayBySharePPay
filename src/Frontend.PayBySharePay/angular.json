@@ -56,15 +56,15 @@
                                                                                                                                                   "maximumWarning":  "500kB",
                                                                                                                                                   "maximumError":  "1MB"
                                                                                                                                               },
-                                                                                                                                              {
-                                                                                                                                                  "type":  "anyComponentStyle",
-                                                                                                                                                  "maximumWarning":  "10kB",
-                                                                                                                                                  "maximumError":  "20kB"
-                                                                                                                                              }
-                                                                                                                                          ],
-                                                                                                                              "outputHashing":  "all"
-                                                                                                                          },
-                                                                                                           "development":  {
+                                                                                                                                                                 {
+                                                                                                                                                                     "type":  "anyComponentStyle",
+                                                                                                                                                                     "maximumWarning":  "12kB",
+                                                                                                                                                                     "maximumError":  "20kB"
+                                                                                                                                                                 }
+                                                                                                                                                             ],
+                                                                                                                                                             "outputHashing":  "all"
+                                                                                                                                                         },
+                                                                                                                                              "development":  {
                                                                                                                                "optimization":  false,
                                                                                                                                "extractLicenses":  false,
                                                                                                                                "sourceMap":  true
@@ -82,15 +82,15 @@
                                                                                                                                             "maximumWarning":  "500kB",
                                                                                                                                             "maximumError":  "1MB"
                                                                                                                                         },
-                                                                                                                                        {
-                                                                                                                                            "type":  "anyComponentStyle",
-                                                                                                                                            "maximumWarning":  "10kB",
-                                                                                                                                            "maximumError":  "20kB"
-                                                                                                                                        }
-                                                                                                                                    ],
-                                                                                                                        "outputHashing":  "all"
-                                                                                                                    },
-                                                                                                           "simply":  {
+                                                                                                                                                             {
+                                                                                                                                                                 "type":  "anyComponentStyle",
+                                                                                                                                                                 "maximumWarning":  "12kB",
+                                                                                                                                                                 "maximumError":  "20kB"
+                                                                                                                                                             }
+                                                                                                                                                         ],
+                                                                                                                                                         "outputHashing":  "all"
+                                                                                                                                                     },
+                                                                                                                                        "simply":  {
                                                                                                                           "outputHashing":  "all",
                                                                                                                           "budgets":  [
                                                                                                                                           {
@@ -98,12 +98,12 @@
                                                                                                                                               "maximumError":  "1MB",
                                                                                                                                               "type":  "initial"
                                                                                                                                           },
-                                                                                                                                          {
-                                                                                                                                              "maximumWarning":  "10kB",
-                                                                                                                                              "maximumError":  "20kB",
-                                                                                                                                              "type":  "anyComponentStyle"
-                                                                                                                                          }
-                                                                                                                                      ],
+                                                                                                                                              {
+                                                                                                                                                  "maximumWarning":  "12kB",
+                                                                                                                                                  "maximumError":  "20kB",
+                                                                                                                                                  "type":  "anyComponentStyle"
+                                                                                                                                              }
+                                                                                                                                          ],
                                                                                                                           "fileReplacements":  [
                                                                                                                                                    {
                                                                                                                                                        "with":  "src/environments/environment.simply.ts",

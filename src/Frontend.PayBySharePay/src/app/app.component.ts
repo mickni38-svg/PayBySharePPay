@@ -1,15 +1,17 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterLink, RouterOutlet } from '@angular/router';
 import { BottomNavComponent } from './layout/bottom-nav/bottom-nav.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, BottomNavComponent],
+  imports: [RouterOutlet, RouterLink, BottomNavComponent],
   template: `
     <div class="app-shell">
       <header class="app-header">
-        <img class="app-header__logo" src="images/logo.png" alt="PayBySharePay" />
+        <a routerLink="/home" class="app-header__logo-link">
+          <img class="app-header__logo" src="images/logo.png" alt="PayBySharePay" />
+        </a>
       </header>
       <main class="app-shell__content">
         <router-outlet></router-outlet>
@@ -34,6 +36,13 @@ import { BottomNavComponent } from './layout/bottom-nav/bottom-nav.component';
       justify-content: flex-start;
       padding: 6px 20px 2px;
       background: #070B14;
+    }
+
+    .app-header__logo-link {
+      display: block;
+      width: 100%;
+      max-width: 320px;
+      text-decoration: none;
     }
 
     .app-header__logo {

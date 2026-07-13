@@ -1,6 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ProfileService, UpdateProfileRequest, VippsTestPersonDto } from '../../core/services/profile.service';
 import { ParticipantApiDto } from '../../core/models/participant.model';
@@ -11,7 +12,7 @@ const NOTIF_KEY = 'sbys_notifications_enabled';
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss'
 })

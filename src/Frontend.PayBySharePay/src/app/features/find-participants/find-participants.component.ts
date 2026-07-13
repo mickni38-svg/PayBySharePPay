@@ -1,6 +1,7 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { DirectoryEntry } from '../../core/models/directory.model';
 import { DirectoryService } from '../../core/services/directory.service';
 import { FriendService } from '../../core/services/friend.service';
@@ -30,7 +31,7 @@ function avatarColor(name: string): string {
 @Component({
   selector: 'app-find-participants',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './find-participants.component.html',
   styleUrl: './find-participants.component.css'
 })

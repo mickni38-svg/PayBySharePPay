@@ -10,7 +10,7 @@
 }
 
 .find__header {
-  padding: 20px var(--space-page) 12px;
+  padding: 16px var(--space-page) 12px;
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -19,6 +19,24 @@
   font-weight: 700;
   margin: 0;
 }
+
+.page-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.page-back svg {
+  width: 16px;
+  height: 16px;
+}
+
+.page-back:active { opacity: 0.7; }
 
 .find__search { padding: 16px var(--space-page) 8px; }
 

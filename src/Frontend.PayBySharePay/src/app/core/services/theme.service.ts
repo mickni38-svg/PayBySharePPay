@@ -6,13 +6,17 @@ const THEME_KEY = 'sbys_theme';
 
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
-  readonly current = signal<Theme>('default');
+  readonly current = signal<Theme>('dark');
+
+  constructor() {
+    // Pas temaet til ved opstart – læs localStorage, ellers brug 'dark'
+    const stored = localStorage.getItem(THEME_KEY);
+    const valid: Theme[] = ['default', 'dark'];
+    this.apply(valid.includes(stored as Theme) ? (stored as Theme) : 'dark');
+  }
 
   init(): void {
-    const stored = localStorage.getItem(THEME_KEY);
-    // Guard: hvis et gammelt 'pink'-tema er gemt, nulstil til default
-    const valid: Theme[] = ['default', 'dark'];
-    this.apply(valid.includes(stored as Theme) ? (stored as Theme) : 'default');
+    // Beholdes for bagud-kompatibilitet – constructor håndterer nu initialiseringen
   }
 
   setTheme(theme: Theme): void {
