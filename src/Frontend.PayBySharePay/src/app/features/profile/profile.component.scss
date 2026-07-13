@@ -6,15 +6,8 @@
 }
 
 .profile__header {
-  padding: 16px var(--space-page) 12px;
+  padding: 6px var(--space-page) 6px;
   border-bottom: 1px solid var(--color-border);
-
-  h2 {
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--color-text-primary);
-    margin: 0;
-  }
 }
 
 .page-back {
@@ -25,7 +18,7 @@
   text-decoration: none;
   font-size: 13px;
   font-weight: 500;
-  margin-bottom: 8px;
+  margin-bottom: 0;
   svg { width: 16px; height: 16px; }
   &:active { opacity: 0.7; }
 }
