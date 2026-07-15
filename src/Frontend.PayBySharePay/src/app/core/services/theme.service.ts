@@ -1,23 +1,20 @@
 import { Injectable, signal } from '@angular/core';
 
-export type Theme = 'default' | 'dark';
+export type Theme = 'default' | 'color' | 'minimal' | 'charcoal';
 
 const THEME_KEY = 'sbys_theme';
 
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
-  readonly current = signal<Theme>('dark');
+  readonly current = signal<Theme>('color');
 
   constructor() {
-    // Pas temaet til ved opstart – læs localStorage, ellers brug 'dark'
     const stored = localStorage.getItem(THEME_KEY);
-    const valid: Theme[] = ['default', 'dark'];
-    this.apply(valid.includes(stored as Theme) ? (stored as Theme) : 'dark');
+    const valid: Theme[] = ['default', 'color', 'minimal', 'charcoal'];
+    this.apply(valid.includes(stored as Theme) ? (stored as Theme) : 'color');
   }
 
-  init(): void {
-    // Beholdes for bagud-kompatibilitet – constructor håndterer nu initialiseringen
-  }
+  init(): void {}
 
   setTheme(theme: Theme): void {
     this.apply(theme);

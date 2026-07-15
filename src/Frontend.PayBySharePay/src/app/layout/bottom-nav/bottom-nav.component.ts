@@ -3,7 +3,6 @@ import { RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/ro
 import { CommonModule } from '@angular/common';
 import { MessageService } from '../../core/services/message.service';
 import { AuthService } from '../../core/services/auth.service';
-import { ThemeService } from '../../core/services/theme.service';
 import { Subscription, interval } from 'rxjs';
 import { filter } from 'rxjs/operators';
 
@@ -20,32 +19,15 @@ import { filter } from 'rxjs/operators';
         </svg>
         <span>Forside</span>
       </a>
-      <a routerLink="/orders" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" class="bottom-nav__item">
+      <a routerLink="/find-participants" routerLinkActive="active" class="bottom-nav__item">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-          <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <line x1="19" y1="8" x2="19" y2="14"/>
+          <line x1="16" y1="11" x2="22" y2="11"/>
         </svg>
-        <span>Overblik</span>
+        <span>Venner</span>
       </a>
-      <a routerLink="/orders/create" routerLinkActive="active" class="bottom-nav__item bottom-nav__item--create">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="7" x2="12" y2="17"/>
-          <line x1="7" y1="12" x2="17" y2="12"/>
-        </svg>
-        <span>Opret</span>
-      </a>
-      @if (themeService.current() !== 'dark') {
-        <a routerLink="/find-participants" routerLinkActive="active" class="bottom-nav__item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
-          <span>Brugere</span>
-        </a>
-      }
       <a routerLink="/messages" routerLinkActive="active" class="bottom-nav__item">
         <div class="bottom-nav__icon-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -60,15 +42,13 @@ import { filter } from 'rxjs/operators';
         </div>
         <span>Beskeder</span>
       </a>
-      @if (themeService.current() === 'dark') {
-        <a routerLink="/profile" routerLinkActive="active" class="bottom-nav__item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="8" r="4"/>
-            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-          </svg>
-          <span>Profil</span>
-        </a>
-      }
+      <a routerLink="/profile" routerLinkActive="active" class="bottom-nav__item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="4"/>
+          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+        </svg>
+        <span>Profil</span>
+      </a>
     </nav>
   `,
   styles: [`
@@ -114,8 +94,8 @@ import { filter } from 'rxjs/operators';
       position: absolute;
       top: -6px;
       right: -8px;
-      background: #e74c3c;
-      color: #fff;
+      background: var(--color-badge-bg, #e74c3c);
+      color: var(--color-badge-text, #fff);
       font-size: 9px;
       font-weight: 700;
       min-width: 16px;
@@ -134,7 +114,6 @@ export class BottomNavComponent implements OnInit, OnDestroy {
 
   constructor(
     readonly messageService: MessageService,
-    protected readonly themeService: ThemeService,
     private auth: AuthService,
     private router: Router
   ) {

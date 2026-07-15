@@ -78,10 +78,22 @@
             <span class="profile__theme-name">Standard</span>
           </button>
           <button type="button" class="profile__theme-btn"
-            [class.profile__theme-btn--active]="themeService.current() === 'dark'"
-            (click)="themeService.setTheme('dark')">
-            <span class="profile__theme-preview profile__theme-preview--dark"></span>
-            <span class="profile__theme-name">M&#248;rk</span>
+            [class.profile__theme-btn--active]="themeService.current() === 'color'"
+            (click)="themeService.setTheme('color')">
+            <span class="profile__theme-preview profile__theme-preview--color"></span>
+            <span class="profile__theme-name">Color</span>
+          </button>
+          <button type="button" class="profile__theme-btn"
+            [class.profile__theme-btn--active]="themeService.current() === 'minimal'"
+            (click)="themeService.setTheme('minimal')">
+            <span class="profile__theme-preview profile__theme-preview--minimal"></span>
+            <span class="profile__theme-name">Minimal</span>
+          </button>
+          <button type="button" class="profile__theme-btn"
+            [class.profile__theme-btn--active]="themeService.current() === 'charcoal'"
+            (click)="themeService.setTheme('charcoal')">
+            <span class="profile__theme-preview profile__theme-preview--charcoal"></span>
+            <span class="profile__theme-name">Charcoal</span>
           </button>
         </div>
         <div class="profile__divider"></div>

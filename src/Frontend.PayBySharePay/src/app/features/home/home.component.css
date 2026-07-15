@@ -203,8 +203,8 @@
   position: absolute;
   top: -7px;
   right: -9px;
-  background: #e74c3c;
-  color: #fff;
+  background: var(--color-badge-bg, #e74c3c);
+  color: var(--color-badge-text, #fff);
   font-size: 10px;
   font-weight: 700;
   min-width: 18px;
@@ -228,12 +228,13 @@
   align-items: center;
   gap: 14px;
   width: 100%;
-  background: rgba(124, 58, 237, 0.08);
-  border: 1px solid rgba(124, 58, 237, 0.45);
+  background: var(--color-accent-cta-bg);
+  border: 1px solid var(--color-accent-cta-border);
+  border-left: 4px solid var(--color-accent-cta);
   border-radius: 14px;
   padding: 14px 16px;
   text-decoration: none;
-  color: var(--text-primary, #fff);
+  color: var(--color-text-primary, #fff);
   transition: background 0.18s;
 }
 
@@ -245,7 +246,8 @@
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: rgba(124, 58, 237, 0.2);
+  background: var(--color-accent-cta-icon-bg);
+  color: var(--color-accent-cta);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -317,33 +319,33 @@
 }
 
 .status-card--pending {
-  border-left-color: #FFCCFF;
+  border-left-color: var(--color-accent-pending);
 }
 
 .status-card--updated {
-  border-left-color: #22C55E;
+  border-left-color: var(--color-accent-success);
 }
 
 .status-card--allPaid {
-  border-left-color: #22C55E;
+  border-left-color: var(--color-accent-success);
 }
 
 .status-card--overblik {
-  border-left-color: #38BDF8;
+  border-left-color: var(--color-accent-overblik);
 }
 
 .status-card--overblik .status-card__icon {
-  background: rgba(56, 189, 248, 0.15);
-  color: #38BDF8;
+  background: var(--color-accent-overblik-bg);
+  color: var(--color-accent-overblik);
 }
 
 .status-card--messages {
-  border-left-color: rgba(255, 255, 255, 0.7);
+  border-left-color: var(--color-accent-messages);
 }
 
 .status-card--messages .status-card__icon {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.85);
+  background: var(--color-accent-messages-bg);
+  color: var(--color-accent-messages);
 }
 
 .status-card__icon {
@@ -357,13 +359,13 @@
 }
 
 .status-card--pending .status-card__icon {
-  background: rgba(236, 72, 153, 0.15);
-  color: #FFCCFF;
+  background: var(--color-accent-pending-bg);
+  color: var(--color-accent-pending);
 }
 
 .status-card--updated .status-card__icon {
-  background: rgba(34, 197, 94, 0.15);
-  color: #22C55E;
+  background: var(--color-accent-success-bg);
+  color: var(--color-accent-success);
 }
 
 .status-card__icon svg {
@@ -382,7 +384,7 @@
 .status-card__title {
   font-size: 15px;
   font-weight: 700;
-  color: #fff;
+  color: var(--color-text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -390,7 +392,7 @@
 
 .status-card__sub {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--color-text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -404,8 +406,8 @@
 }
 
 .status-card--allPaid .status-card__icon {
-  background: rgba(34, 197, 94, 0.15);
-  color: #22C55E;
+  background: var(--color-accent-success-bg);
+  color: var(--color-accent-success);
 }
 
 .status-card__dismiss {
@@ -548,111 +550,99 @@
 }
 
 /* ============================================================
-   Dark theme overrides – UC-07
-   :host-context() bruges fordi Angular ViewEncapsulation.Emulated
-   scoper component-CSS med attribut-selektorer, så [data-theme="dark"]
-   på <html> ikke kan matches direkte inde i en komponent-stylesheet.
+   Tema-overrides – kun layout/struktur der ikke kan
+   løses via CSS-variabler (farver håndteres i styles.css)
    ============================================================ */
 
-/* CTA card – lys orange border + tyk venstre indikator i dark mode */
-:host-context([data-theme="dark"]) .cta-card {
-  background: rgba(0, 0, 0, 0.45);
-  border: 1.5px solid rgba(251, 146, 60, 0.7);
-  border-left: 4px solid rgba(251, 146, 60, 1.0);
+/* color + alle nye temaer: cta-card glow */
+:host-context([data-theme="color"]) .cta-card {
   box-shadow: 0 0 20px rgba(251, 146, 60, 0.18);
 }
 
-:host-context([data-theme="dark"]) .cta-card:active {
-  background: rgba(251, 146, 60, 0.1);
+/* minimal + charcoal: ingen box-shadow */
+:host-context([data-theme="minimal"]) .cta-card,
+:host-context([data-theme="charcoal"]) .cta-card,
+:host-context([data-theme="minimal"]) .status-card,
+:host-context([data-theme="charcoal"]) .status-card {
+  box-shadow: none;
 }
 
-/* Status cards – tænd venstre indikator i dark mode */
-:host-context([data-theme="dark"]) .status-card {
-  background: rgba(0, 0, 0, 0.45);
-  border: 1px solid var(--color-border);
+/* ── Minimal: rent sort/hvid – ingen farveaccenter ── */
+
+/* Alle kort: sort baggrund, tynd grå ramme, ingen farvet venstre-streg */
+:host-context([data-theme="minimal"]) .cta-card {
+  background: #0a0a0a;
+  border: 1px solid #888888;
+  border-left: 1px solid #888888;
+  border-radius: 14px;
 }
 
-:host-context([data-theme="dark"]) .status-card--pending {
-  border: 1px solid rgba(34, 197, 94, 0.3);
-  border-left: 3px solid rgba(34, 197, 94, 0.9);
-  box-shadow: 0 0 18px rgba(34, 197, 94, 0.1);
+:host-context([data-theme="minimal"]) .status-card {
+  background: #0a0a0a;
+  border: 1px solid #888888;
+  border-left: 1px solid #888888;
+  border-radius: 14px;
 }
 
-:host-context([data-theme="dark"]) .status-card--allPaid {
-  border: 1px solid rgba(34, 197, 94, 0.3);
-  border-left: 3px solid rgba(34, 197, 94, 0.9);
-  box-shadow: 0 0 18px rgba(34, 197, 94, 0.1);
+/* Ikonboks: mørkegrå, hvidt ikon */
+:host-context([data-theme="minimal"]) .cta-card__icon {
+  background: #1c1c1c;
+  color: #FFFFFF;
+  border-radius: 10px;
 }
 
-:host-context([data-theme="dark"]) .status-card--overblik {
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  border-left: 3px solid rgba(56, 189, 248, 0.9);
+:host-context([data-theme="minimal"]) .status-card__icon {
+  background: #1c1c1c;
+  color: #FFFFFF;
 }
 
-:host-context([data-theme="dark"]) .status-card--messages {
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-left: 3px solid rgba(255, 255, 255, 0.7);
+/* Tekst */
+:host-context([data-theme="minimal"]) .cta-card__title,
+:host-context([data-theme="minimal"]) .status-card__title {
+  color: #FFFFFF;
 }
 
-/* Action cards – neon glow border + centreret ikon/label layout (standard-tema) */
-:host-context([data-theme="dark"]) .action-card {
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid var(--card-accent, var(--color-border));
-  border-bottom: 1px solid var(--card-accent, var(--color-border));
-  align-items: center;
-  justify-content: center;
-  min-height: 140px;
-  padding: 20px 10px;
-  gap: 12px;
+:host-context([data-theme="minimal"]) .cta-card__sub,
+:host-context([data-theme="minimal"]) .status-card__sub {
+  color: #888888;
 }
 
-:host-context([data-theme="dark"]) .action-card__top {
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0;
-  width: 100%;
+:host-context([data-theme="minimal"]) .status-card__chevron,
+:host-context([data-theme="minimal"]) .cta-card__chevron {
+  color: #555555;
 }
 
-:host-context([data-theme="dark"]) .action-card__top > .action-card__sub {
-  display: none;
+/* Bruger-auth sektion */
+:host-context([data-theme="minimal"]) .user-auth__logged {
+  background: #0a0a0a;
+  border: 1px solid #888888;
+  border-radius: 14px;
 }
 
-:host-context([data-theme="dark"]) .action-card__icon {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
+:host-context([data-theme="minimal"]) .user-auth__btn--out {
+  background: transparent;
+  border: 1px solid #888888;
+  color: #FFFFFF;
+  border-radius: 8px;
 }
 
-:host-context([data-theme="dark"]) .action-card__icon svg {
-  width: 28px;
-  height: 28px;
-}
-
-:host-context([data-theme="dark"]) .action-card__label {
-  text-align: center;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-:host-context([data-theme="dark"]) .cta-card__title {
-  font-size: 14px;
-  font-weight: 700;
-}
-
-/* Ekstra afstand til login-sektion i dark mode */
-:host-context([data-theme="dark"]) .home__user-auth {
+/* Login-knap – mørk baggrund i alle temaer undtagen default */
+:host-context([data-theme="color"]) .home__user-auth,
+:host-context([data-theme="minimal"]) .home__user-auth,
+:host-context([data-theme="charcoal"]) .home__user-auth {
   margin-top: 24px;
 }
 
-/* Log ind-knap – hvid med sort tekst i dark mode */
-:host-context([data-theme="dark"]) .user-auth__btn--primary {
-  background: #ffffff;
-  color: #080c18;
+:host-context([data-theme="color"]) .user-auth__btn--primary,
+:host-context([data-theme="minimal"]) .user-auth__btn--primary,
+:host-context([data-theme="charcoal"]) .user-auth__btn--primary {
+  background: var(--color-text-primary);
+  color: var(--color-bg);
 }
 
-/* "Opret dig som bruger"-link – understreget i dark mode */
-:host-context([data-theme="dark"]) .user-auth__link {
-  color: rgba(255, 255, 255, 0.65);
+:host-context([data-theme="color"]) .user-auth__link,
+:host-context([data-theme="minimal"]) .user-auth__link,
+:host-context([data-theme="charcoal"]) .user-auth__link {
+  color: var(--color-text-secondary);
   text-decoration: underline;
 }

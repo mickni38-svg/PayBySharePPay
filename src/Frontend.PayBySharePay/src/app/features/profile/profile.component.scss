@@ -116,11 +116,13 @@
 
 .profile__themes {
   display: flex;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .profile__theme-btn {
-  flex: 1;
+  flex: 1 1 calc(33% - 10px);
+  min-width: 60px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -128,7 +130,7 @@
   background: var(--color-surface);
   border: 2px solid var(--color-border);
   border-radius: 12px;
-  padding: 12px 8px;
+  padding: 10px 6px;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
   min-height: 44px;
@@ -150,8 +152,17 @@
     background: linear-gradient(135deg, #070B14 50%, #22C55E 50%);
   }
 
-  &--dark {
+  &--color {
     background: linear-gradient(135deg, #0B0F1E 50%, #4AE07A 50%);
+  }
+
+  &--minimal {
+    background: #111111;
+    border: 2px solid #2a2a2a;
+  }
+
+  &--charcoal {
+    background: linear-gradient(135deg, #141414 50%, #404040 50%);
   }
 }
 
