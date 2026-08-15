@@ -41,7 +41,7 @@ public class DirectoryService : IDirectoryService
                 DisplayName = p.CompanyName ?? p.Name,
                 Handle = p.Name,
                 Subtitle = p.CompanyAddress,
-                LogoUrl = null,
+                LogoUrl = p.LogoImageData != null ? $"/api/participants/{p.Id}/logo" : null,
                 GroupOrderUrl = p.GroupOrderUrl
             };
         }

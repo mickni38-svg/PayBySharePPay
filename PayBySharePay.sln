@@ -42,6 +42,14 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure.Payments.PayBySharePay", "src\Infrastructure.Payments.PayBySharePay\Infrastructure.Payments.PayBySharePay.csproj", "{1D6C0AA3-9C1B-4739-A1A0-CB9B9AC11EE4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Usecases", "Usecases", "{83FE01E4-F053-46B0-9CCD-5EE59B86FFBE}"
+	ProjectSection(SolutionItems) = preProject
+		docs\usecases\00-IMPLEMENTATION-ORDER.md = docs\usecases\00-IMPLEMENTATION-ORDER.md
+		docs\usecases\UC-01-merchant-logo.md = docs\usecases\UC-01-merchant-logo.md
+		docs\usecases\UC-02-home-merchant-carousel.md = docs\usecases\UC-02-home-merchant-carousel.md
+		docs\usecases\UC-03-wizard-step-1-participants.md = docs\usecases\UC-03-wizard-step-1-participants.md
+		docs\usecases\UC-04-wizard-step-2-details.md = docs\usecases\UC-04-wizard-step-2-details.md
+		docs\usecases\UC-05-wizard-step-3-review-create.md = docs\usecases\UC-05-wizard-step-3-review-create.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

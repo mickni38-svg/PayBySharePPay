@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { RouterLink, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -13,6 +13,16 @@ import { FriendService } from '../../core/services/friend.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { DirectoryEntry } from '../../core/models/directory.model';
 import { computePendingSummary } from '../../core/models/order.model';
+import { environment } from '../../../environments/environment';
+
+const MAX_MERCHANTS = 8;
+
+interface MerchantCard {
+  id: number;
+  displayName: string;
+  initials: string;
+  logoUrl: string | null;
+}
 
 interface ActionCard {
   label: string;
@@ -28,6 +38,10 @@ interface StatusCard {
   title: string;
   subtitle: string;
   orderId?: number;
+}
+
+function toInitials(name: string): string {
+  return name.split(' ').slice(0, 2).map(p => p[0] ?? '').join('').toUpperCase();
 }
 
 @Component({
@@ -57,6 +71,19 @@ export class HomeComponent implements OnInit, OnDestroy {
   resetMessage = signal<string | null>(null);
   devPanelOpen = signal(false);
 
+  // Merchant carousel
+  allMerchants = signal<MerchantCard[]>([]);
+  merchantSearch = signal('');
+
+  filteredMerchants = computed(() => {
+    const term = this.merchantSearch().toLowerCase().trim();
+    const list = this.allMerchants();
+    const filtered = term
+      ? list.filter(m => m.displayName.toLowerCase().includes(term))
+      : list;
+    return filtered.slice(0, MAX_MERCHANTS);
+  });
+
   private routerSub?: Subscription;
 
   constructor(
@@ -77,7 +104,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     });
     this.refreshData();
 
-    // Reload status og unread-count ved hvert besøg på /home
     this.routerSub = this.router.events.pipe(
       filter(e => e instanceof NavigationEnd)
     ).subscribe((e) => {
@@ -97,11 +123,36 @@ export class HomeComponent implements OnInit, OnDestroy {
     if (userId) {
       this.loadStatusCards(userId);
       this.messageService.refreshUnread(userId);
-      this.friendService.getFriends(userId).subscribe({
-        next: (list) => this.friendCount.set(list.length),
-        error: () => this.friendCount.set(0)
-      });
+      this.loadMerchants(userId);
     }
+  }
+
+  private loadMerchants(userId: number): void {
+    this.friendService.getFriends(userId).subscribe({
+      next: (list) => {
+        this.friendCount.set(list.length);
+        const merchants: MerchantCard[] = list
+          .filter(e => e.type === 'Merchant')
+          .sort((a, b) => a.displayName.localeCompare(b.displayName, 'da'))
+          .map(e => ({
+            id: e.id,
+            displayName: e.displayName,
+            initials: toInitials(e.displayName),
+            logoUrl: e.logoUrl ? `${environment.apiUrl}${e.logoUrl}` : null
+          }));
+        this.allMerchants.set(merchants);
+      },
+      error: () => {
+        this.friendCount.set(0);
+        this.allMerchants.set([]);
+      }
+    });
+  }
+
+  selectMerchant(m: MerchantCard): void {
+    this.router.navigate(['/orders/create'], {
+      state: { merchant: { id: m.id, displayName: m.displayName, logoUrl: m.logoUrl } }
+    });
   }
 
   private loadStatusCards(userId: number): void {
@@ -118,7 +169,6 @@ export class HomeComponent implements OnInit, OnDestroy {
           });
         }
 
-        // Tilføj kort for host-ordrer hvor alle har betalt (og ikke dismissed)
         const dismissed = this.dismissedAllPaidIds();
         const allPaidOrders = orders.filter(o =>
           o.createdByParticipantId === userId &&
@@ -138,7 +188,6 @@ export class HomeComponent implements OnInit, OnDestroy {
 
         this.statusCards.set(cards);
 
-        // Tæl ordrer der venter på host-betaling
         const readyToPay = orders.filter(o =>
           o.createdByParticipantId === userId &&
           o.status === 'ReadyToPay'
@@ -189,22 +238,23 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   toggleDevPanel(): void {
-      this.devPanelOpen.update(v => !v);
-    }
+    this.devPanelOpen.update(v => !v);
+  }
 
-    devLogin(): void {
+  devLogin(): void {
     if (!this.selectedEmail) return;
     this.loginLoading.set(true);
     this.loginError.set(null);
-    this.auth.login(this.selectedEmail).subscribe({
+    this.auth.login(this.selectedEmail, '').subscribe({
       next: () => {
-        // Hard reload sikrer at alle komponenter starter fresh med login-state
-        window.location.reload();
-      },
-      error: () => {
-        this.loginError.set('Login fejlede – prøv igen.');
         this.loginLoading.set(false);
+        this.refreshData();
+      },
+      error: (err) => {
+        this.loginLoading.set(false);
+        this.loginError.set(err?.error?.message ?? 'Login fejlede');
       }
     });
   }
 }
+

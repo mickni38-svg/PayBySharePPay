@@ -167,6 +167,40 @@ public class ParticipantService : IParticipantService
         await _participantRepository.SaveChangesAsync();
     }
 
+    public async Task<MerchantLogoDto?> GetMerchantLogoAsync(int merchantId)
+    {
+        var participant = await _participantRepository.GetByIdAsync(merchantId);
+        if (participant is null || participant.Type != ParticipantType.Merchant)
+            return null;
+        if (participant.LogoImageData is null || string.IsNullOrEmpty(participant.LogoContentType))
+            return null;
+
+        return new MerchantLogoDto
+        {
+            ImageData = participant.LogoImageData,
+            ContentType = participant.LogoContentType,
+            FileName = participant.LogoFileName,
+            UpdatedAtUtc = participant.LogoUpdatedAtUtc
+        };
+    }
+
+    public async Task UpdateMerchantLogoAsync(int merchantId, UpdateMerchantLogoDto dto)
+    {
+        var participant = await _participantRepository.GetByIdAsync(merchantId)
+            ?? throw new KeyNotFoundException($"Merchant med id {merchantId} findes ikke.");
+
+        if (participant.Type != ParticipantType.Merchant)
+            throw new InvalidOperationException($"Deltager {merchantId} er ikke en merchant.");
+
+        participant.LogoImageData = dto.ImageData;
+        participant.LogoContentType = dto.ContentType;
+        participant.LogoFileName = dto.FileName;
+        participant.LogoUpdatedAtUtc = DateTime.UtcNow;
+
+        await _participantRepository.UpdateAsync(participant);
+        await _participantRepository.SaveChangesAsync();
+    }
+
     private static ParticipantDto MapToDto(Participant p) => new()
     {
         Id = p.Id,

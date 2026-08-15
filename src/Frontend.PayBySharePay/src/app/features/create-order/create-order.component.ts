@@ -56,6 +56,7 @@ export class CreateOrderComponent implements OnInit {
   // ── Trin 2: Spisested ────────────────────────────────────────────────────
   merchants = signal<MerchantVM[]>([]);
   selectedMerchant = signal<MerchantVM | null>(null);
+  merchantPreselected = signal(false);
   merchantSearch = '';
 
   filteredMerchants = computed(() => {
@@ -102,6 +103,21 @@ export class CreateOrderComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    const state = history.state as { merchant?: { id: number; displayName: string; logoUrl: string | null } };
+    if (!state?.merchant?.id) {
+      this.router.navigate(['/home']);
+      return;
+    }
+    const m = state.merchant;
+    this.selectedMerchant.set({
+      id: m.id,
+      type: 'Merchant',
+      displayName: m.displayName,
+      initials: toInitials(m.displayName),
+      avatarColor: avatarColor(m.displayName),
+      handle: undefined
+    });
+    this.merchantPreselected.set(true);
     this.loadFriends();
   }
 
@@ -167,14 +183,18 @@ export class CreateOrderComponent implements OnInit {
   goNext(): void {
     if (!this.validateCurrentStep()) return;
     if (this.currentStep() < this.totalSteps) {
-      this.currentStep.update(s => s + 1);
+      const next = this.currentStep() + 1;
+      // Skip step 2 when merchant is pre-selected
+      this.currentStep.set(this.merchantPreselected() && next === 2 ? 3 : next);
     }
   }
 
   goBack(): void {
     if (this.currentStep() > 1) {
       this.stepError.set(null);
-      this.currentStep.update(s => s - 1);
+      const prev = this.currentStep() - 1;
+      // Skip step 2 going back when merchant is pre-selected
+      this.currentStep.set(this.merchantPreselected() && prev === 2 ? 1 : prev);
     }
   }
 

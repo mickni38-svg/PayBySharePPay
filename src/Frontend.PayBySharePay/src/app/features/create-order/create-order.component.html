@@ -80,6 +80,19 @@
     <!-- ── TRIN 2: Spisested ── -->
     @if (currentStep() === 2) {
 
+      @if (merchantPreselected()) {
+        <!-- Merchant valgt fra forsiden — kan ikke ændres -->
+        <div class="preselected-merchant">
+          <p class="preselected-merchant__label">Valgt spisested</p>
+          <div class="row row--selected">
+            <div class="row__avatar" [style.background]="selectedMerchant()!.avatarColor">{{ selectedMerchant()!.initials }}</div>
+            <div class="row__info">
+              <span class="row__name">{{ selectedMerchant()!.displayName }}</span>
+            </div>
+          </div>
+        </div>
+      } @else {
+
       <div class="field">
         <input
           class="field__input"
@@ -118,6 +131,7 @@
       }
 
       <p class="wizard__hint-text">Kan du ikke finde dit spisested? Spørg om de bruger <strong>PayBySharePay</strong>.</p>
+      }
     }
 
     <!-- ── TRIN 3: Deltagere ── -->

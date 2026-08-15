@@ -646,3 +646,147 @@
   color: var(--color-text-secondary);
   text-decoration: underline;
 }
+
+/* ─── Merchant carousel ──────────────────────────────────────────────────── */
+
+.home__carousel-section {
+  padding: 16px var(--space-page) 4px;
+}
+
+.home__carousel-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 12px;
+}
+
+/* Search field */
+.carousel-search {
+  margin-bottom: 12px;
+}
+
+.carousel-search__input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  font-size: 14px;
+  color: var(--color-text-primary);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.carousel-search__input:focus {
+  border-color: var(--color-primary, #FFCCFF);
+}
+
+/* Carousel track — horizontal scroll, clipped to content width */
+.merchant-carousel {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 6px;
+  /* Hide scrollbar but keep functionality */
+  scrollbar-width: none;
+}
+
+.merchant-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+/* Individual merchant card */
+.merchant-card {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 10px 8px 8px;
+  cursor: pointer;
+  width: 76px;
+  transition: transform 0.15s, opacity 0.15s;
+}
+
+.merchant-card:active {
+  transform: scale(0.93);
+  opacity: 0.85;
+}
+
+/* Logo container — square, aspect-ratio preserved */
+.merchant-card__logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.merchant-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.merchant-card__initials {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.merchant-card__name {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-align: center;
+  line-height: 1.2;
+  word-break: break-word;
+  max-width: 68px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* Empty state */
+.merchant-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 4px 0 8px;
+}
+
+.merchant-empty__text {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.merchant-empty__btn {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-primary, #FFCCFF);
+  text-decoration: none;
+  padding: 8px 0;
+}
+
+.merchant-empty__btn:active {
+  opacity: 0.7;
+}
+

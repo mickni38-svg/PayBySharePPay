@@ -14,7 +14,7 @@ Analysér først det nuværende wizard-flow, deltagerliste, søgning, state, rou
 
 ## Designreference
 
-Følg mockupfilen `5EFC3989-445B-46F9-AC4F-E3374A385B92.jpeg`.
+Følg mockupfilen `../images/wizard1.jpeg`.
 
 Personer, e-mailadresser og merchant i mockuppen er kun eksempler og må ikke hardcodes.
 

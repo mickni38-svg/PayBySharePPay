@@ -1,26 +1,54 @@
 <!-- Forside – ny dashboard -->
 <div class="home">
 
-  <!-- Fuld-bredde CTA: Opret ny gruppebetaling -->
-  <section class="home__cta">
-    <a class="cta-card" routerLink="/orders/create">
-      <div class="cta-card__icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-        </svg>
+  <!-- Merchant carousel: Start en gruppebetaling -->
+  <section class="home__carousel-section">
+    <h2 class="home__carousel-title">Start en gruppebetaling</h2>
+
+    @if (allMerchants().length === 0) {
+      <!-- Tom tilstand -->
+      <div class="merchant-empty">
+        <p class="merchant-empty__text">Du har endnu ingen spisesteder på din venneliste</p>
+        <a class="merchant-empty__btn" routerLink="/find-participants">Find spisested</a>
       </div>
-      <div class="cta-card__text">
-        <span class="cta-card__title">Opret ny gruppebetaling</span>
-        @if (friendCount() === 0) {
-          <span class="cta-card__sub cta-card__sub--warn">Tilføj venner inden du kan indgå i en gruppebetaling</span>
-        } @else {
-          <span class="cta-card__sub">Del regningen med venner</span>
-        }
+    } @else {
+      <!-- Søgefelt -->
+      <div class="carousel-search">
+        <input
+          class="carousel-search__input"
+          type="search"
+          placeholder="Søg spisested…"
+          [ngModel]="merchantSearch()"
+          (ngModelChange)="merchantSearch.set($event)"
+          aria-label="Søg spisested"
+        />
       </div>
-      <svg class="cta-card__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <polyline points="9 18 15 12 9 6"/>
-      </svg>
-    </a>
+
+      @if (filteredMerchants().length === 0) {
+        <p class="merchant-empty__text">Ingen spisesteder fundet</p>
+      } @else {
+        <!-- Carousel -->
+        <div class="merchant-carousel" role="list">
+          @for (m of filteredMerchants(); track m.id) {
+            <button
+              class="merchant-card"
+              role="listitem"
+              (click)="selectMerchant(m)"
+              [attr.aria-label]="'Vælg ' + m.displayName"
+            >
+              <div class="merchant-card__logo">
+                @if (m.logoUrl) {
+                  <img [src]="m.logoUrl" [alt]="m.displayName" class="merchant-card__img" />
+                } @else {
+                  <span class="merchant-card__initials">{{ m.initials }}</span>
+                }
+              </div>
+              <span class="merchant-card__name">{{ m.displayName }}</span>
+            </button>
+          }
+        </div>
+      }
+    }
   </section>
 
   <!-- Statuskort -->
@@ -184,18 +212,7 @@
     </section>
   }
 
-  <!-- Bruger login / opret bruger -->
-  <section class="home__user-auth">
-    @if (auth.isLoggedIn()) {
-      <div class="user-auth__logged">
-        <span class="user-auth__name">{{ auth.currentUserName() }}</span>
-        <button class="user-auth__btn user-auth__btn--out" (click)="auth.logout()">Log ud</button>
-      </div>
-    } @else {
-      <a class="user-auth__btn user-auth__btn--primary" routerLink="/login">Log ind</a>
-      <a class="user-auth__link" routerLink="/register">Opret dig som bruger</a>
-    }
-  </section>
+
 
   <!-- Diskret dev-panel nederst -->
   <section class="home__dev-panel" [class.home__dev-panel--open]="devPanelOpen()">

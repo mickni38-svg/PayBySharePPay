@@ -14,7 +14,7 @@ Analysér først det eksisterende wizard-flow, formularmønstre, validering og s
 
 ## Designreference
 
-Følg mockupfilen `179D9D82-68F8-434A-92D8-5877001D9290.jpeg`.
+Følg mockupfilen `../images/wizard2.jpeg`.
 
 Teksten **Pizzaaften**, beskeden, merchantnavnet og deltagerantallet i mockuppen er kun eksempler og må ikke hardcodes.
 

@@ -118,4 +118,63 @@ public class ParticipantsController : ControllerBase
             return NotFound();
         }
     }
+
+    [HttpGet("{id:int}/logo")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetMerchantLogo(int id)
+    {
+        var logo = await _participantService.GetMerchantLogoAsync(id);
+        if (logo is null)
+            return NotFound();
+
+        var etag = logo.UpdatedAtUtc?.Ticks.ToString() ?? "0";
+        Response.Headers.ETag = $"\"{etag}\"";
+        Response.Headers.CacheControl = "public, max-age=3600";
+
+        return File(logo.ImageData, logo.ContentType, logo.FileName);
+    }
+
+    [HttpPut("{id:int}/logo")]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateMerchantLogo(int id, IFormFile file)
+    {
+        if (file is null || file.Length == 0)
+            return BadRequest(new { error = "Fil må ikke være tom." });
+
+        const long maxBytes = 1 * 1024 * 1024;
+        if (file.Length > maxBytes)
+            return BadRequest(new { error = "Filen må højst være 1 MB." });
+
+        var allowedTypes = new[] { "image/png", "image/jpeg", "image/webp" };
+        if (!allowedTypes.Contains(file.ContentType, StringComparer.OrdinalIgnoreCase))
+            return BadRequest(new { error = "Kun PNG, JPEG og WebP er tilladt." });
+
+        using var ms = new System.IO.MemoryStream();
+        await file.CopyToAsync(ms);
+
+        var dto = new Service.PayBySharePay.DTOs.UpdateMerchantLogoDto
+        {
+            ImageData = ms.ToArray(),
+            ContentType = file.ContentType,
+            FileName = file.FileName
+        };
+
+        try
+        {
+            await _participantService.UpdateMerchantLogoAsync(id, dto);
+            return NoContent();
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
 }

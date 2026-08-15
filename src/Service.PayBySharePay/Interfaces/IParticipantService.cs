@@ -15,4 +15,6 @@ public interface IParticipantService
     bool VerifyPassword(string password, string passwordHash);
     Task<IEnumerable<VippsTestPersonDto>> GetVippsTestPersonsAsync();
     Task SetVippsTestUserAsync(int participantId, int? vippsTestUserId);
+    Task<MerchantLogoDto?> GetMerchantLogoAsync(int merchantId);
+    Task UpdateMerchantLogoAsync(int merchantId, UpdateMerchantLogoDto dto);
 }

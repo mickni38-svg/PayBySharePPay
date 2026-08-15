@@ -14,7 +14,8 @@ Analysér først den eksisterende oprettelsesfunktion, requestkontrakt, backendv
 
 ## Designreference
 
-Følg mockupfilen `375F42F8-535D-42F5-B23A-7E6378AA2718.jpeg`.
+
+Følg mockupfilen `../images/wizard3.jpeg`.
 
 Merchant, deltagere, titel og besked i mockuppen er kun eksempler og må ikke hardcodes.
 

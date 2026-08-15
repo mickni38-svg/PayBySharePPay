@@ -14,7 +14,7 @@ Analysér først den eksisterende forside, venner-/merchant-services, routing, w
 
 ## Designreference
 
-Følg mockupfilen `7E661036-9E21-4355-B445-F2483BCB6A00.jpeg`.
+Følg mockupfilen `../images/overview.jpeg`.
 
 Mockuppens merchants og logoer er kun eksempler og må ikke hardcodes.
 
