@@ -42,23 +42,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure.Payments.PayBySharePay", "src\Infrastructure.Payments.PayBySharePay\Infrastructure.Payments.PayBySharePay.csproj", "{1D6C0AA3-9C1B-4739-A1A0-CB9B9AC11EE4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Usecases", "Usecases", "{83FE01E4-F053-46B0-9CCD-5EE59B86FFBE}"
-	ProjectSection(SolutionItems) = preProject
-		docs\usecases\UC-01-opret-bruger.md = docs\usecases\UC-01-opret-bruger.md
-		docs\usecases\UC-02-log-ind.md = docs\usecases\UC-02-log-ind.md
-		docs\usecases\UC-03-Login-with-Google-or-Apple.md = docs\usecases\UC-03-Login-with-Google-or-Apple.md
-		docs\usecases\UC-04-opdater-profil.md = docs\usecases\UC-04-opdater-profil.md
-		docs\usecases\UC-05-find-deltagere-tilfoj-ven.md = docs\usecases\UC-05-find-deltagere-tilfoj-ven.md
-		docs\usecases\UC-06-opret-ordre.md = docs\usecases\UC-06-opret-ordre.md
-		docs\usecases\UC-07-se-ordrer-og-overblik.md = docs\usecases\UC-07-se-ordrer-og-overblik.md
-		docs\usecases\UC-08-bestil-via-merchant-link.md = docs\usecases\UC-08-bestil-via-merchant-link.md
-		docs\usecases\UC-09-reserver-betaling.md = docs\usecases\UC-09-reserver-betaling.md
-		docs\usecases\UC-10-godkend-og-capture.md = docs\usecases\UC-10-godkend-og-capture.md
-		docs\usecases\UC-11-annuller-ordre.md = docs\usecases\UC-11-annuller-ordre.md
-		docs\usecases\UC-12-beskeder.md = docs\usecases\UC-12-beskeder.md
-		docs\usecases\UC-13-payment-webhook.md = docs\usecases\UC-13-payment-webhook.md
-		docs\usecases\UC-14-legacy-betaling.md = docs\usecases\UC-14-legacy-betaling.md
-		docs\usecases\UC-15-dev-og-seed-tools.md = docs\usecases\UC-15-dev-og-seed-tools.md
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
