@@ -234,6 +234,13 @@
   }
 }
 
+.row__avatar-image {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: contain;
+}
+
 .row__info { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 
 .row__name {
@@ -452,4 +459,3 @@
   color: var(--color-text-muted);
   margin: 0;
 }
-

@@ -13,6 +13,7 @@ import { FriendService } from '../../core/services/friend.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { DirectoryEntry } from '../../core/models/directory.model';
 import { computePendingSummary } from '../../core/models/order.model';
+import { getStaticMerchantLogoUrl } from '../../core/utils/merchant-logo';
 import { environment } from '../../../environments/environment';
 
 const MAX_MERCHANTS = 8;
@@ -20,8 +21,10 @@ const MAX_MERCHANTS = 8;
 interface MerchantCard {
   id: number;
   displayName: string;
+  handle?: string;
   initials: string;
   logoUrl: string | null;
+  fallbackLogoUrl: string | null;
 }
 
 interface ActionCard {
@@ -134,12 +137,19 @@ export class HomeComponent implements OnInit, OnDestroy {
         const merchants: MerchantCard[] = list
           .filter(e => e.type === 'Merchant')
           .sort((a, b) => a.displayName.localeCompare(b.displayName, 'da'))
-          .map(e => ({
-            id: e.id,
-            displayName: e.displayName,
-            initials: toInitials(e.displayName),
-            logoUrl: e.logoUrl ? `${environment.apiUrl}${e.logoUrl}` : null
-          }));
+          .map(e => {
+            const staticLogoUrl = getStaticMerchantLogoUrl(e);
+            const apiLogoUrl = e.logoUrl ? `${environment.apiUrl}${e.logoUrl}` : null;
+
+            return {
+              id: e.id,
+              displayName: e.displayName,
+              handle: e.handle,
+              initials: toInitials(e.displayName),
+              logoUrl: staticLogoUrl ?? apiLogoUrl,
+              fallbackLogoUrl: staticLogoUrl ? apiLogoUrl : null
+            };
+          });
         this.allMerchants.set(merchants);
       },
       error: () => {
@@ -151,8 +161,24 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   selectMerchant(m: MerchantCard): void {
     this.router.navigate(['/orders/create'], {
-      state: { merchant: { id: m.id, displayName: m.displayName, logoUrl: m.logoUrl } }
+      state: {
+        merchant: {
+          id: m.id,
+          displayName: m.displayName,
+          handle: m.handle,
+          logoUrl: m.logoUrl,
+          fallbackLogoUrl: m.fallbackLogoUrl
+        }
+      }
     });
+  }
+
+  onMerchantLogoError(merchantId: number): void {
+    this.allMerchants.update(merchants => merchants.map(merchant =>
+      merchant.id === merchantId
+        ? { ...merchant, logoUrl: merchant.fallbackLogoUrl, fallbackLogoUrl: null }
+        : merchant
+    ));
   }
 
   private loadStatusCards(userId: number): void {
@@ -257,4 +283,3 @@ export class HomeComponent implements OnInit, OnDestroy {
     });
   }
 }
-

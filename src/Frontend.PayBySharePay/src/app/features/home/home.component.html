@@ -38,7 +38,12 @@
             >
               <div class="merchant-card__logo">
                 @if (m.logoUrl) {
-                  <img [src]="m.logoUrl" [alt]="m.displayName" class="merchant-card__img" />
+                  <img
+                    [src]="m.logoUrl"
+                    [alt]="m.displayName"
+                    class="merchant-card__img"
+                    (error)="onMerchantLogoError(m.id)"
+                  />
                 } @else {
                   <span class="merchant-card__initials">{{ m.initials }}</span>
                 }
