@@ -6,6 +6,8 @@ import { OrderService } from '../../core/services/order.service';
 import { DirectoryService } from '../../core/services/directory.service';
 import { AuthService } from '../../core/services/auth.service';
 import { DirectoryEntry } from '../../core/models/directory.model';
+import { getStaticMerchantLogoUrl } from '../../core/utils/merchant-logo';
+import { environment } from '../../../environments/environment';
 
 interface ParticipantVM extends DirectoryEntry {
   initials: string;
@@ -16,6 +18,15 @@ interface ParticipantVM extends DirectoryEntry {
 interface MerchantVM extends DirectoryEntry {
   initials: string;
   avatarColor: string;
+  fallbackLogoUrl?: string;
+}
+
+interface PreselectedMerchantState {
+  id: number;
+  displayName: string;
+  handle?: string;
+  logoUrl: string | null;
+  fallbackLogoUrl: string | null;
 }
 
 const AVATAR_COLORS = [
@@ -103,7 +114,7 @@ export class CreateOrderComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const state = history.state as { merchant?: { id: number; displayName: string; logoUrl: string | null } };
+    const state = history.state as { merchant?: PreselectedMerchantState };
     if (!state?.merchant?.id) {
       this.router.navigate(['/home']);
       return;
@@ -115,7 +126,9 @@ export class CreateOrderComponent implements OnInit {
       displayName: m.displayName,
       initials: toInitials(m.displayName),
       avatarColor: avatarColor(m.displayName),
-      handle: undefined
+      handle: m.handle,
+      logoUrl: m.logoUrl ?? undefined,
+      fallbackLogoUrl: m.fallbackLogoUrl ?? undefined
     });
     this.merchantPreselected.set(true);
     this.loadFriends();
@@ -139,11 +152,18 @@ export class CreateOrderComponent implements OnInit {
 
         const merchants = list
           .filter(e => e.type === 'Merchant')
-          .map(e => ({
-            ...e,
-            initials: toInitials(e.displayName),
-            avatarColor: avatarColor(e.displayName)
-          }));
+          .map(e => {
+            const staticLogoUrl = getStaticMerchantLogoUrl(e);
+            const apiLogoUrl = e.logoUrl ? `${environment.apiUrl}${e.logoUrl}` : null;
+
+            return {
+              ...e,
+              initials: toInitials(e.displayName),
+              avatarColor: avatarColor(e.displayName),
+              logoUrl: staticLogoUrl ?? apiLogoUrl ?? undefined,
+              fallbackLogoUrl: staticLogoUrl ? apiLogoUrl ?? undefined : undefined
+            };
+          });
         this.merchants.set(merchants);
 
         this.isLoading.set(false);
@@ -212,6 +232,20 @@ export class CreateOrderComponent implements OnInit {
   // ── Merchant
   toggleMerchant(m: MerchantVM): void {
     this.selectedMerchant.update(current => current?.id === m.id ? null : m);
+  }
+
+  onMerchantLogoError(merchantId: number): void {
+    this.merchants.update(merchants => merchants.map(merchant =>
+      merchant.id === merchantId
+        ? { ...merchant, logoUrl: merchant.fallbackLogoUrl, fallbackLogoUrl: undefined }
+        : merchant
+    ));
+
+    this.selectedMerchant.update(merchant =>
+      merchant?.id === merchantId
+        ? { ...merchant, logoUrl: merchant.fallbackLogoUrl, fallbackLogoUrl: undefined }
+        : merchant
+    );
   }
 
   // ── Deltagere ─────────────────────────────────────────────────────────────

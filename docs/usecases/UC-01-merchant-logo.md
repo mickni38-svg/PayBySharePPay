@@ -2,7 +2,7 @@
 
 ## Mål
 
-En merchant skal kunne gemme og udskifte sit logo. Logoet skal kunne hentes af forsiden og gruppebetalingswizarden uden hardcodede billedreferencer.
+En merchant skal kunne gemme og udskifte sit logo. Forsiden og gruppebetalingswizarden kan desuden bruge det godkendte statiske logo-katalog for demo-merchants, når merchantens `Participant.Name` matcher et logofilnavn præcist.
 
 ## Instruks til Copilot Claude
 
@@ -53,7 +53,9 @@ Endpointet skal:
 ## Datakilder og eksisterende funktionalitet
 
 - Merchantens rigtige ID og eksisterende profil skal benyttes.
-- Der må ikke oprettes hardcodede merchants, testlogoer eller statiske billedstier i produktionskoden.
+- Merchantdata må ikke hardcodes. Merchants skal fortsat komme fra den eksisterende datakilde.
+- For det godkendte demo-logo-katalog må klienten matche `Participant.Name` mod et filnavn i `public/images`, men kun når `Participant.Type` er `Merchant`.
+- Et statisk logo har første prioritet. Hvis filen ikke kan indlæses, anvendes det eksisterende API-logo og derefter initialer som fallback.
 - Eksisterende merchant-oprettelse og profilredigering skal udvides; der må ikke bygges et parallelt flow.
 
 ## Acceptkriterier

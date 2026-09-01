@@ -85,7 +85,18 @@
         <div class="preselected-merchant">
           <p class="preselected-merchant__label">Valgt spisested</p>
           <div class="row row--selected">
-            <div class="row__avatar" [style.background]="selectedMerchant()!.avatarColor">{{ selectedMerchant()!.initials }}</div>
+            <div class="row__avatar" [style.background]="selectedMerchant()!.avatarColor">
+              @if (selectedMerchant()!.logoUrl) {
+                <img
+                  class="row__avatar-image"
+                  [src]="selectedMerchant()!.logoUrl"
+                  [alt]="selectedMerchant()!.displayName"
+                  (error)="onMerchantLogoError(selectedMerchant()!.id)"
+                />
+              } @else {
+                {{ selectedMerchant()!.initials }}
+              }
+            </div>
             <div class="row__info">
               <span class="row__name">{{ selectedMerchant()!.displayName }}</span>
             </div>
@@ -112,7 +123,18 @@
             <div class="row"
                  [class.row--selected]="selectedMerchant()?.id === m.id"
                  (click)="toggleMerchant(m)">
-              <div class="row__avatar" [style.background]="m.avatarColor">{{ m.initials }}</div>
+              <div class="row__avatar" [style.background]="m.avatarColor">
+                @if (m.logoUrl) {
+                  <img
+                    class="row__avatar-image"
+                    [src]="m.logoUrl"
+                    [alt]="m.displayName"
+                    (error)="onMerchantLogoError(m.id)"
+                  />
+                } @else {
+                  {{ m.initials }}
+                }
+              </div>
               <div class="row__info">
                 <span class="row__name">{{ m.displayName }}</span>
                 @if (m.handle) { <span class="row__sub">{{ m.handle }}</span> }
@@ -271,4 +293,3 @@
   </div>
 
 </div>
-
