@@ -95,7 +95,7 @@ Statusoversigt over PayNSync pr. seneste kodegennemgang.
 | MobilePay webhook-alias | ✅ | `POST /api/payments/webhooks/mobilepay` |
 | Vipps callback-endpoint | ✅ | `POST /api/payments/vipps/callbacks/{reference}` |
 | `RowVersion` (optimistisk concurrency på `ParticipantPayment`) | ✅ | Konfigureret i EF Core |
-| Redirect URL returneres ved reserve | ⚠️ | URL returneres i response — frontend-håndtering ikke fuldt observerbar i koden |
+| Redirect til Vipps/MobilePay efter reservation | ✅ | API'et returnerer `PaymentRedirectUrl`, og Merchant Demo navigerer browseren til URL'en; Fake provider fortsætter uden redirect |
 | Webhook-signatur-validering (HMAC) | ❌ | `[AllowAnonymous]` — ingen signaturcheck |
 | Refund-flow | ❌ | `Refunded`-status defineret i enum og transitions — ingen service-metode implementeret |
 | Produktions-Vipps-credentials | ❌ | Placeholder-værdier i `appsettings.json` |
