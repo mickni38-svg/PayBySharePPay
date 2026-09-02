@@ -14,53 +14,59 @@ public class AuthController : ControllerBase
     private readonly IParticipantService _participantService;
     private readonly JwtTokenService _tokenService;
     private readonly IExternalAuthService _externalAuthService;
+    private readonly IWebHostEnvironment _environment;
 
     public AuthController(
         IParticipantService participantService,
         JwtTokenService tokenService,
-        IExternalAuthService externalAuthService)
+        IExternalAuthService externalAuthService,
+        IWebHostEnvironment environment)
     {
         _participantService = participantService;
         _tokenService = tokenService;
         _externalAuthService = externalAuthService;
+        _environment = environment;
     }
 
     /// <summary>
-    /// MVP login: slår email op i Participants og returnerer JWT.
-    /// Ingen password endnu — erstattes med rigtig auth i Later Phase.
+    /// Logger Person eller Merchant ind med email og password.
+    /// Passwordløst login er kun tilladt for legacy seed-personer i Development.
     /// </summary>
     [HttpPost("login")]
     [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        var participants = await _participantService.SearchParticipantsAsync(request.Email);
-        var person = participants.FirstOrDefault(p =>
-            p.Type == "Person" &&
-            string.Equals(p.Email, request.Email, StringComparison.OrdinalIgnoreCase));
+        var participant = await _participantService.GetByEmailAsync(request.Email.Trim());
+        if (participant is null)
+            return Unauthorized(new { error = "Email eller adgangskode er forkert." });
 
-        if (person is null)
-            return Unauthorized(new { error = "Ingen bruger fundet med denne email." });
+        var passwordMissing = string.IsNullOrWhiteSpace(request.Password);
+        var isDevelopmentSeedLogin =
+            _environment.IsDevelopment() &&
+            participant.Type == "Person" &&
+            participant.PasswordHash is null;
 
-        // Hent den rå entity for at få adgang til PasswordHash
-        var personWithHash = await _participantService.GetByEmailAsync(request.Email);
-        if (personWithHash is null)
-            return Unauthorized(new { error = "Ingen bruger fundet med denne email." });
-
-        if (!string.IsNullOrEmpty(request.Password) && personWithHash.PasswordHash is not null)
+        if (passwordMissing)
         {
-            if (!_participantService.VerifyPassword(request.Password, personWithHash.PasswordHash))
-                return Unauthorized(new { error = "Forkert adgangskode." });
+            if (!isDevelopmentSeedLogin)
+                return Unauthorized(new { error = "Email eller adgangskode er forkert." });
+        }
+        else if (participant.PasswordHash is null ||
+                 !_participantService.VerifyPassword(request.Password!, participant.PasswordHash))
+        {
+            return Unauthorized(new { error = "Email eller adgangskode er forkert." });
         }
 
         var expiresAt = DateTime.UtcNow.AddMinutes(480);
-        var token = _tokenService.GenerateToken(person.Id, person.Name);
+        var token = _tokenService.GenerateToken(participant.Id, participant.Name);
 
         return Ok(new LoginResponse
         {
             Token = token,
-            ParticipantId = person.Id,
-            Name = person.Name,
+            ParticipantId = participant.Id,
+            Name = participant.Name,
+            ParticipantType = participant.Type,
             ExpiresAt = expiresAt
         });
     }
@@ -70,9 +76,9 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Register([FromBody] RegisterPersonRequest request)
     {
-        var existing = await _participantService.SearchParticipantsAsync(request.Email);
-        if (existing.Any(p => string.Equals(p.Email, request.Email, StringComparison.OrdinalIgnoreCase)))
-            return Conflict(new { error = "En bruger med denne e-mail eksisterer allerede." });
+        var existing = await _participantService.GetByEmailAsync(request.Email.Trim());
+        if (existing is not null)
+            return Conflict(new { error = "En konto med denne e-mail eksisterer allerede." });
 
         var person = await _participantService.CreatePersonAsync(new CreatePersonDto
         {
@@ -90,6 +96,7 @@ public class AuthController : ControllerBase
             Token = token,
             ParticipantId = person.Id,
             Name = person.Name,
+            ParticipantType = person.Type,
             ExpiresAt = expiresAt
         });
     }
@@ -103,15 +110,16 @@ public class AuthController : ControllerBase
         if (string.IsNullOrWhiteSpace(request.VippsMerchantSerialNumber))
             return BadRequest(new { error = "MSN-nummer (Vipps Merchant Serial Number) er påkrævet." });
 
-        var existing = await _participantService.SearchParticipantsAsync(request.ContactEmail ?? request.Name);
-        if (!string.IsNullOrEmpty(request.ContactEmail) &&
-            existing.Any(p => string.Equals(p.Email, request.ContactEmail, StringComparison.OrdinalIgnoreCase)))
-            return Conflict(new { error = "Et spisested med denne e-mail eksisterer allerede." });
+        var existing = await _participantService.GetByEmailAsync(request.Email.Trim());
+        if (existing is not null)
+            return Conflict(new { error = "En konto med denne e-mail eksisterer allerede." });
 
         var merchant = await _participantService.CreateMerchantAsync(new CreateMerchantDto
         {
             Name = request.Name,
             CompanyName = request.CompanyName,
+            Email = request.Email,
+            Password = request.Password,
             VippsMerchantSerialNumber = request.VippsMerchantSerialNumber,
             CvrNumber = request.CvrNumber,
             ContactPerson = request.ContactPerson,
@@ -128,6 +136,7 @@ public class AuthController : ControllerBase
             Token = token,
             ParticipantId = merchant.Id,
             Name = merchant.Name,
+            ParticipantType = merchant.Type,
             ExpiresAt = expiresAt
         });
     }
