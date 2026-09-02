@@ -38,10 +38,10 @@ UC-07 om dark-theme-navigation er allerede implementeret og registreret i `docs/
    Aktivér det eksisterende JoinToken efter Product Owner-beslutninger.
 7. `UC-14-refunder-captured-betaling.md`  
    Tilføj idempotent refund efter særskilt betalings- og rollebeslutning.
-8. `UC-15-profil-og-kontocenter.md`  
+8. ✅ `UC-15-profil-og-kontocenter.md`
    Saml profil, login, person-/merchantregistrering, Vipps-testmapping og development-only værktøjer i et rollebaseret kontocenter.
 
-UC-15 kan implementeres uafhængigt af UC-10–UC-14. Den kræver særskilt approval, fordi merchant-login og auth-kontrakten ændres.
+UC-15 er implementeret uafhængigt af UC-10–UC-14 efter særskilt approval af ændringerne til merchant-login og auth-kontrakten.
 
 ## Fælles arbejdsgang
 
