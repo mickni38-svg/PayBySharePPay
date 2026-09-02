@@ -1,6 +1,8 @@
 # Current State
 
-Statusoversigt over PayNSync pr. seneste kode-gennemgang.
+Statusoversigt over PayNSync pr. seneste kodegennemgang.
+
+**Senest opdateret:** 2. september 2026 — UC-01–UC-05, wizard-navigation, tests og GitHub Actions er sammenholdt med `main`.
 
 **Symboler:**  
 ✅ Implementeret og fungerende  
@@ -146,7 +148,7 @@ Statusoversigt over PayNSync pr. seneste kode-gennemgang.
 |---------|--------|-------|
 | Login og registrering | ✅ | |
 | Ordreoversigt med aktiv/afsluttet tabs | ✅ | |
-| Opret ordre (3-trins wizard) | ⚠️ | UC-03 trin 1 er implementeret: låst merchant + dynamiske deltagere. Trin 2 og 3 bruger eksisterende indhold indtil UC-04/UC-05. |
+| Opret ordre (3-trins wizard, UC-03–UC-05) | ✅ | Trin 1: låst merchant og dynamiske deltagere. Trin 2: titel (80 tegn) og valgfri besked (500 tegn). Trin 3: dynamisk kontrolside, idempotent oprettelse og navigation til den nye ordres detaljeside. Ændringer foretages via Tilbage-knappen; ingen direkte Redigér-genveje. |
 | Ordredetaljer med betalingsstatus pr. deltager | ✅ | |
 | Host: godkend og capture-knap | ✅ | Kalder `POST /api/orders/{id}/approve` |
 | Host: annuller ordre-knap | ✅ | Kalder `POST /api/orders/{id}/cancel` |
@@ -155,6 +157,7 @@ Statusoversigt over PayNSync pr. seneste kode-gennemgang.
 | Send påmindelser til afventende deltagere | ⚠️ | Knap og dialog eksisterer — `sendReminders()` logger kun til console, ingen API-kald |
 | Beskedindbakke | ✅ | |
 | Brugerprofil | ✅ | Profilredigering, tema, Vipps-testmapping og logout |
+| Merchant-logo i database/API og statisk demo-katalog (UC-01) | ✅ | Logo-data og metadata på merchant, logo-endpoint, validering/fallback samt statiske demo-logoer med API-logo og initialer som fallback. |
 | Merchant-søgning og carousel på forsiden (UC-02) | ✅ | Dynamiske merchant-venner, maks. 8, søgning, logo-fallback, senest anvendt-sortering, tastaturnavigation og låst wizard-state |
 | Dark theme navigation (UC-07) | ✅ | Mørkt tema skjuler Deltagere+Profil-kort, giver neon-glow border på kort, forenkler bottom nav til Hjem/Deltagere/Mere |
 | PayNSync hero-logo på forsiden (dark mode) | ✅ | SVG-kreditkortsillustration + Pay/NSync branding øverst på HomeComponent |
@@ -172,14 +175,15 @@ Statusoversigt over PayNSync pr. seneste kode-gennemgang.
 |---------|--------|-------|
 | Swagger/OpenAPI tilgængeligt på `/` | ✅ | Root redirecter til `/swagger` |
 | `ExceptionHandlingMiddleware` | ✅ | `ArgumentException` → 400, `KeyNotFoundException` → 404, `InvalidOperationException` → 409 |
-| SQL Server EF Core med 9 migrationer | ✅ | |
+| SQL Server EF Core med 15 migrationer | ✅ | Seneste migration: `20260815173756_AddMerchantLogo` |
 | Dev: auto-start af Merchant Demo-server | ✅ | `MerchantDemoHostedService` starter `npx http-server` på port 8081 |
 | CORS konfigureret | ✅ | Hardcodet liste med localhost + Azure-URL'er |
-| Azure App Service (API) | ✅ | `web.config` + IIS in-process |
-| Azure Static Web Apps (Angular SPA + Merchant Demo) | ✅ | `staticwebapp.config.json` med SPA-fallback |
+| Simply.com API (IIS) | ✅ | Self-contained Windows x64 publish til `api.paynsync.dk` |
+| Simply.com webklienter | ✅ | Landing, Angular SPA og Merchant Demo deployes til deres respektive domæner |
 | `Tools.PayBySharePay` (seed-scripts) | ✅ | `seed`, `seed-group-orders`, `seed-pizza`, `flush` m.fl. |
 | Container/Docker | ❌ | Ikke konfigureret |
-| CI/CD pipeline | ❌ | Ingen pipeline-filer i repositoriet |
+| CI: Build & Test | ✅ | `.github/workflows/build.yml` kører automatisk ved push/PR til `main`: .NET build/tests samt Angular tests og Simply-build |
+| CD: Simply.com deploy | ✅ | `.github/workflows/deploy-simply.yml` bygger og deployer manuelt via `workflow_dispatch`; ingen automatisk produktionsdeploy ved push |
 | Health checks | ❌ | Ikke konfigureret |
 | Rate limiting | ❌ | Ikke konfigureret |
 
@@ -194,7 +198,7 @@ Statusoversigt over PayNSync pr. seneste kode-gennemgang.
 | `ParticipantPaymentStateServiceTests` | ✅ | State machine-transitioner, ugyldige overgange, event log-skrivning |
 | `UnitTest1` | ⚠️ | Tom testklasse — placeholder |
 | Integrationstests | ❌ | Intet integrationstestprojekt |
-| Frontend-tests | ✅ | Karma/Jasmine-specs for UC-02: filtrering, begrænsning, sortering, tastaturnavigation, wizard-state og logout |
+| Frontend-tests | ✅ | Karma/Jasmine-specs for UC-01-logo-fallback, UC-02-carousel og UC-03–UC-05-wizarden, herunder validering, state, tilbage-navigation, idempotent submit, succes og fejl |
 
 ---
 
@@ -220,7 +224,6 @@ Statusoversigt over PayNSync pr. seneste kode-gennemgang.
 | `requestingParticipantId` fra request-body | Host-ejerskab valideres mod `requestingParticipantId` sendt af klienten i body — ikke mod JWT-claimet `sub`. En klient kan sende en anden brugers ID. |
 | `DevController` uden auth i prod | `DELETE /api/dev/reset` sletter alle ordrer og `POST /api/dev/seed-merchant-urls` ændrer data. Begge endpoints har ingen authentication-krav. |
 | JWT-udløbstid-inkonsistens | `appsettings.json` har `Jwt:ExpiresInMinutes = 43200` (30 dage). `AuthController` bruger `AddMinutes(480)` (8 timer) hardcodet. `JwtTokenService` læser konfigurationsværdien. Hvilken værdi der reelt bruges afhænger af kodestien. |
-| Ingen Angular production environment-fil | `environment.ts` peger på `https://localhost:7007`. Der er ingen separat `environment.production.ts`. Det er uklart hvordan prod-API-URL'en sættes ved Angular-build. |
 | `FriendRelation` race condition | `RelationExistsAsync` tjekker for duplikat i service, men der er inget unikt DB-constraint. Samtidige kald kan oprette dubletter. |
 | `UnitTest1` er tom | Testklassen eksisterer med en tom `Test1()`-metode — placeholder uden indhold. |
 | `MerchantOrderDraft.Status` bruges ikke aktivt | Entiteten har `Status = "Draft"` som default, men `MerchantOrderService` sætter `"Submitted"`. Systemets `ReadyToPay`-logik tjekker `OrderParticipant.Status`, ikke `MerchantOrderDraft.Status`. |
@@ -238,6 +241,5 @@ Statusoversigt over PayNSync pr. seneste kode-gennemgang.
 5. **`requestingParticipantId` validering** — Bør det valideres mod `User.FindFirst(ClaimTypes.NameIdentifier)` fra JWT i stedet for at stole på request-body?
 6. **`DevController` i prod** — Skal den beskyttes (fx `[Authorize]` + env-check) eller fjernes helt fra produktionsmiljøet?
 7. **JWT-udløbstid** — Hvad er den korrekte udløbstid: 480 minutter (hardcodet i `AuthController`) eller 43200 (i `appsettings.json`)?
-8. **Angular prod-build** — Hvordan sættes prod-API-URL'en? Via Angular build-konfiguration, environment-fil-swap, eller andet?
-9. **`Declined`-status** — Defineret i frontend-enum og `participantStatusLabel()`. Planlægges der backend-logik til at håndtere dette?
-10. **`Refunded`-status** — Transition `Captured → Refunded` er tilladt i state machine. Planlægges der et refund-endpoint?
+8. **`Declined`-status** — Defineret i frontend-enum og `participantStatusLabel()`. Planlægges der backend-logik til at håndtere dette?
+9. **`Refunded`-status** — Transition `Captured → Refunded` er tilladt i state machine. Planlægges der et refund-endpoint?
