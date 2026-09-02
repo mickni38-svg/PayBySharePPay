@@ -214,14 +214,13 @@ describe('CreateOrderComponent UC-03/UC-04/UC-05 wizard', () => {
     expect(component.wizardState().participants.map(person => person.displayName)).toEqual(['Anna Jensen']);
   });
 
-  it('UC-05 edit actions preserve data while navigating to the relevant step', () => {
+  it('UC-05 preserves data when the user navigates back through the wizard', () => {
     const { component } = openStep3();
-    component.editDetails();
+    component.goBack();
     expect(component.currentStep()).toBe(2);
     expect(component.title()).toBe('Pizzaaften');
     expect(component.message()).toBe('Hej alle 👋');
-    component.currentStep.set(3);
-    component.editParticipants();
+    component.goBack();
     expect(component.currentStep()).toBe(1);
     expect(component.selectedParticipants().map(person => person.id)).toEqual([anna.id]);
   });
