@@ -1,5 +1,11 @@
 # FEATURE 04: Wizard trin 2 – titel og besked
 
+> **Status:** ✅ Implementeret og automatisk verificeret i PR #12.
+
+## Implementeringsnote
+
+Trin 2 bruger den eksisterende wizard-state fra UC-03, validerer og trimmer titel (maks. 80 tegn), bevarer valgfri besked præcist (maks. 500 tegn) og viser dynamisk merchantlogo, merchantnavn og deltagerantal. Emoji er ikke længere et obligatorisk felt. API, database og betalingsflow er uændret.
+
 ## Mål
 
 Værten indtaster gruppebetalingens titel og en valgfri besked. Data gemmes i den eksisterende wizard-state og bevares ved navigation.
