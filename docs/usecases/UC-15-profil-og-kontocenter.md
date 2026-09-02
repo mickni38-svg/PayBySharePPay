@@ -2,7 +2,7 @@
 
 ## Status
 
-❌ Planlagt — UX/UI og funktionelt scope er analyseret mod `main` den 2. september 2026.
+✅ Implementeret på `main` den 2. september 2026. Verificeret med backend-build/tests, 42 Angular-tests og Simply-produktionsbuild i GitHub Actions Build & Test #205.
 
 ## Implementeringsprofil
 
