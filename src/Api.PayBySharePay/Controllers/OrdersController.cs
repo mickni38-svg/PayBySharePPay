@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Api.PayBySharePay.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,6 +11,8 @@ namespace Api.PayBySharePay.Controllers;
 [Route("api/[controller]")]
 public class OrdersController : ControllerBase
 {
+    private static readonly ConcurrentDictionary<string, Lazy<Task<OrderDto>>> CreateRequests = new();
+
     private readonly IOrderService _orderService;
     private readonly IExternalPaymentService _externalPaymentService;
     private readonly IGroupPaymentOrchestrationService _orchestration;
@@ -24,7 +27,6 @@ public class OrdersController : ControllerBase
         _orchestration = orchestration;
     }
 
-    /// <summary>Henter alle ordrer, eller filtrerer på participantId</summary>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<OrderSummaryDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll([FromQuery] int? participantId = null)
@@ -44,18 +46,33 @@ public class OrdersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest request)
     {
-        var dto = new CreateOrderDto
+        var key = request.IdempotencyKey.Trim();
+        var lazyCreate = CreateRequests.GetOrAdd(key, _ => new Lazy<Task<OrderDto>>(() =>
         {
-            CreatedByParticipantId = request.CreatedByParticipantId,
-            Title = request.Title,
-            Category = request.Category,
-            Message = request.Message,
-            MerchantParticipantId = request.MerchantParticipantId,
-            ParticipantIds = request.ParticipantIds
-        };
+            var dto = new CreateOrderDto
+            {
+                CreatedByParticipantId = request.CreatedByParticipantId,
+                Title = request.Title,
+                Category = request.Category,
+                Message = request.Message,
+                MerchantParticipantId = request.MerchantParticipantId,
+                ParticipantIds = request.ParticipantIds,
+                IdempotencyKey = key
+            };
 
-        var result = await _orderService.CreateOrderAsync(dto);
-        return CreatedAtAction(nameof(GetOverview), new { id = result.Id }, result);
+            return _orderService.CreateOrderAsync(dto);
+        }, LazyThreadSafetyMode.ExecutionAndPublication));
+
+        try
+        {
+            var result = await lazyCreate.Value;
+            return CreatedAtAction(nameof(GetOverview), new { id = result.Id }, result);
+        }
+        catch
+        {
+            CreateRequests.TryRemove(new KeyValuePair<string, Lazy<Task<OrderDto>>>(key, lazyCreate));
+            throw;
+        }
     }
 
     [HttpGet("{id}/overview")]
@@ -67,9 +84,6 @@ public class OrdersController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>
-    /// Returnerer capture-status for alle betalinger på ordren.
-    /// </summary>
     [HttpGet("{id}/capture-status")]
     [ProducesResponseType(typeof(CaptureStatusDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -79,10 +93,6 @@ public class OrdersController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>
-    /// Deltager starter betalingsreservation for sin del af gruppebetalingen.
-    /// Kalder IPaymentProvider.ReserveAsync og returnerer redirect-url til betalingsudbyder.
-    /// </summary>
     [HttpPost("{id}/reserve")]
     [ProducesResponseType(typeof(ReserveParticipantPaymentResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -105,7 +115,6 @@ public class OrdersController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>Host gennemfører gruppebetaling — sætter status til Completed</summary>
     [HttpPost("{id}/complete")]
     [ProducesResponseType(typeof(OrderDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -117,10 +126,6 @@ public class OrdersController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>
-    /// Host annullerer ordren — canceller alle ikke-capturede betalingsreservationer.
-    /// Idempotent: allerede annullerede ordrer returnerer success.
-    /// </summary>
     [HttpPost("{id}/cancel")]
     [ProducesResponseType(typeof(CancelOrderResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -132,11 +137,6 @@ public class OrdersController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>
-    /// Host godkender ordren — capture'r alle reserverede betalinger én ad gangen.
-    /// Kun host kan kalde dette endpoint. Kræver ordre i status ReadyToPay.
-    /// Er idempotent: allerede captured betalinger springes over.
-    /// </summary>
     [HttpPost("{id}/approve")]
     [ProducesResponseType(typeof(ApproveAndCaptureResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -148,10 +148,6 @@ public class OrdersController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>
-    /// Host initierer betaling via eksternt betalings-API.
-    /// Kalder dummy (fremtidigt: rigtigt) betalings-API, og ved success gemmes ordren som Completed.
-    /// </summary>
     [HttpPost("{id}/pay")]
     [ProducesResponseType(typeof(PayOrderResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -160,11 +156,9 @@ public class OrdersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> PayOrder(int id, [FromBody] PayOrderRequest request)
     {
-        // 1. Kald eksternt betalings-API (dummy → altid success)
-        var overview = await _orderService.GetOrderOverviewAsync(id );
+        var overview = await _orderService.GetOrderOverviewAsync(id);
 
         var amount = request.Amount > 0 ? request.Amount : overview.TotalAmount;
-
         var paymentResult = await _externalPaymentService.ChargeAsync(new(
             OrderId: id,
             Amount: amount,
@@ -178,7 +172,6 @@ public class OrdersController : ControllerBase
                 new { error = paymentResult.ErrorMessage ?? "Betaling afvist af betalingsudbyderen." });
         }
 
-        // 2. Gem i vores DB og sæt ordre til Completed
         var order = await _orderService.CompleteOrderAsync(id, request.RequestingParticipantId);
 
         return Ok(new PayOrderResponse
