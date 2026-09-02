@@ -86,7 +86,8 @@
               class="field__input"
               type="search"
               placeholder="Søg venner..."
-              [(ngModel)]="searchTerm"
+              [ngModel]="searchTerm()"
+              (ngModelChange)="searchTerm.set($event)"
               aria-label="Søg venner"
             />
           </div>
