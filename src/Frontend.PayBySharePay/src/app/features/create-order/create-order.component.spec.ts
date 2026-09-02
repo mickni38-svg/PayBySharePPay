@@ -3,7 +3,7 @@ import { of, throwError } from 'rxjs';
 import { DirectoryEntry } from '../../core/models/directory.model';
 import { CreateOrderComponent } from './create-order.component';
 
-describe('CreateOrderComponent UC-03 participant step', () => {
+describe('CreateOrderComponent wizard', () => {
   const host: DirectoryEntry = {
     id: 7,
     type: 'Person',
@@ -53,9 +53,13 @@ describe('CreateOrderComponent UC-03 participant step', () => {
   ): {
     component: CreateOrderComponent;
     router: { navigate: jasmine.Spy };
+    orderService: { createOrder: jasmine.Spy };
   } {
     const router = {
       navigate: jasmine.createSpy('navigate')
+    };
+    const orderService = {
+      createOrder: jasmine.createSpy('createOrder').and.returnValue(of({}))
     };
     const directoryService = {
       getFriends: jasmine.createSpy('getFriends').and.returnValue(
@@ -67,13 +71,20 @@ describe('CreateOrderComponent UC-03 participant step', () => {
 
     return {
       component: new CreateOrderComponent(
-        {} as any,
+        orderService as any,
         directoryService as any,
         router as any,
         { currentUserId: () => userId } as any
       ),
-      router
+      router,
+      orderService
     };
+  }
+
+  function openDetailsStep(component: CreateOrderComponent): void {
+    component.ngOnInit();
+    component.togglePerson(component.persons()[0]);
+    component.goNext();
   }
 
   it('redirects home when opened without merchant state', () => {
@@ -222,5 +233,141 @@ describe('CreateOrderComponent UC-03 participant step', () => {
     expect(component.loadError()).toBe('Kunne ikke hente deltagere. Prøv igen.');
     expect(component.persons()).toEqual([]);
     expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  describe('UC-04 details step', () => {
+    beforeEach(() => setMerchantState());
+
+    it('requires a non-whitespace title and no longer requires an emoji', () => {
+      const { component } = createComponent();
+      openDetailsStep(component);
+
+      component.title.set('   ');
+      expect(component.canContinue()).toBeFalse();
+      component.goNext();
+      expect(component.currentStep()).toBe(2);
+      expect(component.stepError()).toBe('Titel skal udfyldes');
+
+      component.title.set('Pizzaaften');
+      expect(component.emoji()).toBe('');
+      expect(component.canContinue()).toBeTrue();
+    });
+
+    it('accepts 80 title characters and rejects 81 characters defensively', () => {
+      const { component } = createComponent();
+      openDetailsStep(component);
+
+      component.title.set('a'.repeat(80));
+      expect(component.canContinue()).toBeTrue();
+
+      component.title.set('a'.repeat(81));
+      expect(component.canContinue()).toBeFalse();
+      component.goNext();
+      expect(component.currentStep()).toBe(2);
+      expect(component.stepError()).toBe('Titel må højst være 80 tegn');
+    });
+
+    it('accepts an empty or 500-character message and rejects 501 characters', () => {
+      const { component } = createComponent();
+      openDetailsStep(component);
+      component.title.set('Frokost');
+
+      component.message.set('');
+      expect(component.canContinue()).toBeTrue();
+
+      component.message.set('ø'.repeat(500));
+      expect(component.canContinue()).toBeTrue();
+
+      component.message.set('ø'.repeat(501));
+      expect(component.canContinue()).toBeFalse();
+      component.goNext();
+      expect(component.currentStep()).toBe(2);
+      expect(component.stepError()).toBe('Besked må højst være 500 tegn');
+    });
+
+    it('trims the title but preserves multiline Danish and emoji message content', () => {
+      const { component } = createComponent();
+      openDetailsStep(component);
+      const message = 'Hej alle 👋\nVi mødes kl. 18 – glæder mig!';
+
+      component.title.set('  Pizzaaften  ');
+      component.message.set(message);
+      component.goNext();
+
+      expect(component.currentStep()).toBe(3);
+      expect(component.wizardState().title).toBe('Pizzaaften');
+      expect(component.wizardState().message).toBe(message);
+    });
+
+    it('exposes dynamic merchant, participant count and details in the existing wizard state', () => {
+      const { component } = createComponent();
+      openDetailsStep(component);
+      component.title.set('Sushi');
+      component.message.set('Hvem er med?');
+
+      expect(component.wizardState().merchant?.displayName).toBe('Test Bistro');
+      expect(component.wizardState().merchant?.logoUrl).toContain('/api/participants/42/logo');
+      expect(component.wizardState().participants.length).toBe(1);
+      expect(component.wizardState().title).toBe('Sushi');
+      expect(component.wizardState().message).toBe('Hvem er med?');
+    });
+
+    it('preserves details and participants while navigating backward and forward', () => {
+      const { component } = createComponent();
+      openDetailsStep(component);
+      component.title.set('Aftensmad');
+      component.message.set('To linjer\nmed tekst 😊');
+
+      component.goBack();
+      expect(component.currentStep()).toBe(1);
+      expect(component.selectedParticipants().map(person => person.id)).toEqual([anna.id]);
+
+      component.goNext();
+      expect(component.currentStep()).toBe(2);
+      expect(component.title()).toBe('Aftensmad');
+      expect(component.message()).toBe('To linjer\nmed tekst 😊');
+    });
+
+    it('returns to the participant step if details are opened without a participant', () => {
+      const { component } = createComponent();
+      component.ngOnInit();
+      component.currentStep.set(2);
+      component.title.set('Ugyldig state');
+
+      component.goNext();
+
+      expect(component.currentStep()).toBe(1);
+      expect(component.stepError()).toBe('Vælg mindst én deltager');
+    });
+
+    it('returns home if details are opened without a valid merchant', () => {
+      const { component, router } = createComponent();
+      component.currentStep.set(2);
+      component.title.set('Ugyldig state');
+
+      component.goNext();
+
+      expect(router.navigate).toHaveBeenCalledWith(['/home']);
+      expect(component.currentStep()).toBe(2);
+    });
+
+    it('submits the preserved message and omits the optional category', () => {
+      const { component, orderService } = createComponent();
+      openDetailsStep(component);
+      const message = 'Dansk tekst\nmed emoji 🍕';
+      component.title.set('  Pizzaaften  ');
+      component.message.set(message);
+      component.goNext();
+
+      component.submit();
+
+      expect(orderService.createOrder).toHaveBeenCalledWith(jasmine.objectContaining({
+        title: 'Pizzaaften',
+        category: undefined,
+        message,
+        merchantParticipantId: merchant.id,
+        participantIds: [anna.id]
+      }));
+    });
   });
 });
