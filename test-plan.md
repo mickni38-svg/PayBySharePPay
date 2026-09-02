@@ -1,29 +1,37 @@
-# Test plan — UC-02
+# Test plan — UC-03
 
-## Automated tests
+## Automatiske tests
 
-Test the merchant carousel utilities for:
+Udvid `create-order.component.spec.ts` med:
 
-- 0, 1, 8 and more than 8 merchants.
-- Full and partial case-insensitive name matching.
-- Zero search results.
-- Recent merchants before alphabetical fallback.
-- Updating recent merchant history without duplicates.
-- Invalid stored history.
-- ArrowLeft, ArrowRight, Home and End scroll targets.
-- Unsupported keys causing no carousel action.
+- direkte adgang uden merchant-state sender brugeren til forsiden;
+- ukendt eller ikke-ven merchant-ID sender brugeren til forsiden;
+- merchantkortet bruger valideret navn og logo fra den eksisterende service;
+- kun `Person`-venner vises som deltagere;
+- værten filtreres fra;
+- den valgte merchant filtreres fra;
+- dublerede personer deduplikeres efter ID;
+- søgning matcher navn og sekundær tekst uden forskel på store/små bogstaver;
+- valg og fravalg ændrer kun den valgte persons state;
+- samme deltager kan ikke forekomme eller vælges to gange;
+- næste-knappen er deaktiveret uden deltagere;
+- mindst én deltager gør trin 1 gyldigt og åbner trin 2;
+- merchant, HostUserId og valgte deltager-ID'er er bevaret i wizard-state;
+- frem/tilbage-navigation bevarer deltagervalg;
+- fejlet venneindlæsning giver en stabil fejltilstand.
 
-## Build verification
+## Build og test
 
-- Compile the Angular production build.
-- Run the Angular unit-test suite non-interactively when the available CI environment supports Chrome Headless.
-- Review the pull-request diff for unrelated changes.
+- Kør `npx ng test --watch=false --browsers=ChromeHeadless`.
+- Kør `npx ng build --configuration simply`.
+- Lad GitHub Actions køre både .NET-testjobbet og Angular-test/build-jobbet.
+- Gennemgå PR-diffen for ændringer uden for UC-03.
 
-## Manual checks
+## Manuel kontrol
 
-- Confirm the carousel remains inside the narrow mobile content width.
-- Confirm swipe and mouse scrolling still work.
-- Confirm keyboard focus is visible and arrow keys scroll the carousel.
-- Confirm selecting a merchant opens wizard step 1 with its real ID.
-- Confirm direct wizard access without merchant state redirects home.
-- Confirm logout is absent from home and available on profile.
+- Sammenlign trin 1 med `docs/images/wizard1.jpeg`.
+- Kontrollér den smalle mobilbredde og sort/blå styling.
+- Kontrollér kompakt merchant-logo i samme visuelle størrelse som på forsiden.
+- Kontrollér fravær af "Valgt", flueben, Skift og merchant-søgning.
+- Kontrollér søgning, valg/fravalg og valgt antal med touch.
+- Kontrollér at tilbage fra trin 1 går til forsiden uden at oprette data.
