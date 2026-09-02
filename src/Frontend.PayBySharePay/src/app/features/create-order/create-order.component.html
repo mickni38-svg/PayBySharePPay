@@ -130,44 +130,61 @@
     }
 
     @if (currentStep() === 2) {
+      <header class="wizard__page-heading">
+        <h1 class="wizard__title">Detaljer</h1>
+        <p class="wizard__step-copy">Trin 2 af 3 · Giv gruppebetalingen en titel og evt. en besked.</p>
+      </header>
+
+      @if (selectedMerchant()) {
+        <section class="preselected-merchant" aria-label="Opsummering af gruppebetaling">
+          <p class="preselected-merchant__label">GRUPPEBETALING</p>
+          <div class="merchant-summary">
+            <div class="merchant-summary__logo" [style.background]="selectedMerchant()!.avatarColor">
+              @if (selectedMerchant()!.logoUrl) {
+                <img
+                  class="row__avatar-image"
+                  [src]="selectedMerchant()!.logoUrl"
+                  [alt]="selectedMerchant()!.displayName"
+                  (error)="onMerchantLogoError()"
+                />
+              } @else {
+                <span>{{ selectedMerchant()!.initials }}</span>
+              }
+            </div>
+            <span class="merchant-summary__name">
+              {{ selectedMerchant()!.displayName }} · {{ selectedParticipants().length }} deltagere
+            </span>
+          </div>
+        </section>
+      }
+
       <div class="field">
-        <label class="field__label">TITEL</label>
+        <label class="field__label" for="order-title">Titel</label>
         <input
+          id="order-title"
           class="field__input"
           type="text"
-          placeholder="fx pizza aften"
+          placeholder="Fx Pizzaaften"
           [ngModel]="title()"
           (ngModelChange)="title.set($event)"
           maxlength="80"
+          required
         />
+        <span class="field__hint">{{ title().length }}/80 tegn</span>
       </div>
 
       <div class="field">
-        <label class="field__label">
-          INDTAST EMOJI <span class="field__required">*</span>
-        </label>
-        <input
-          class="field__input field__input--emoji"
-          type="text"
-          placeholder="Tryk på 😊 på dit tastatur og vælg en emoji…"
-          [ngModel]="emoji()"
-          (ngModelChange)="emoji.set($event)"
-          maxlength="2"
-        />
-        @if (emoji()) {
-          <span class="emoji-preview">{{ emoji() }}</span>
-        }
-      </div>
-
-      <div class="field">
-        <label class="field__label">BESKED (VALGFRI)</label>
+        <label class="field__label" for="order-message">Besked</label>
         <textarea
+          id="order-message"
           class="field__textarea"
-          placeholder="Skriv en kort besked til deltagerne…"
-          [(ngModel)]="message"
-          maxlength="200"
-          rows="3"
+          placeholder="Skriv en besked til deltagerne..."
+          [ngModel]="message()"
+          (ngModelChange)="message.set($event)"
+          maxlength="500"
+          rows="5"
         ></textarea>
+        <span class="field__hint">{{ message().length }}/500 tegn</span>
       </div>
     }
 
@@ -179,22 +196,11 @@
           <span class="review-row__value">{{ title() }}</span>
         </div>
         <div class="review-row">
-          <span class="review-row__icon">🏷️</span>
-          <span class="review-row__label">Emoji</span>
-          <span class="review-row__value">
-            @if (emoji()) {
-              {{ emoji() }}
-            } @else {
-              <span class="review-row__empty">Ikke valgt</span>
-            }
-          </span>
-        </div>
-        <div class="review-row">
           <span class="review-row__icon">💬</span>
           <span class="review-row__label">Besked</span>
           <span class="review-row__value">
-            @if (message.trim()) {
-              {{ message }}
+            @if (message()) {
+              {{ message() }}
             } @else {
               <span class="review-row__empty">Ingen besked</span>
             }
