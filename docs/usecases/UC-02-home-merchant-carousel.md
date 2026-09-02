@@ -44,6 +44,7 @@ Mockuppens merchants og logoer er kun eksempler og må ikke hardcodes.
 - Der må ikke vises et kort eller en knap med teksten **Vælg fra liste**.
 - **Overblik**, **Beskeder** og bundmenuen bevares.
 - Rækken med brugernavn og **Log ud** fjernes fra forsiden.
+- Panelet **UDVIKLER LOGIN** fjernes fra forsiden og placeres på profilsiden med den eksisterende login- og nulstillingsfunktionalitet.
 - **Log ud** skal være tilgængelig på profilsiden gennem den eksisterende logout-funktion.
 
 ## Sortering og søgning
@@ -104,7 +105,8 @@ Hvis brugeren ikke har merchant-venner:
 
 **Givet** forsiden  
 **Så** vises **Log ud** ikke på siden  
-**Og** den eksisterende logout-handling kan bruges fra profilsiden.
+**Og** den eksisterende logout-handling kan bruges fra profilsiden
+**Og** udvikler-login findes kun på profilsiden.
 
 ## Test
 
