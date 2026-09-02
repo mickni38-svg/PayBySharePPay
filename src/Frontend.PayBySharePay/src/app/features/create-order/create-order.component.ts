@@ -274,21 +274,6 @@ export class CreateOrderComponent implements OnInit {
     }
   }
 
-  goToStep(step: number): void {
-    if (step < this.currentStep()) {
-      this.stepError.set(null);
-      this.currentStep.set(step);
-    }
-  }
-
-  editParticipants(): void {
-    this.goToStep(1);
-  }
-
-  editDetails(): void {
-    this.goToStep(2);
-  }
-
   isStepDone(step: number): boolean {
     return step < this.currentStep();
   }
