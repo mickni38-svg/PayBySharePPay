@@ -91,9 +91,23 @@
                placeholder="Mario Rossi" />
       </div>
       <div class="form-group">
-        <label class="form-label">E-mail <span class="form-label--opt">(valgfri)</span></label>
+        <label class="form-label">Konto-email *</label>
         <input class="form-input" type="email" [(ngModel)]="merchantEmail" name="merchantEmail"
-               placeholder="kontakt@mario.dk" />
+               placeholder="konto@mario.dk" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Adgangskode *</label>
+        <input class="form-input" type="password" [(ngModel)]="merchantPassword" name="merchantPassword"
+               minlength="6" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Gentag adgangskode *</label>
+        <input class="form-input" type="password" [(ngModel)]="merchantPasswordConfirm" name="merchantPasswordConfirm"
+               required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Vipps Merchant Serial Number *</label>
+        <input class="form-input" type="text" [(ngModel)]="merchantMsn" name="merchantMsn" required />
       </div>
       <div class="form-group">
         <label class="form-label">Telefon <span class="form-label--opt">(valgfri)</span></label>
@@ -107,7 +121,7 @@
     }
 
     <button class="btn-primary register__submit" type="submit"
-            [disabled]="loading() || (tab() === 'person' && (!personName || !personEmail || !personPassword || personPasswordMismatch())) || (tab() === 'merchant' && (!merchantName || !merchantCompany))">
+            [disabled]="loading() || (tab() === 'person' && (!personName || !personEmail || !personPassword || personPasswordMismatch())) || (tab() === 'merchant' && (!merchantName || !merchantCompany || !merchantEmail || !merchantPassword || merchantPassword !== merchantPasswordConfirm || !merchantMsn))">
       {{ loading() ? 'Opretter konto…' : 'Opret konto' }}
     </button>
 
