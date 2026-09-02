@@ -1,37 +1,63 @@
-# Test plan — UC-03
+# Test plan — UC-08
 
-## Automatiske tests
+## Teststrategi
 
-Udvid `create-order.component.spec.ts` med:
+Brug eksisterende xUnit, FluentAssertions og Moq. Ingen ny testpakke, database, EF InMemory eller live Vipps/MobilePay-kald.
 
-- direkte adgang uden merchant-state sender brugeren til forsiden;
-- ukendt eller ikke-ven merchant-ID sender brugeren til forsiden;
-- merchantkortet bruger valideret navn og logo fra den eksisterende service;
-- kun `Person`-venner vises som deltagere;
-- værten filtreres fra;
-- den valgte merchant filtreres fra;
-- dublerede personer deduplikeres efter ID;
-- søgning matcher navn og sekundær tekst uden forskel på store/små bogstaver;
-- valg og fravalg ændrer kun den valgte persons state;
-- samme deltager kan ikke forekomme eller vælges to gange;
-- næste-knappen er deaktiveret uden deltagere;
-- mindst én deltager gør trin 1 gyldigt og åbner trin 2;
-- merchant, HostUserId og valgte deltager-ID'er er bevaret i wizard-state;
-- frem/tilbage-navigation bevarer deltagervalg;
-- fejlet venneindlæsning giver en stabil fejltilstand.
+## Controller-tests
 
-## Build og test
+Tilføj direkte tests af `OrdersController` med en `DefaultHttpContext` og claims-principal.
 
-- Kør `npx ng test --watch=false --browsers=ChromeHeadless`.
-- Kør `npx ng build --configuration simply`.
-- Lad GitHub Actions køre både .NET-testjobbet og Angular-test/build-jobbet.
-- Gennemgå PR-diffen for ændringer uden for UC-03.
+### Claim-identitet
 
-## Manuel kontrol
+- `ApproveOrder` sender JWT participant-ID til orchestration, selv når body indeholder et andet ID.
+- `CancelOrder` sender JWT participant-ID til orchestration.
+- `CompleteOrder` sender JWT participant-ID til order service.
+- `PayOrder` sender JWT participant-ID til complete-service og ignorerer body-ID.
+- Dæk både `ClaimTypes.NameIdentifier` og fallback til `sub`.
 
-- Sammenlign trin 1 med `docs/images/wizard1.jpeg`.
-- Kontrollér den smalle mobilbredde og sort/blå styling.
-- Kontrollér kompakt merchant-logo i samme visuelle størrelse som på forsiden.
-- Kontrollér fravær af "Valgt", flueben, Skift og merchant-søgning.
-- Kontrollér søgning, valg/fravalg og valgt antal med touch.
-- Kontrollér at tilbage fra trin 1 går til forsiden uden at oprette data.
+### Manglende/ugyldig identitet
+
+- Manglende claim giver 401 og ingen service/provider-kald.
+- Ikke-numerisk, nul eller negativ claim giver 401 og ingen service/provider-kald.
+- Reflektions-/metadata-test bekræfter, at `OrdersController` fortsat har `[Authorize]`.
+
+### Manipulation og payment side effect
+
+- Ikke-host JWT kombineret med host-ID i body kan ikke kalde approve/cancel/complete med host-ID.
+- På legacy `/pay` afvises ikke-host før `IExternalPaymentService.ChargeAsync`.
+- Gyldig host kan fortsat gennemføre det eksisterende flow.
+
+## Middleware-tests
+
+- `UnauthorizedAccessException` returnerer 403.
+- Response indeholder en generisk fejl og ikke exceptionens interne besked.
+- Nærliggende mappings for 400, 404 og 409 forbliver uændrede eller dækkes af eksisterende tests.
+- Uventet exception forbliver 500 med den eksisterende generiske fejl; UC-08 ændrer ikke øvrig exception policy.
+
+## Eksisterende tests
+
+Kør mindst:
+
+- `dotnet build PayBySharePay.sln --configuration Release`
+- `dotnet test PayBySharePay.sln --configuration Release --no-build --verbosity normal`
+- relevante eksisterende `GroupPaymentOrchestrationServiceTests` for host, capture, cancel og idempotens
+
+Frontendkode ændres ikke. GitHub Actions kører fortsat Angular test/build som samlet regressionskontrol efter push.
+
+## Manuel/API-kontrol
+
+Med testtokens for host A og bruger B:
+
+1. A + vilkårligt body-ID på A's ordre lykkes.
+2. B + A's ID i body på A's ordre giver 403.
+3. Intet token giver 401.
+4. Fejlen indeholder ikke stack trace, exception-type eller intern exceptiontekst.
+5. Ikke-host `/pay` udløser intet betalingskald.
+
+## Exit-kriterier
+
+- Alle nye og eksisterende .NET-tests består.
+- Ingen provider-kald sker ved 401/403.
+- Ingen database-, payment state- eller frontendændring er introduceret.
+- Diffen indeholder kun UC-08-relaterede filer og nødvendige dokumentationsrettelser.
