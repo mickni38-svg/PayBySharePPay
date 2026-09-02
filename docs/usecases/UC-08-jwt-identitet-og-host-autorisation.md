@@ -7,6 +7,12 @@
 - **Opgavetype:** SECURITY_FIX
 - **Størrelse:** Én afgrænset backend-slice uden databaseændring
 
+## Status
+
+✅ Implementeret på `main` den 2. september 2026.
+
+Implementeringen bruger JWT `NameIdentifier`/`sub` på `/approve`, `/cancel`, `/complete` og legacy `/pay`. Body-feltet `requestingParticipantId` er bevaret for bagudkompatibilitet, men ignoreres ved autorisation. Ugyldigt identitets-claim giver 401, og fejlet host-ejerskab mappes til et generisk 403-svar før stateændring eller eksternt betalingskald.
+
 ## Mål
 
 Beskyttede ordrehandlinger skal identificere den aktuelle bruger fra det validerede JWT-token. Klienten må ikke kunne opnå host-rettigheder ved at sende en anden brugers ID i request-body.
