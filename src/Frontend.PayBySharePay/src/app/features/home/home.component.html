@@ -28,7 +28,14 @@
         <p class="merchant-empty__text">Ingen spisesteder fundet</p>
       } @else {
         <!-- Carousel -->
-        <div class="merchant-carousel" role="list">
+        <div
+          #merchantCarousel
+          class="merchant-carousel"
+          role="list"
+          tabindex="0"
+          aria-label="Spisesteder. Brug venstre og højre piletast for at navigere."
+          (keydown)="onCarouselKeydown($event, merchantCarousel)"
+        >
           @for (m of filteredMerchants(); track m.id) {
             <button
               class="merchant-card"
@@ -230,12 +237,7 @@
     @if (devPanelOpen()) {
       <p class="dev-panel__info">Denne login bruges kun til udvikling.</p>
 
-      @if (auth.isLoggedIn()) {
-        <div class="dev-panel__logged">
-          <span class="dev-panel__user">Logget ind som: <strong>{{ auth.currentUserName() }}</strong></span>
-          <button class="dev-panel__btn dev-panel__btn--out" (click)="auth.logout()">Log ud</button>
-        </div>
-      } @else {
+      @if (!auth.isLoggedIn()) {
         <select class="form-input dev-panel__select" [(ngModel)]="selectedEmail">
           <option value="" disabled>Vælg testperson…</option>
           @for (p of persons(); track p.id) {
