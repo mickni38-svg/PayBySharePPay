@@ -1,42 +1,50 @@
-# Test plan — UC-09
+# Test plan — UC-15
 
-## Teststrategi
+## Backendtests
 
-Brug eksisterende xUnit og FluentAssertions. Ingen ny testpakke, EF InMemory, database eller live ekstern integration.
+Brug eksisterende xUnit, FluentAssertions og Moq. Ingen database, EF InMemory eller live eksterne kald.
 
-## Controller discovery-tests
+- Person med korrekt password kan logge ind og får type Person.
+- Merchant med korrekt password kan logge ind og får type Merchant.
+- Forkert password og manglende password giver 401.
+- Manglende password kan ikke omgå et eksisterende hash.
+- Passwordløs Person uden hash kan kun logge ind i Development.
+- Passwordløs login afvises i Simply/Production og for Merchant.
+- Merchantregistrering kræver email, password og MSN.
+- Merchantregistrering sender password til hashinglaget og returnerer Merchant-type.
+- Email-unikhed kontrolleres på tværs af Person og Merchant.
+- Person-/Google-svar indeholder korrekt participant-type.
+- PasswordHash returneres aldrig i auth response.
 
-Byg en `ApplicationPartManager` med API-assemblyens controllers og den nye environment-provider.
+## Frontendtests
 
-- `Development`: `DevController` findes fortsat i `ControllerFeature`.
-- `Simply`: `DevController` findes ikke.
-- `Production`: `DevController` findes ikke.
-- `Local`: `DevController` findes ikke.
-- Ukendt/tomt environment: `DevController` findes ikke.
-- En almindelig controller forbliver registreret i alle miljøer, så provideren ikke rammer bredere end UC-09.
+Mock alle services og HTTP-grænser.
 
-## Side-effect og Swagger-verifikation
+- Query mode vælger login/register.
+- Konto-fanen viser Min profil kun ved session.
+- Opret skifter mellem Bruger og Merchant.
+- Personvalidering og payload.
+- Merchantvalidering for email, passwordbekræftelse og MSN samt korrekt payload.
+- Login navigerer Person til home og Merchant til profile.
+- Session gemmer participant-type under eksisterende key.
+- Vipps-fanen er kun tilgængelig for autentificeret Person og loader data lazy.
+- Udvikler-fanen findes kun ved `environment.production === false` og loader directory lazy.
+- Production sender ingen dev-kald.
+- Profil, mapping og developer feedback er adskilt.
+- Fanerne har centrale ARIA-attributter og keyboard navigation.
+- Login/register routes lander på korrekt profile mode.
 
-Når `DevController` ikke findes i MVC controller discovery:
-
-- registreres ingen af controllerens fire attribut-routes;
-- controlleren kan ikke instantieres eller kalde database/services via HTTP;
-- ApiExplorer/Swagger modtager ingen dev-actions.
-
-Dette verificeres ved controller feature-listen, som både endpoint-routing og ApiExplorer bygger deres controller action discovery på.
-
-## Regression
-
-Kør:
+## Verification
 
 - `dotnet build PayBySharePay.sln --configuration Release`
 - `dotnet test PayBySharePay.sln --configuration Release --no-build --verbosity normal`
-- GitHub Actions' Angular test/build som samlet regressionskontrol efter push til `main`.
+- Angular tests
+- Angular Simply-build
+- review af auth, public kontrakt, UC-09-adskillelse, scope og dokumentation
 
-## Exit-kriterier
+## Exit
 
-- DevController findes kun i Development discovery.
-- Almindelige controllers forbliver registreret.
-- Alle eksisterende og nye tests består.
-- Ingen database-, dependency-, frontend- eller betalingsændring er introduceret.
-- Dokumentation opdateres først efter grøn verifikation.
+- Alle nye og eksisterende tests grønne.
+- Ingen migration eller dependency.
+- Ingen live Google/Vipps/MobilePay-kald.
+- UC-15 markeres først implementeret efter grøn GitHub Actions.
