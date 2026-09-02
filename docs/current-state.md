@@ -16,7 +16,7 @@ Statusoversigt over PayNSync pr. seneste kodegennemgang.
 | Feature | Status | Noter |
 |---------|--------|-------|
 | Login med email + password | ✅ | `POST /api/auth/login` — BCrypt-verifikation |
-| Login uden password (legacy seed-brugere) | ✅ | Springer verifikation over hvis `PasswordHash` er null |
+| Login uden password (legacy seed-brugere) | ⚠️ | En tom password-request springer aktuelt verifikation over, også når hash findes; skal begrænses til passwordløse seed-personer i Development (UC-15) |
 | Registrering (person) | ✅ | `POST /api/auth/register` — email-unikhed tjekkes |
 | Registrering (merchant) | ⚠️ | Backend kræver Vipps MSN, men den nuværende Angular-form sender ikke feltet; UI-flowet kan derfor ikke gennemføres |
 | Password hashing med BCrypt | ✅ | `Participant.PasswordHash` + `BCrypt.Verify()` |
@@ -240,6 +240,7 @@ Se `docs/usecases/00-IMPLEMENTATION-ORDER.md` for anbefalet rækkefølge og mode
 | Gældspunkt | Beskrivelse |
 |-----------|-------------|
 | `ExternalPaymentService` er en stub | Har `TODO`-kommentarer. `ChargeAsync()` simulerer 300ms forsinkelse og returnerer altid success. Bruges stadig af `/pay`-endpoint. |
+| Login-password kan omgås | `AuthController.Login` verificerer kun password, når requesten indeholder et ikke-tomt password. En klient kan derfor undlade password og få JWT for en fundet Person. UC-15 kræver 401 uden password uden for eksplicit Development seed-login. |
 | Merchant auth-kontrakt er ufuldstændig | Frontend mangler påkrævet Vipps MSN; merchant oprettes uden `Participant.Email`/`PasswordHash`, og login tillader kun `Person`. Planlagt i UC-15. |
 | Udviklerpanel vises i production-frontend | UC-09 beskytter backend med 404, men profilen environment-skjuler endnu ikke udviklerpanelet. Planlagt i UC-15. |
 | JWT-udløbstid-inkonsistens | `appsettings.json` har `Jwt:ExpiresInMinutes = 43200` (30 dage). `AuthController` bruger `AddMinutes(480)` (8 timer) hardcodet. `JwtTokenService` læser konfigurationsværdien. Hvilken værdi der reelt bruges afhænger af kodestien. |
