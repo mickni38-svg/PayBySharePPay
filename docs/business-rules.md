@@ -33,15 +33,16 @@ Merchant-knappen bør derfor ikke hedde `Betal`. Den bør hedde fx `Bekræft min
 - En `Participant` er enten `Person` eller `Merchant` (`ParticipantType` enum — enkelt tabel, single-table inheritance).
 - En **Person** kræver et navn (`Name` må ikke være tomt eller whitespace).
 - En **Merchant** kræver et firmanavn (`CompanyName` må ikke være tomt eller whitespace).
-- En **Merchant** kræver et Vipps MSN-nummer (`VippsMerchantSerialNumber`) ved registrering via `POST /api/auth/register-merchant` — *(NYT)*. Per-merchant kan også sættes `VippsClientId`, `VippsClientSecret` og `VippsSubscriptionKey`; null-værdier bevirker at global konfiguration bruges.
+- En **Merchant** kræver firmanavn, konto-email, password og Vipps MSN-nummer (`VippsMerchantSerialNumber`) ved registrering via `POST /api/auth/register-merchant`. Per-merchant kan også sættes `VippsClientId`, `VippsClientSecret` og `VippsSubscriptionKey`; null-værdier bevirker at global konfiguration bruges.
 - Password hashes med BCrypt ved oprettelse.
-- Email er ikke påkrævet ved oprettelse, men bruges som login-identifikator og til unikhedstjek ved registrering.
+- Konto-email er påkrævet ved registrering gennem auth-API'et og skal være unik på tværs af Person og Merchant.
 
 ### Login
 
-- Login sker på email — systemet finder den første `Person` med matchende email (case-insensitiv).
-- Hvis `PasswordHash` er sat og et password er angivet, skal BCrypt-verifikation bestå.
-- Hvis `PasswordHash` er null, tillades login **uden** password (legacy seed-brugere).
+- Login sker på email for både `Person` og `Merchant` (trimmet og case-insensitivt).
+- Almindeligt login kræver password, og BCrypt-verifikation skal bestå.
+- Passwordløst login tillades kun for en eksisterende `Person` uden password-hash, når ASP.NET Core kører i `Development`. Det afvises for merchants, konti med hash og alle andre miljøer.
+- Vellykket login og registrering returnerer participant-type sammen med JWT og participant-ID.
 - Vellykkede logins returnerer JWT med `sub` = `participantId`, `name` = navn, `jti` = nyt GUID. Token-levetid styres af `Jwt:ExpiresInMinutes` i konfigurationen (default **43200 min / 30 dage** i `appsettings.json`). `AuthController` returnerer en hardkodet `ExpiresAt = now + 480 min` i response-body — dette afspejler **ikke** den faktiske token-levetid (se Open Questions #2 i arkitektur-dokumentet).
 
 ### Google-login *(NYT)*
