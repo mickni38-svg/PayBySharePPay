@@ -57,12 +57,20 @@ public class ParticipantService : IParticipantService
     {
         if (string.IsNullOrWhiteSpace(dto.CompanyName))
             throw new ArgumentException("En merchant skal have et firmanavn.");
+        if (string.IsNullOrWhiteSpace(dto.Email))
+            throw new ArgumentException("En merchant skal have en konto-email.");
+        if (string.IsNullOrWhiteSpace(dto.Password))
+            throw new ArgumentException("En merchant skal have en adgangskode.");
+        if (string.IsNullOrWhiteSpace(dto.VippsMerchantSerialNumber))
+            throw new ArgumentException("En merchant skal have et Vipps MSN-nummer.");
 
         var participant = new Participant
         {
             Type = ParticipantType.Merchant,
             Name = dto.Name.Trim(),
             CompanyName = dto.CompanyName.Trim(),
+            Email = dto.Email.Trim(),
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
             VippsMerchantSerialNumber = dto.VippsMerchantSerialNumber.Trim(),
             CvrNumber = dto.CvrNumber,
             VatNumber = dto.VatNumber,
