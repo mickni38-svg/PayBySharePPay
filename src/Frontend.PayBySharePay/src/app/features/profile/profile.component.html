@@ -107,6 +107,10 @@
           [disabled]="isSaving() || !name().trim()">
           {{ isSaving() ? 'Gemmer&#8230;' : 'Gem &#230;ndringer' }}
         </button>
+        <div class="profile__divider"></div>
+        <button type="button" class="profile__logout-btn" (click)="logout()">
+          Log ud
+        </button>
       </form>
     }
   </div>
