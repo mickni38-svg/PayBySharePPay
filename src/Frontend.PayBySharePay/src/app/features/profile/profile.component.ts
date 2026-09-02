@@ -1,7 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ProfileService, UpdateProfileRequest, VippsTestPersonDto } from '../../core/services/profile.service';
 import { ParticipantApiDto } from '../../core/models/participant.model';
@@ -34,6 +34,7 @@ export class ProfileComponent implements OnInit {
 
   constructor(
     private readonly auth: AuthService,
+    private readonly router: Router,
     private readonly profileService: ProfileService,
     protected readonly themeService: ThemeService
   ) {}
@@ -88,6 +89,11 @@ export class ProfileComponent implements OnInit {
         this.vippsSaving.set(false);
       }
     });
+  }
+
+  logout(): void {
+    this.auth.logout();
+    this.router.navigate(['/login']);
   }
 
   toggleNotifications(): void {
