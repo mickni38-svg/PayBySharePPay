@@ -2,7 +2,7 @@
 
 Statusoversigt over PayNSync pr. seneste kodegennemgang.
 
-**Senest opdateret:** 2. september 2026 — profil/auth-UX er analyseret mod `main`, og UC-15 er tilføjet som planlagt use case.
+**Senest opdateret:** 2. september 2026 — UC-15 profil- og kontocenter er implementeret og verificeret på `main`.
 
 **Symboler:**  
 ✅ Implementeret og fungerende  
@@ -16,16 +16,16 @@ Statusoversigt over PayNSync pr. seneste kodegennemgang.
 | Feature | Status | Noter |
 |---------|--------|-------|
 | Login med email + password | ✅ | `POST /api/auth/login` — BCrypt-verifikation |
-| Login uden password (legacy seed-brugere) | ⚠️ | En tom password-request springer aktuelt verifikation over, også når hash findes; skal begrænses til passwordløse seed-personer i Development (UC-15) |
+| Login uden password (legacy seed-brugere) | ✅ | Kun passwordløse Person-seedkonti i ASP.NET Core `Development`; afvises for konti med hash, merchants og andre miljøer |
 | Registrering (person) | ✅ | `POST /api/auth/register` — email-unikhed tjekkes |
-| Registrering (merchant) | ⚠️ | Backend kræver Vipps MSN, men den nuværende Angular-form sender ikke feltet; UI-flowet kan derfor ikke gennemføres |
+| Registrering (merchant) | ✅ | Kontocenter og API kræver vist navn, firmanavn, konto-email, password og Vipps MSN; password hashes med BCrypt |
 | Password hashing med BCrypt | ✅ | `Participant.PasswordHash` + `BCrypt.Verify()` |
 | JWT udstedelse (HS256) | ✅ | Claims: `sub`, `name`, `jti` |
 | JWT-validering i controllers | ✅ | `OrdersController` kræver JWT; host-handlinger udleder bruger-ID fra `NameIdentifier`/`sub` og ignorerer body-ID |
 | Google login (`POST /api/auth/google-login`) | ✅ | `ExternalAuthService` — validerer Google ID-token via `Google.Apis.Auth`; opretter/finder `Participant` + `ParticipantExternalLogin` — *(NYT)* |
 | `ParticipantExternalLogin` (Google-tilknytning) | ✅ | Tabel til externe OAuth-logins; Provider + ProviderUserId + Email — *(NYT)* |
 | Profilopdatering (navn, email, telefon) | ✅ | `PUT /api/participants/{id}/profile` |
-| Merchant-login med email + password | ❌ | Login-opslag filtrerer til `Person`; merchantregistrering gemmer ikke konto-email/password |
+| Merchant-login med email + password | ✅ | Fælles login-opslag for Person og Merchant; responsen indeholder participant-type |
 | Token refresh | ❌ | Ikke implementeret |
 | Host-autorisation via JWT-identitet | ✅ | Host-ejerskab sammenlignes med det autentificerede participant-ID fra JWT |
 
@@ -157,7 +157,7 @@ Statusoversigt over PayNSync pr. seneste kodegennemgang.
 | Afventende deltagere (beregnet client-side) | ✅ | `computePendingSummary()` — kun `Invited`-status tæller |
 | Send påmindelser til afventende deltagere | ⚠️ | Knap og dialog eksisterer — `sendReminders()` logger kun til console, ingen API-kald |
 | Beskedindbakke | ✅ | |
-| Brugerprofil | ⚠️ | Funktionerne findes, men profil, mapping, tema og udviklerværktøjer er blandet i én lang side; UC-15 planlægger et rollebaseret kontocenter |
+| Profil- og kontocenter (UC-15) | ✅ | `/profile` samler profil, login, person-/merchantoprettelse, rollebeskyttet Vipps-test og Development-only værktøjer i lazy-loadede faner; `/login` og `/register` redirecter hertil |
 | Merchant-logo i database/API og statisk demo-katalog (UC-01) | ✅ | Logo-data og metadata på merchant, logo-endpoint, validering/fallback samt statiske demo-logoer med API-logo og initialer som fallback. |
 | Merchant-søgning og carousel på forsiden (UC-02) | ✅ | Dynamiske merchant-venner, maks. 8, søgning, logo-fallback, senest anvendt-sortering, tastaturnavigation og låst wizard-state |
 | Dark theme navigation (UC-07) | ✅ | Mørkt tema skjuler Deltagere+Profil-kort, giver neon-glow border på kort, forenkler bottom nav til Hjem/Deltagere/Mere |
@@ -201,7 +201,7 @@ Statusoversigt over PayNSync pr. seneste kodegennemgang.
 | `DevelopmentOnlyControllerFeatureProviderTests` | ✅ | DevController registreres i Development, fjernes i Simply/Production/Local/andre miljøer, mens almindelige controllers bevares |
 | `UnitTest1` | ⚠️ | Tom testklasse — placeholder |
 | Integrationstests | ❌ | Intet integrationstestprojekt |
-| Frontend-tests | ✅ | Karma/Jasmine-specs for UC-01-logo-fallback, UC-02-carousel og UC-03–UC-05-wizarden, herunder validering, state, tilbage-navigation, idempotent submit, succes og fejl |
+| Frontend-tests | ✅ | 42 Karma/Jasmine-tests, herunder UC-01–UC-05 samt UC-15 auth-session, kontotype, merchantpayload, navigation og lazy fanedata |
 
 ---
 
@@ -216,7 +216,7 @@ Statusoversigt over PayNSync pr. seneste kodegennemgang.
 | UC-12 – Send påmindelser | ❌ Planlagt | Erstat frontend-placeholder med eksisterende Message-flow |
 | UC-13 – Join med token | ❌ Planlagt | Aktivér eksisterende `JoinToken` efter Product Owner-beslutninger |
 | UC-14 – Refund captured betaling | ❌ Planlagt | Idempotent refund gennem provider/state machine efter betalingsbeslutning |
-| UC-15 – Profil- og kontocenter | ❌ Planlagt | Faner til profil/login/oprettelse, person- og merchantkonto, Vipps-testmapping og development-only værktøjer |
+| UC-15 – Profil- og kontocenter | ✅ Implementeret | Faner til profil/login/oprettelse, person- og merchantkonto, Vipps-testmapping og development-only værktøjer |
 
 Se `docs/usecases/00-IMPLEMENTATION-ORDER.md` for anbefalet rækkefølge og modelprofil.
 
