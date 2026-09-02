@@ -146,7 +146,7 @@ Statusoversigt over PayNSync pr. seneste kode-gennemgang.
 |---------|--------|-------|
 | Login og registrering | ✅ | |
 | Ordreoversigt med aktiv/afsluttet tabs | ✅ | |
-| Opret ordre (4-trins wizard) | ✅ | Titel → merchant → deltagere → opret |
+| Opret ordre (3-trins wizard) | ⚠️ | UC-03 trin 1 er implementeret: låst merchant + dynamiske deltagere. Trin 2 og 3 bruger eksisterende indhold indtil UC-04/UC-05. |
 | Ordredetaljer med betalingsstatus pr. deltager | ✅ | |
 | Host: godkend og capture-knap | ✅ | Kalder `POST /api/orders/{id}/approve` |
 | Host: annuller ordre-knap | ✅ | Kalder `POST /api/orders/{id}/cancel` |

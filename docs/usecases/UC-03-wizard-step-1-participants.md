@@ -1,5 +1,11 @@
 # FEATURE 03: Wizard trin 1 – merchant og deltagere
 
+> **Status:** ✅ Implementeret og automatisk verificeret i PR #10.
+
+## Implementeringsnote
+
+Trin 1 validerer den valgte merchant mod den eksisterende venneliste, viser merchantens dynamiske navn og logo og henter deltagere fra samme service. Vært og merchants filtreres fra, dubletter fjernes, og valget bevares ved frem/tilbage-navigation. Wizarden består nu af tre trin; eksisterende indhold på trin 2 og 3 bevares indtil UC-04 og UC-05.
+
 ## Mål
 
 Wizard trin 1 viser den merchant, der allerede er valgt på forsiden, og lader værten søge efter samt vælge deltagere gennem den eksisterende vennerfunktionalitet.

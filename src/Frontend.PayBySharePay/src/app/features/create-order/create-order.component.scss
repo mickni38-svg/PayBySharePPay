@@ -41,8 +41,19 @@
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  cursor: pointer;
   min-width: 56px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: default;
+
+  &:focus-visible {
+    outline: 2px solid #38bdf8;
+    outline-offset: 4px;
+    border-radius: 999px;
+  }
 }
 
 .wizard__step-circle {
@@ -67,14 +78,14 @@
 }
 
 .wizard__step--active .wizard__step-circle {
-  border-color: #2ecc71;
+  border-color: #38bdf8;
   background: transparent;
-  color: #2ecc71;
+  color: #38bdf8;
 }
 
 .wizard__step--done .wizard__step-circle {
-  border-color: #2ecc71;
-  background: #2ecc71;
+  border-color: #38bdf8;
+  background: #38bdf8;
   color: #fff;
 }
 
@@ -86,8 +97,8 @@
   white-space: nowrap;
 }
 
-.wizard__step--active .wizard__step-label { color: #2ecc71; font-weight: 700; }
-.wizard__step--done .wizard__step-label { color: #4ade80; }
+.wizard__step--active .wizard__step-label { color: #38bdf8; font-weight: 700; }
+.wizard__step--done .wizard__step-label { color: #7dd3fc; }
 
 .wizard__step-line {
   flex: 1;
@@ -98,12 +109,29 @@
   max-width: 32px;
 }
 
-.wizard__step-line--done { background: #2ecc71; }
+.wizard__step-line--done { background: #38bdf8; }
 
 // ── Indhold ───────────────────────────────────────────────────────────────────
 .wizard__content {
   flex: 1;
   padding: 0 16px;
+}
+
+.wizard__page-heading {
+  margin: 8px 0 18px;
+}
+
+.wizard__title {
+  margin: 0;
+  color: #fff;
+  font-size: 22px;
+  line-height: 1.25;
+}
+
+.wizard__step-copy {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 13px;
 }
 
 .wizard__hint-text {
@@ -112,7 +140,7 @@
   margin: 12px 0 0;
   text-align: center;
 
-  strong { color: #2ecc71; }
+  strong { color: #38bdf8; }
 }
 
 // ── Felt ──────────────────────────────────────────────────────────────────────
@@ -202,17 +230,31 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  width: 100%;
   padding: 12px 14px;
   min-height: 56px;
+  color: inherit;
+  font: inherit;
+  text-align: left;
   cursor: pointer;
   background: #111827;
+  border: 0;
   border-bottom: 1px solid #1f2937;
   transition: background 0.1s;
 
   &:last-child { border-bottom: none; }
   &:active { background: #1a2236; }
+  &:focus-visible {
+    position: relative;
+    z-index: 1;
+    outline: 2px solid #38bdf8;
+    outline-offset: -2px;
+  }
 
-  &--selected { background: rgba(46,204,113,0.06); border-color: rgba(46,204,113,0.2); }
+  &--selected {
+    background: rgba(56,189,248,0.08);
+    border-color: rgba(56,189,248,0.25);
+  }
 }
 
 .row__avatar {
@@ -264,7 +306,7 @@
   justify-content: center;
   transition: background 0.15s, border-color 0.15s;
 
-  &--on { background: #2e7d32; border-color: #2e7d32; }
+  &--on { background: #0284c7; border-color: #38bdf8; }
 
   svg { width: 12px; height: 12px; }
 }
@@ -280,13 +322,14 @@
   justify-content: center;
   transition: background 0.15s, border-color 0.15s;
 
-  &--on { background: #2e7d32; border-color: #2ecc71; }
+  &--on { background: #2e7d32; border-color: #38bdf8; }
 
   svg { width: 12px; height: 12px; }
 }
 
 // ── State text ────────────────────────────────────────────────────────────────
-.state-text { color: #4b5563; font-size: 14px; padding: 12px 0; margin: 0; }
+.state-text { color: #64748b; font-size: 14px; padding: 12px 0; margin: 0; }
+.state-text--error { color: #f87171; }
 
 // ── Review trin 4 ─────────────────────────────────────────────────────────────
 .review-card {
@@ -354,7 +397,7 @@
 .review-status__title {
   font-size: 14px;
   font-weight: 700;
-  color: #2ecc71;
+  color: #38bdf8;
   margin: 0 0 2px;
 }
 
@@ -458,4 +501,60 @@
   text-transform: uppercase;
   color: var(--color-text-muted);
   margin: 0;
+}
+
+.merchant-summary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  background: #111827;
+  border: 1px solid #263449;
+  border-radius: 14px;
+}
+
+.merchant-summary__logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  flex: 0 0 72px;
+  overflow: hidden;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.merchant-summary__name {
+  min-width: 0;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.participants-section {
+  margin-top: 22px;
+}
+
+.participants-section__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.participants-section__title {
+  margin: 0;
+  color: #fff;
+  font-size: 17px;
+}
+
+.participants-section__count {
+  color: #7dd3fc;
+  font-size: 12px;
+  font-weight: 700;
 }

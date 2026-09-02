@@ -1,21 +1,27 @@
 <div class="wizard">
 
-  <!-- Tilbage til hjem -->
   <div class="wizard__header">
     <a class="page-back" routerLink="/home">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
       Hjem
     </a>
   </div>
 
-  <!-- Step indikator -->
-  <div class="wizard__steps">
-    @for (step of [1,2,3,4]; track step) {
-      <div class="wizard__step"
-           [class.wizard__step--active]="currentStep() === step"
-           [class.wizard__step--done]="isStepDone(step)"
-           (click)="goToStep(step)">
-        <div class="wizard__step-circle">
+  <div class="wizard__steps" aria-label="Trin i oprettelse af gruppebetaling">
+    @for (step of [1, 2, 3]; track step) {
+      <button
+        type="button"
+        class="wizard__step"
+        [class.wizard__step--active]="currentStep() === step"
+        [class.wizard__step--done]="isStepDone(step)"
+        [attr.aria-current]="currentStep() === step ? 'step' : null"
+        [attr.aria-label]="'Trin ' + step + ' af 3'"
+        (click)="goToStep(step)"
+      >
+        <span class="wizard__step-circle">
           @if (isStepDone(step)) {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
                  stroke-linecap="round" stroke-linejoin="round">
@@ -24,20 +30,106 @@
           } @else {
             {{ step }}
           }
-        </div>
-      </div>
-      @if (step < 4) {
-        <div class="wizard__step-line" [class.wizard__step-line--done]="isStepDone(step + 1) || currentStep() > step"></div>
+        </span>
+      </button>
+      @if (step < totalSteps) {
+        <div
+          class="wizard__step-line"
+          [class.wizard__step-line--done]="currentStep() > step"
+        ></div>
       }
     }
   </div>
 
-  <!-- Indhold -->
   <div class="wizard__content">
 
-    <!-- ── TRIN 1: Grundinfo ── -->
     @if (currentStep() === 1) {
+      <header class="wizard__page-heading">
+        <h1 class="wizard__title">Vælg deltagere</h1>
+        <p class="wizard__step-copy">Trin 1 af 3</p>
+      </header>
 
+      @if (isLoading()) {
+        <p class="state-text">Henter deltagere…</p>
+      } @else if (loadError()) {
+        <p class="state-text state-text--error">{{ loadError() }}</p>
+      } @else if (selectedMerchant()) {
+        <section class="preselected-merchant" aria-label="Valgt spisested">
+          <p class="preselected-merchant__label">VALGT SPISESTED</p>
+          <div class="merchant-summary">
+            <div class="merchant-summary__logo" [style.background]="selectedMerchant()!.avatarColor">
+              @if (selectedMerchant()!.logoUrl) {
+                <img
+                  class="row__avatar-image"
+                  [src]="selectedMerchant()!.logoUrl"
+                  [alt]="selectedMerchant()!.displayName"
+                  (error)="onMerchantLogoError()"
+                />
+              } @else {
+                <span>{{ selectedMerchant()!.initials }}</span>
+              }
+            </div>
+            <span class="merchant-summary__name">{{ selectedMerchant()!.displayName }}</span>
+          </div>
+        </section>
+
+        <section class="participants-section">
+          <div class="participants-section__header">
+            <h2 class="participants-section__title">Deltagere</h2>
+            <span class="participants-section__count">
+              {{ selectedParticipants().length }} valgt
+            </span>
+          </div>
+
+          <div class="field">
+            <input
+              class="field__input"
+              type="search"
+              placeholder="Søg venner..."
+              [ngModel]="searchTerm()"
+              (ngModelChange)="searchTerm.set($event)"
+              aria-label="Søg venner"
+            />
+          </div>
+
+          @if (filtered().length === 0) {
+            <p class="state-text">Ingen deltagere fundet</p>
+          } @else {
+            <div class="row-list">
+              @for (person of filtered(); track person.id) {
+                <button
+                  type="button"
+                  class="row"
+                  [class.row--selected]="person.selected"
+                  [attr.aria-pressed]="person.selected"
+                  (click)="togglePerson(person)"
+                >
+                  <span class="row__avatar" [style.background]="person.avatarColor">
+                    {{ person.initials }}
+                  </span>
+                  <span class="row__info">
+                    <span class="row__name">{{ person.displayName }}</span>
+                    @if (person.handle) {
+                      <span class="row__sub">{{ person.handle }}</span>
+                    }
+                  </span>
+                  <span class="row__check" [class.row__check--on]="person.selected">
+                    @if (person.selected) {
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8"
+                           stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                    }
+                  </span>
+                </button>
+              }
+            </div>
+          }
+        </section>
+      }
+    }
+
+    @if (currentStep() === 2) {
       <div class="field">
         <label class="field__label">TITEL</label>
         <input
@@ -51,7 +143,9 @@
       </div>
 
       <div class="field">
-        <label class="field__label">INDTAST EMOJI <span class="field__required">*</span></label>
+        <label class="field__label">
+          INDTAST EMOJI <span class="field__required">*</span>
+        </label>
         <input
           class="field__input field__input--emoji"
           type="text"
@@ -77,129 +171,7 @@
       </div>
     }
 
-    <!-- ── TRIN 2: Spisested ── -->
-    @if (currentStep() === 2) {
-
-      @if (merchantPreselected()) {
-        <!-- Merchant valgt fra forsiden — kan ikke ændres -->
-        <div class="preselected-merchant">
-          <p class="preselected-merchant__label">Valgt spisested</p>
-          <div class="row row--selected">
-            <div class="row__avatar" [style.background]="selectedMerchant()!.avatarColor">
-              @if (selectedMerchant()!.logoUrl) {
-                <img
-                  class="row__avatar-image"
-                  [src]="selectedMerchant()!.logoUrl"
-                  [alt]="selectedMerchant()!.displayName"
-                  (error)="onMerchantLogoError(selectedMerchant()!.id)"
-                />
-              } @else {
-                {{ selectedMerchant()!.initials }}
-              }
-            </div>
-            <div class="row__info">
-              <span class="row__name">{{ selectedMerchant()!.displayName }}</span>
-            </div>
-          </div>
-        </div>
-      } @else {
-
-      <div class="field">
-        <input
-          class="field__input"
-          type="search"
-          placeholder="Søg spisested…"
-          [(ngModel)]="merchantSearch"
-        />
-      </div>
-
-      @if (isLoading()) {
-        <p class="state-text">Henter…</p>
-      } @else if (filteredMerchants().length === 0) {
-        <p class="state-text">Ingen spisestedder fundet</p>
-      } @else {
-        <div class="row-list">
-          @for (m of filteredMerchants(); track m.id) {
-            <div class="row"
-                 [class.row--selected]="selectedMerchant()?.id === m.id"
-                 (click)="toggleMerchant(m)">
-              <div class="row__avatar" [style.background]="m.avatarColor">
-                @if (m.logoUrl) {
-                  <img
-                    class="row__avatar-image"
-                    [src]="m.logoUrl"
-                    [alt]="m.displayName"
-                    (error)="onMerchantLogoError(m.id)"
-                  />
-                } @else {
-                  {{ m.initials }}
-                }
-              </div>
-              <div class="row__info">
-                <span class="row__name">{{ m.displayName }}</span>
-                @if (m.handle) { <span class="row__sub">{{ m.handle }}</span> }
-              </div>
-              <div class="row__radio" [class.row__radio--on]="selectedMerchant()?.id === m.id">
-                @if (selectedMerchant()?.id === m.id) {
-                  <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8"
-                       stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
-                }
-              </div>
-            </div>
-          }
-        </div>
-      }
-
-      <p class="wizard__hint-text">Kan du ikke finde dit spisested? Spørg om de bruger <strong>PayBySharePay</strong>.</p>
-      }
-    }
-
-    <!-- ── TRIN 3: Deltagere ── -->
     @if (currentStep() === 3) {
-
-      <div class="field">
-        <input
-          class="field__input"
-          type="search"
-          placeholder="Søg navn…"
-          [(ngModel)]="searchTerm"
-        />
-      </div>
-
-      @if (isLoading()) {
-        <p class="state-text">Henter…</p>
-      } @else if (filtered().length === 0) {
-        <p class="state-text">Ingen deltagere fundet</p>
-      } @else {
-        <div class="row-list">
-          @for (p of filtered(); track p.id) {
-            <div class="row"
-                 [class.row--selected]="p.selected"
-                 (click)="togglePerson(p)">
-              <div class="row__avatar" [style.background]="p.avatarColor">{{ p.initials }}</div>
-              <div class="row__info">
-                <span class="row__name">{{ p.displayName }}</span>
-                @if (p.handle) { <span class="row__sub">{{ p.handle }}</span> }
-              </div>
-              <div class="row__check" [class.row__check--on]="p.selected">
-                @if (p.selected) {
-                  <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8"
-                       stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
-                }
-              </div>
-            </div>
-          }
-        </div>
-      }
-    }
-
-    <!-- ── TRIN 4: Gennemse ── -->
-    @if (currentStep() === 4) {
-
       <div class="review-card">
         <div class="review-row">
           <span class="review-row__icon">◇</span>
@@ -210,25 +182,28 @@
           <span class="review-row__icon">🏷️</span>
           <span class="review-row__label">Emoji</span>
           <span class="review-row__value">
-            @if (emoji()) { {{ emoji() }} }
-            @else { <span class="review-row__empty">Ikke valgt</span> }
+            @if (emoji()) {
+              {{ emoji() }}
+            } @else {
+              <span class="review-row__empty">Ikke valgt</span>
+            }
           </span>
         </div>
         <div class="review-row">
           <span class="review-row__icon">💬</span>
           <span class="review-row__label">Besked</span>
           <span class="review-row__value">
-            @if (message.trim()) { {{ message }} }
-            @else { <span class="review-row__empty">Ingen besked</span> }
+            @if (message.trim()) {
+              {{ message }}
+            } @else {
+              <span class="review-row__empty">Ingen besked</span>
+            }
           </span>
         </div>
         <div class="review-row">
           <span class="review-row__icon">🏪</span>
           <span class="review-row__label">Spisested</span>
-          <span class="review-row__value">
-            @if (selectedMerchant()) { {{ selectedMerchant()!.displayName }} }
-            @else { <span class="review-row__empty">Ikke valgt</span> }
-          </span>
+          <span class="review-row__value">{{ selectedMerchant()?.displayName }}</span>
         </div>
         <div class="review-row">
           <span class="review-row__icon">👥</span>
@@ -240,23 +215,28 @@
       @if (selectedParticipants().length > 0) {
         <div class="review-participants">
           <p class="review-participants__label">Valgte deltagere</p>
-          @for (p of selectedParticipants(); track p.id) {
+          @for (person of selectedParticipants(); track person.id) {
             <div class="review-participant">
-              <div class="row__avatar row__avatar--sm" [style.background]="p.avatarColor">{{ p.initials }}</div>
-              <span>{{ p.displayName }}</span>
+              <div class="row__avatar row__avatar--sm" [style.background]="person.avatarColor">
+                {{ person.initials }}
+              </div>
+              <span>{{ person.displayName }}</span>
             </div>
           }
         </div>
       }
 
       <div class="review-status">
-        <svg class="review-status__icon" viewBox="0 0 24 24" fill="none" stroke="#2ecc71" stroke-width="2.5"
-             stroke-linecap="round" stroke-linejoin="round">
+        <svg class="review-status__icon" viewBox="0 0 24 24" fill="none"
+             stroke="#2ecc71" stroke-width="2.5" stroke-linecap="round"
+             stroke-linejoin="round">
           <polyline points="20 6 9 17 4 12"/>
         </svg>
         <div>
           <p class="review-status__title">Klar til oprettelse</p>
-          <p class="review-status__sub">Alt ser godt ud. Du kan nu oprette din gruppebetaling.</p>
+          <p class="review-status__sub">
+            Alt ser godt ud. Du kan nu oprette din gruppebetaling.
+          </p>
         </div>
       </div>
 
@@ -265,31 +245,41 @@
       }
     }
 
-    <!-- Inline trin-fejl -->
     @if (stepError()) {
       <p class="field__error">{{ stepError() }}</p>
     }
-
   </div>
 
-  <!-- Footer med knap -->
   <div class="wizard__footer">
     <div class="wizard__footer__actions">
       @if (currentStep() > 1) {
-        <button class="btn-back" (click)="goBack()" aria-label="Tilbage">←</button>
+        <button type="button" class="btn-back" (click)="goBack()" aria-label="Tilbage">
+          ←
+        </button>
       }
-      @if (currentStep() < 4) {
-        <button class="btn-primary" (click)="goNext()">Næste</button>
+      @if (currentStep() < totalSteps) {
+        <button
+          type="button"
+          class="btn-primary"
+          [disabled]="!canContinue()"
+          (click)="goNext()"
+        >
+          Næste
+        </button>
       } @else {
         <button
+          type="button"
           class="btn-primary btn-primary--green"
           [disabled]="!canSubmit() || isSubmitting()"
           (click)="submit()"
         >
-          @if (isSubmitting()) { Opretter… } @else { Opret gruppebetaling }
+          @if (isSubmitting()) {
+            Opretter…
+          } @else {
+            Opret gruppebetaling
+          }
         </button>
       }
     </div>
   </div>
-
 </div>
