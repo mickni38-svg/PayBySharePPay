@@ -29,19 +29,28 @@ interface PreselectedMerchantState {
   fallbackLogoUrl: string | null;
 }
 
+export interface CreateOrderWizardState {
+  hostUserId: number | null;
+  merchantId: number | null;
+  merchant: MerchantVM | null;
+  participantIds: number[];
+  participants: ParticipantVM[];
+}
+
 const AVATAR_COLORS = [
   '#7c5cbf', '#2e7d32', '#1565c0', '#ad1457',
   '#00838f', '#558b2f', '#4527a0', '#6d4c41'
 ];
 
-
 function toInitials(name: string): string {
-  return name.split(' ').slice(0, 2).map(p => p[0]).join('').toUpperCase();
+  return name.split(' ').slice(0, 2).map(part => part[0] ?? '').join('').toUpperCase();
 }
 
 function avatarColor(name: string): string {
   let hash = 0;
-  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  for (let index = 0; index < name.length; index++) {
+    hash = name.charCodeAt(index) + ((hash << 5) - hash);
+  }
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
@@ -53,56 +62,64 @@ function avatarColor(name: string): string {
   styleUrl: './create-order.component.scss'
 })
 export class CreateOrderComponent implements OnInit {
-
-  // ── Wizard state ─────────────────────────────────────────────────────────
   currentStep = signal(1);
-  readonly totalSteps = 4;
+  readonly totalSteps = 3;
   stepError = signal<string | null>(null);
 
-  // ── Trin 1: Grundinfo ────────────────────────────────────────────────────
+  hostUserId = signal<number | null>(null);
+  selectedMerchant = signal<MerchantVM | null>(null);
+
+  persons = signal<ParticipantVM[]>([]);
+  searchTerm = '';
+  isLoading = signal(false);
+  loadError = signal<string | null>(null);
+
+  filtered = computed(() => {
+    const term = this.searchTerm.toLocaleLowerCase('da').trim();
+    if (!term) return this.persons();
+
+    return this.persons().filter(person =>
+      person.displayName.toLocaleLowerCase('da').includes(term) ||
+      (person.handle?.toLocaleLowerCase('da').includes(term) ?? false)
+    );
+  });
+
+  selectedParticipants = computed(() =>
+    this.persons().filter(person => person.selected)
+  );
+
+  wizardState = computed<CreateOrderWizardState>(() => ({
+    hostUserId: this.hostUserId(),
+    merchantId: this.selectedMerchant()?.id ?? null,
+    merchant: this.selectedMerchant(),
+    participantIds: this.selectedParticipants().map(person => person.id),
+    participants: this.selectedParticipants()
+  }));
+
   title = signal('');
   emoji = signal('');
   message = '';
 
-  // ── Trin 2: Spisested ────────────────────────────────────────────────────
-  merchants = signal<MerchantVM[]>([]);
-  selectedMerchant = signal<MerchantVM | null>(null);
-  merchantPreselected = signal(false);
-  merchantSearch = '';
-
-  filteredMerchants = computed(() => {
-    const term = this.merchantSearch.toLowerCase().trim();
-    if (!term) return this.merchants();
-    return this.merchants().filter(m =>
-      m.displayName.toLowerCase().includes(term) ||
-      (m.handle?.toLowerCase().includes(term) ?? false)
-    );
-  });
-
-  // ── Trin 3: Deltagere ────────────────────────────────────────────────────
-  persons = signal<ParticipantVM[]>([]);
-  searchTerm = '';
-  isLoading = signal(false);
-
-  filtered = computed(() => {
-    const term = this.searchTerm.toLowerCase().trim();
-    if (!term) return this.persons();
-    return this.persons().filter(p =>
-      p.displayName.toLowerCase().includes(term) ||
-      (p.handle?.toLowerCase().includes(term) ?? false)
-    );
-  });
-
-  selectedParticipants = computed(() => this.persons().filter(p => p.selected));
-
-  // ── Submit ────────────────────────────────────────────────────────────────
   isSubmitting = signal(false);
   errorMessage = signal<string | null>(null);
+
+  canContinue = computed(() => {
+    if (this.currentStep() === 1) {
+      return this.selectedParticipants().length > 0;
+    }
+
+    if (this.currentStep() === 2) {
+      return this.title().trim().length > 0 && this.emoji().trim().length > 0;
+    }
+
+    return true;
+  });
 
   canSubmit = computed(() =>
     this.title().trim().length > 0 &&
     this.emoji().trim().length > 0 &&
     this.selectedMerchant() !== null &&
+    this.selectedParticipants().length > 0 &&
     !this.isSubmitting()
   );
 
@@ -115,67 +132,85 @@ export class CreateOrderComponent implements OnInit {
 
   ngOnInit(): void {
     const state = history.state as { merchant?: PreselectedMerchantState };
-    if (!state?.merchant?.id) {
+    const userId = this.auth.currentUserId();
+
+    if (userId == null || !state?.merchant?.id) {
       this.router.navigate(['/home']);
       return;
     }
-    const m = state.merchant;
-    this.selectedMerchant.set({
-      id: m.id,
-      type: 'Merchant',
-      displayName: m.displayName,
-      initials: toInitials(m.displayName),
-      avatarColor: avatarColor(m.displayName),
-      handle: m.handle,
-      logoUrl: m.logoUrl ?? undefined,
-      fallbackLogoUrl: m.fallbackLogoUrl ?? undefined
-    });
-    this.merchantPreselected.set(true);
-    this.loadFriends();
+
+    this.hostUserId.set(userId);
+    this.loadFriends(userId, state.merchant);
   }
 
-  private loadFriends(): void {
-    const userId = this.auth.currentUserId();
-    if (userId == null) return;
+  private loadFriends(userId: number, requestedMerchant: PreselectedMerchantState): void {
     this.isLoading.set(true);
+    this.loadError.set(null);
+
     this.directoryService.getFriends(userId).subscribe({
       next: (list) => {
+        const merchantEntry = list.find(entry =>
+          entry.type === 'Merchant' && entry.id === requestedMerchant.id
+        );
+
+        if (!merchantEntry) {
+          this.isLoading.set(false);
+          this.router.navigate(['/home']);
+          return;
+        }
+
+        const staticLogoUrl = getStaticMerchantLogoUrl(merchantEntry);
+        const apiLogoUrl = merchantEntry.logoUrl
+          ? `${environment.apiUrl}${merchantEntry.logoUrl}`
+          : undefined;
+
+        this.selectedMerchant.set({
+          ...merchantEntry,
+          initials: toInitials(merchantEntry.displayName),
+          avatarColor: avatarColor(merchantEntry.displayName),
+          logoUrl: staticLogoUrl ?? apiLogoUrl,
+          fallbackLogoUrl: staticLogoUrl ? apiLogoUrl : undefined
+        });
+
+        const currentSelection = new Set(
+          this.selectedParticipants().map(person => person.id)
+        );
+        const seenIds = new Set<number>();
         const persons = list
-          .filter(e => e.type === 'Person')
-          .map(e => ({
-            ...e,
-            initials: toInitials(e.displayName),
-            avatarColor: avatarColor(e.displayName),
-            selected: this.persons().find(p => p.id === e.id)?.selected ?? false
+          .filter(entry => {
+            if (entry.type !== 'Person') return false;
+            if (entry.id === userId || entry.id === merchantEntry.id) return false;
+            if (seenIds.has(entry.id)) return false;
+            seenIds.add(entry.id);
+            return true;
+          })
+          .map(entry => ({
+            ...entry,
+            initials: toInitials(entry.displayName),
+            avatarColor: avatarColor(entry.displayName),
+            selected: currentSelection.has(entry.id)
           }));
+
         this.persons.set(persons);
-
-        const merchants = list
-          .filter(e => e.type === 'Merchant')
-          .map(e => {
-            const staticLogoUrl = getStaticMerchantLogoUrl(e);
-            const apiLogoUrl = e.logoUrl ? `${environment.apiUrl}${e.logoUrl}` : null;
-
-            return {
-              ...e,
-              initials: toInitials(e.displayName),
-              avatarColor: avatarColor(e.displayName),
-              logoUrl: staticLogoUrl ?? apiLogoUrl ?? undefined,
-              fallbackLogoUrl: staticLogoUrl ? apiLogoUrl ?? undefined : undefined
-            };
-          });
-        this.merchants.set(merchants);
-
         this.isLoading.set(false);
       },
-      error: () => { this.isLoading.set(false); }
+      error: () => {
+        this.isLoading.set(false);
+        this.loadError.set('Kunne ikke hente deltagere. Prøv igen.');
+        this.persons.set([]);
+      }
     });
   }
 
-  // ── Wizard navigation ─────────────────────────────────────────────────────
   validateCurrentStep(): boolean {
     this.stepError.set(null);
-    if (this.currentStep() === 1) {
+
+    if (this.currentStep() === 1 && this.selectedParticipants().length === 0) {
+      this.stepError.set('Vælg mindst én deltager');
+      return false;
+    }
+
+    if (this.currentStep() === 2) {
       if (!this.title().trim()) {
         this.stepError.set('Titel skal udfyldes');
         return false;
@@ -185,36 +220,21 @@ export class CreateOrderComponent implements OnInit {
         return false;
       }
     }
-    if (this.currentStep() === 2) {
-      if (!this.selectedMerchant()) {
-        this.stepError.set('Du skal vælge et spisested for at oprette en gruppebetaling.');
-        return false;
-      }
-    }
-    if (this.currentStep() === 3) {
-      if (this.selectedParticipants().length === 0) {
-        this.stepError.set('Vælg mindst én deltager');
-        return false;
-      }
-    }
+
     return true;
   }
 
   goNext(): void {
     if (!this.validateCurrentStep()) return;
     if (this.currentStep() < this.totalSteps) {
-      const next = this.currentStep() + 1;
-      // Skip step 2 when merchant is pre-selected
-      this.currentStep.set(this.merchantPreselected() && next === 2 ? 3 : next);
+      this.currentStep.update(step => step + 1);
     }
   }
 
   goBack(): void {
     if (this.currentStep() > 1) {
       this.stepError.set(null);
-      const prev = this.currentStep() - 1;
-      // Skip step 2 going back when merchant is pre-selected
-      this.currentStep.set(this.merchantPreselected() && prev === 2 ? 1 : prev);
+      this.currentStep.update(step => step - 1);
     }
   }
 
@@ -229,35 +249,32 @@ export class CreateOrderComponent implements OnInit {
     return step < this.currentStep();
   }
 
-  // ── Merchant
-  toggleMerchant(m: MerchantVM): void {
-    this.selectedMerchant.update(current => current?.id === m.id ? null : m);
-  }
-
-  onMerchantLogoError(merchantId: number): void {
-    this.merchants.update(merchants => merchants.map(merchant =>
-      merchant.id === merchantId
-        ? { ...merchant, logoUrl: merchant.fallbackLogoUrl, fallbackLogoUrl: undefined }
-        : merchant
-    ));
-
+  onMerchantLogoError(): void {
     this.selectedMerchant.update(merchant =>
-      merchant?.id === merchantId
-        ? { ...merchant, logoUrl: merchant.fallbackLogoUrl, fallbackLogoUrl: undefined }
+      merchant
+        ? {
+            ...merchant,
+            logoUrl: merchant.fallbackLogoUrl,
+            fallbackLogoUrl: undefined
+          }
         : merchant
     );
   }
 
-  // ── Deltagere ─────────────────────────────────────────────────────────────
-  togglePerson(p: ParticipantVM): void {
+  togglePerson(person: ParticipantVM): void {
+    const merchantId = this.selectedMerchant()?.id;
+    if (person.id === this.hostUserId() || person.id === merchantId) return;
+
     this.persons.update(list =>
-      list.map(item => item.id === p.id ? { ...item, selected: !item.selected } : item)
+      list.map(item =>
+        item.id === person.id ? { ...item, selected: !item.selected } : item
+      )
     );
   }
 
-  // ── Submit ────────────────────────────────────────────────────────────────
   submit(): void {
     this.stepError.set(null);
+
     if (!this.title().trim() || !this.emoji().trim()) {
       this.stepError.set('Udfyld venligst titel og kategori.');
       return;
@@ -266,20 +283,22 @@ export class CreateOrderComponent implements OnInit {
       this.stepError.set('Du skal vælge et spisested for at oprette en gruppebetaling.');
       return;
     }
+    if (this.selectedParticipants().length === 0) {
+      this.stepError.set('Vælg mindst én deltager');
+      return;
+    }
     if (this.isSubmitting()) return;
 
     this.isSubmitting.set(true);
     this.errorMessage.set(null);
 
-    const participantIds = this.selectedParticipants().map(p => p.id);
-
     this.orderService.createOrder({
-      createdByParticipantId: this.auth.currentUserId() ?? 0,
+      createdByParticipantId: this.hostUserId() ?? 0,
       title: this.title().trim(),
       category: this.emoji().trim() || undefined,
       message: this.message.trim() || undefined,
       merchantParticipantId: this.selectedMerchant()?.id,
-      participantIds
+      participantIds: this.selectedParticipants().map(person => person.id)
     }).subscribe({
       next: () => {
         this.router.navigate(['/home']);
