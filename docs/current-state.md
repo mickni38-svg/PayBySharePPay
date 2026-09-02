@@ -2,7 +2,7 @@
 
 Statusoversigt over PayNSync pr. seneste kodegennemgang.
 
-**Senest opdateret:** 2. september 2026 — UC-09 beskyttelse af udvikler-endpoints er implementeret og sammenholdt med `main`.
+**Senest opdateret:** 2. september 2026 — profil/auth-UX er analyseret mod `main`, og UC-15 er tilføjet som planlagt use case.
 
 **Symboler:**  
 ✅ Implementeret og fungerende  
@@ -18,13 +18,14 @@ Statusoversigt over PayNSync pr. seneste kodegennemgang.
 | Login med email + password | ✅ | `POST /api/auth/login` — BCrypt-verifikation |
 | Login uden password (legacy seed-brugere) | ✅ | Springer verifikation over hvis `PasswordHash` er null |
 | Registrering (person) | ✅ | `POST /api/auth/register` — email-unikhed tjekkes |
-| Registrering (merchant) | ✅ | `POST /api/auth/register-merchant` |
+| Registrering (merchant) | ⚠️ | Backend kræver Vipps MSN, men den nuværende Angular-form sender ikke feltet; UI-flowet kan derfor ikke gennemføres |
 | Password hashing med BCrypt | ✅ | `Participant.PasswordHash` + `BCrypt.Verify()` |
 | JWT udstedelse (HS256) | ✅ | Claims: `sub`, `name`, `jti` |
 | JWT-validering i controllers | ✅ | `OrdersController` kræver JWT; host-handlinger udleder bruger-ID fra `NameIdentifier`/`sub` og ignorerer body-ID |
 | Google login (`POST /api/auth/google-login`) | ✅ | `ExternalAuthService` — validerer Google ID-token via `Google.Apis.Auth`; opretter/finder `Participant` + `ParticipantExternalLogin` — *(NYT)* |
 | `ParticipantExternalLogin` (Google-tilknytning) | ✅ | Tabel til externe OAuth-logins; Provider + ProviderUserId + Email — *(NYT)* |
 | Profilopdatering (navn, email, telefon) | ✅ | `PUT /api/participants/{id}/profile` |
+| Merchant-login med email + password | ❌ | Login-opslag filtrerer til `Person`; merchantregistrering gemmer ikke konto-email/password |
 | Token refresh | ❌ | Ikke implementeret |
 | Host-autorisation via JWT-identitet | ✅ | Host-ejerskab sammenlignes med det autentificerede participant-ID fra JWT |
 
@@ -156,7 +157,7 @@ Statusoversigt over PayNSync pr. seneste kodegennemgang.
 | Afventende deltagere (beregnet client-side) | ✅ | `computePendingSummary()` — kun `Invited`-status tæller |
 | Send påmindelser til afventende deltagere | ⚠️ | Knap og dialog eksisterer — `sendReminders()` logger kun til console, ingen API-kald |
 | Beskedindbakke | ✅ | |
-| Brugerprofil | ✅ | Profilredigering, tema, Vipps-testmapping og logout |
+| Brugerprofil | ⚠️ | Funktionerne findes, men profil, mapping, tema og udviklerværktøjer er blandet i én lang side; UC-15 planlægger et rollebaseret kontocenter |
 | Merchant-logo i database/API og statisk demo-katalog (UC-01) | ✅ | Logo-data og metadata på merchant, logo-endpoint, validering/fallback samt statiske demo-logoer med API-logo og initialer som fallback. |
 | Merchant-søgning og carousel på forsiden (UC-02) | ✅ | Dynamiske merchant-venner, maks. 8, søgning, logo-fallback, senest anvendt-sortering, tastaturnavigation og låst wizard-state |
 | Dark theme navigation (UC-07) | ✅ | Mørkt tema skjuler Deltagere+Profil-kort, giver neon-glow border på kort, forenkler bottom nav til Hjem/Deltagere/Mere |
@@ -215,6 +216,7 @@ Statusoversigt over PayNSync pr. seneste kodegennemgang.
 | UC-12 – Send påmindelser | ❌ Planlagt | Erstat frontend-placeholder med eksisterende Message-flow |
 | UC-13 – Join med token | ❌ Planlagt | Aktivér eksisterende `JoinToken` efter Product Owner-beslutninger |
 | UC-14 – Refund captured betaling | ❌ Planlagt | Idempotent refund gennem provider/state machine efter betalingsbeslutning |
+| UC-15 – Profil- og kontocenter | ❌ Planlagt | Faner til profil/login/oprettelse, person- og merchantkonto, Vipps-testmapping og development-only værktøjer |
 
 Se `docs/usecases/00-IMPLEMENTATION-ORDER.md` for anbefalet rækkefølge og modelprofil.
 
@@ -238,6 +240,8 @@ Se `docs/usecases/00-IMPLEMENTATION-ORDER.md` for anbefalet rækkefølge og mode
 | Gældspunkt | Beskrivelse |
 |-----------|-------------|
 | `ExternalPaymentService` er en stub | Har `TODO`-kommentarer. `ChargeAsync()` simulerer 300ms forsinkelse og returnerer altid success. Bruges stadig af `/pay`-endpoint. |
+| Merchant auth-kontrakt er ufuldstændig | Frontend mangler påkrævet Vipps MSN; merchant oprettes uden `Participant.Email`/`PasswordHash`, og login tillader kun `Person`. Planlagt i UC-15. |
+| Udviklerpanel vises i production-frontend | UC-09 beskytter backend med 404, men profilen environment-skjuler endnu ikke udviklerpanelet. Planlagt i UC-15. |
 | JWT-udløbstid-inkonsistens | `appsettings.json` har `Jwt:ExpiresInMinutes = 43200` (30 dage). `AuthController` bruger `AddMinutes(480)` (8 timer) hardcodet. `JwtTokenService` læser konfigurationsværdien. Hvilken værdi der reelt bruges afhænger af kodestien. |
 | `FriendRelation` race condition | `RelationExistsAsync` tjekker for duplikat i service, men der er inget unikt DB-constraint. Samtidige kald kan oprette dubletter. |
 | `UnitTest1` er tom | Testklassen eksisterer med en tom `Test1()`-metode — placeholder uden indhold. |
