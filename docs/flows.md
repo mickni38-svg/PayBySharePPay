@@ -141,15 +141,16 @@ Host sees order status = "ReadyToPay" in frontend
 
 API: OrdersController.ApproveOrder() → GroupPaymentOrchestrationService.ApproveAndCaptureAllAsync()
 
-Orchestration:
-  1. Validates host (requestingParticipantId == order.CreatedByParticipantId)
-  2. Validates order status in [ReadyToPay, HostApproved, Capturing, PartiallyFailed]
-  3. Loads Reserved payments
-  4. Validates at least 1 Reserved payment exists
-  5. Order.Status → "HostApproved"  [saved]
-  6. All Reserved payments → "CapturePending"
-  7. Order.Status → "Capturing"  [saved]
-  8. For each CapturePending payment:
+Authorization and orchestration:
+  1. Controller derives `currentParticipantId` from validated JWT `NameIdentifier`/`sub`; missing/invalid claim → 401
+  2. Service validates host (`currentParticipantId == order.CreatedByParticipantId`); mismatch → 403
+  3. Validates order status in [ReadyToPay, HostApproved, Capturing, PartiallyFailed]
+  4. Loads Reserved payments
+  5. Validates at least 1 Reserved payment exists
+  6. Order.Status → "HostApproved"  [saved]
+  7. All Reserved payments → "CapturePending"
+  8. Order.Status → "Capturing"  [saved]
+  9. For each CapturePending payment:
 	 a. Build CapturePaymentRequest (ProviderPaymentId, amount, currency, idempotencyKey)
 	 b. Call IPaymentProvider.CaptureAsync()
 	 c. Success → SetCapturedAsync (ParticipantPayment.Status = Captured)
@@ -224,11 +225,12 @@ No automated reminder sending — host can manually send messages.
 Host sees order in non-Paid state
   → Clicks cancel
 
-Orchestration:
-  1. Validates host
-  2. Rejects if already Paid
-  3. Idempotent: if already Cancelled, returns success
-  4. For each ParticipantPayment:
+Authorization and orchestration:
+  1. Controller derives participant ID from validated JWT; missing/invalid claim → 401
+  2. Service validates host ownership; mismatch → 403
+  3. Rejects if already Paid
+  4. Idempotent: if already Cancelled, returns success
+  5. For each ParticipantPayment:
 	 - Skip if Captured, Cancelled, or Expired
 	 - If no ProviderPaymentId: set Cancelled directly
 	 - Else: call IPaymentProvider.CancelAsync()
