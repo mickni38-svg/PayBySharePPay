@@ -105,7 +105,7 @@ Hvis brugeren ikke har merchant-venner:
 
 **Givet** forsiden  
 **Så** vises **Log ud** ikke på siden  
-**Og** den eksisterende logout-handling kan bruges fra profilsiden
+**Og** den eksisterende logout-handling kan bruges fra profilsiden  
 **Og** udvikler-login findes kun på profilsiden.
 
 ## Test
