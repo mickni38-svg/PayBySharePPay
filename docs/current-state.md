@@ -2,7 +2,7 @@
 
 Statusoversigt over PayNSync pr. seneste kodegennemgang.
 
-**Senest opdateret:** 2. september 2026 — UC-01–UC-05, wizard-navigation, tests og GitHub Actions er sammenholdt med `main`.
+**Senest opdateret:** 2. september 2026 — UC-08 JWT-identitet og host-autorisation er implementeret og sammenholdt med `main`.
 
 **Symboler:**  
 ✅ Implementeret og fungerende  
@@ -21,12 +21,12 @@ Statusoversigt over PayNSync pr. seneste kodegennemgang.
 | Registrering (merchant) | ✅ | `POST /api/auth/register-merchant` |
 | Password hashing med BCrypt | ✅ | `Participant.PasswordHash` + `BCrypt.Verify()` |
 | JWT udstedelse (HS256) | ✅ | Claims: `sub`, `name`, `jti` |
-| JWT-validering i controllers | ⚠️ | Kun `OrdersController` har `[Authorize]` — se Security-sektion |
+| JWT-validering i controllers | ✅ | `OrdersController` kræver JWT; host-handlinger udleder bruger-ID fra `NameIdentifier`/`sub` og ignorerer body-ID |
 | Google login (`POST /api/auth/google-login`) | ✅ | `ExternalAuthService` — validerer Google ID-token via `Google.Apis.Auth`; opretter/finder `Participant` + `ParticipantExternalLogin` — *(NYT)* |
 | `ParticipantExternalLogin` (Google-tilknytning) | ✅ | Tabel til externe OAuth-logins; Provider + ProviderUserId + Email — *(NYT)* |
 | Profilopdatering (navn, email, telefon) | ✅ | `PUT /api/participants/{id}/profile` |
 | Token refresh | ❌ | Ikke implementeret |
-| Roller/claims (host vs. deltager) | ❌ | Host-tjek sker i service-laget via sammenligning af IDs, ikke JWT-claims |
+| Host-autorisation via JWT-identitet | ✅ | Host-ejerskab sammenlignes med det autentificerede participant-ID fra JWT |
 
 ---
 
@@ -174,7 +174,7 @@ Statusoversigt over PayNSync pr. seneste kodegennemgang.
 | Feature | Status | Noter |
 |---------|--------|-------|
 | Swagger/OpenAPI tilgængeligt på `/` | ✅ | Root redirecter til `/swagger` |
-| `ExceptionHandlingMiddleware` | ✅ | `ArgumentException` → 400, `KeyNotFoundException` → 404, `InvalidOperationException` → 409 |
+| `ExceptionHandlingMiddleware` | ✅ | `ArgumentException` → 400, `UnauthorizedAccessException` → 403, `KeyNotFoundException` → 404, `InvalidOperationException` → 409 |
 | SQL Server EF Core med 15 migrationer | ✅ | Seneste migration: `20260815173756_AddMerchantLogo` |
 | Dev: auto-start af Merchant Demo-server | ✅ | `MerchantDemoHostedService` starter `npx http-server` på port 8081 |
 | CORS konfigureret | ✅ | Hardcodet liste med localhost + Azure-URL'er |
@@ -196,6 +196,7 @@ Statusoversigt over PayNSync pr. seneste kodegennemgang.
 | `FakePaymentProviderTests` | ✅ | DI-opløsning, reserve success/fejl, capture success/fejl, cancel, alle simulate-flags |
 | `GroupPaymentOrchestrationServiceTests` | ✅ | Reserve, capture, cancel, idempotens, fejlscenarier — in-memory fakes |
 | `ParticipantPaymentStateServiceTests` | ✅ | State machine-transitioner, ugyldige overgange, event log-skrivning |
+| `OrdersControllerAuthorizationTests` | ✅ | JWT-identitet, manipuleret body-ID, ugyldige claims, host/non-host `/pay`, `[Authorize]` og middleware 403 |
 | `UnitTest1` | ⚠️ | Tom testklasse — placeholder |
 | Integrationstests | ❌ | Intet integrationstestprojekt |
 | Frontend-tests | ✅ | Karma/Jasmine-specs for UC-01-logo-fallback, UC-02-carousel og UC-03–UC-05-wizarden, herunder validering, state, tilbage-navigation, idempotent submit, succes og fejl |
@@ -206,7 +207,7 @@ Statusoversigt over PayNSync pr. seneste kodegennemgang.
 
 | Use case | Status | Formål |
 |----------|--------|--------|
-| UC-08 – JWT-identitet og host-autorisation | ❌ Planlagt | Brug JWT-identitet i stedet for bruger-ID fra request-body |
+| UC-08 – JWT-identitet og host-autorisation | ✅ Implementeret | Host-handlinger bruger JWT-identitet; ugyldig identitet giver 401 og manglende ejerskab 403 |
 | UC-09 – Beskyt dev-endpoints | ❌ Planlagt | Fjern destruktive udvikler-ruter fra Simply/produktion |
 | UC-10 – Vipps webhook HMAC | ❌ Planlagt | Verificér webhook-secret, body-hash og HMAC før stateændring |
 | UC-11 – Ens JWT-udløbstid | ❌ Planlagt | Ensret tokenets `exp` og auth-responsens `ExpiresAt` |
@@ -236,8 +237,6 @@ Se `docs/usecases/00-IMPLEMENTATION-ORDER.md` for anbefalet rækkefølge og mode
 | Gældspunkt | Beskrivelse |
 |-----------|-------------|
 | `ExternalPaymentService` er en stub | Har `TODO`-kommentarer. `ChargeAsync()` simulerer 300ms forsinkelse og returnerer altid success. Bruges stadig af `/pay`-endpoint. |
-| `UnauthorizedAccessException` → HTTP 500 | `ExceptionHandlingMiddleware` mapper ikke denne exception-type. Host-tjek i service-laget kaster `UnauthorizedAccessException`, som resulterer i 500 i stedet for 403. |
-| `requestingParticipantId` fra request-body | Host-ejerskab valideres mod `requestingParticipantId` sendt af klienten i body — ikke mod JWT-claimet `sub`. En klient kan sende en anden brugers ID. |
 | `DevController` uden auth i prod | `DELETE /api/dev/reset` sletter alle ordrer og `POST /api/dev/seed-merchant-urls` ændrer data. Begge endpoints har ingen authentication-krav. |
 | JWT-udløbstid-inkonsistens | `appsettings.json` har `Jwt:ExpiresInMinutes = 43200` (30 dage). `AuthController` bruger `AddMinutes(480)` (8 timer) hardcodet. `JwtTokenService` læser konfigurationsværdien. Hvilken værdi der reelt bruges afhænger af kodestien. |
 | `FriendRelation` race condition | `RelationExistsAsync` tjekker for duplikat i service, men der er inget unikt DB-constraint. Samtidige kald kan oprette dubletter. |
@@ -254,7 +253,6 @@ Se `docs/usecases/00-IMPLEMENTATION-ORDER.md` for anbefalet rækkefølge og mode
 2. **JoinToken-endpoint** — `JoinToken` genereres på alle ordrer men ingen endpoint accepterer det. Er dette en planlagt feature?
 3. **`Completed` vs. `Paid`** — To separate terminal-statuser eksisterer. `Paid` = provider-capture-flow afsluttet. `Completed` = det gamle manuelle flow. Skal de samles til én?
 4. **Webhook-signatur** — Alle webhooks er `[AllowAnonymous]` uden HMAC-validering. En angriber kan sende falske status-opdateringer. Skal dette implementeres inden produktion?
-5. **`requestingParticipantId` validering** — Bør det valideres mod `User.FindFirst(ClaimTypes.NameIdentifier)` fra JWT i stedet for at stole på request-body?
 6. **`DevController` i prod** — Skal den beskyttes (fx `[Authorize]` + env-check) eller fjernes helt fra produktionsmiljøet?
 7. **JWT-udløbstid** — Hvad er den korrekte udløbstid: 480 minutter (hardcodet i `AuthController`) eller 43200 (i `appsettings.json`)?
 8. **`Declined`-status** — Defineret i frontend-enum og `participantStatusLabel()`. Planlægges der backend-logik til at håndtere dette?
