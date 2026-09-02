@@ -1,63 +1,42 @@
-# Test plan — UC-08
+# Test plan — UC-09
 
 ## Teststrategi
 
-Brug eksisterende xUnit, FluentAssertions og Moq. Ingen ny testpakke, database, EF InMemory eller live Vipps/MobilePay-kald.
+Brug eksisterende xUnit og FluentAssertions. Ingen ny testpakke, EF InMemory, database eller live ekstern integration.
 
-## Controller-tests
+## Controller discovery-tests
 
-Tilføj direkte tests af `OrdersController` med en `DefaultHttpContext` og claims-principal.
+Byg en `ApplicationPartManager` med API-assemblyens controllers og den nye environment-provider.
 
-### Claim-identitet
+- `Development`: `DevController` findes fortsat i `ControllerFeature`.
+- `Simply`: `DevController` findes ikke.
+- `Production`: `DevController` findes ikke.
+- `Local`: `DevController` findes ikke.
+- Ukendt/tomt environment: `DevController` findes ikke.
+- En almindelig controller forbliver registreret i alle miljøer, så provideren ikke rammer bredere end UC-09.
 
-- `ApproveOrder` sender JWT participant-ID til orchestration, selv når body indeholder et andet ID.
-- `CancelOrder` sender JWT participant-ID til orchestration.
-- `CompleteOrder` sender JWT participant-ID til order service.
-- `PayOrder` sender JWT participant-ID til complete-service og ignorerer body-ID.
-- Dæk både `ClaimTypes.NameIdentifier` og fallback til `sub`.
+## Side-effect og Swagger-verifikation
 
-### Manglende/ugyldig identitet
+Når `DevController` ikke findes i MVC controller discovery:
 
-- Manglende claim giver 401 og ingen service/provider-kald.
-- Ikke-numerisk, nul eller negativ claim giver 401 og ingen service/provider-kald.
-- Reflektions-/metadata-test bekræfter, at `OrdersController` fortsat har `[Authorize]`.
+- registreres ingen af controllerens fire attribut-routes;
+- controlleren kan ikke instantieres eller kalde database/services via HTTP;
+- ApiExplorer/Swagger modtager ingen dev-actions.
 
-### Manipulation og payment side effect
+Dette verificeres ved controller feature-listen, som både endpoint-routing og ApiExplorer bygger deres controller action discovery på.
 
-- Ikke-host JWT kombineret med host-ID i body kan ikke kalde approve/cancel/complete med host-ID.
-- På legacy `/pay` afvises ikke-host før `IExternalPaymentService.ChargeAsync`.
-- Gyldig host kan fortsat gennemføre det eksisterende flow.
+## Regression
 
-## Middleware-tests
-
-- `UnauthorizedAccessException` returnerer 403.
-- Response indeholder en generisk fejl og ikke exceptionens interne besked.
-- Nærliggende mappings for 400, 404 og 409 forbliver uændrede eller dækkes af eksisterende tests.
-- Uventet exception forbliver 500 med den eksisterende generiske fejl; UC-08 ændrer ikke øvrig exception policy.
-
-## Eksisterende tests
-
-Kør mindst:
+Kør:
 
 - `dotnet build PayBySharePay.sln --configuration Release`
 - `dotnet test PayBySharePay.sln --configuration Release --no-build --verbosity normal`
-- relevante eksisterende `GroupPaymentOrchestrationServiceTests` for host, capture, cancel og idempotens
-
-Frontendkode ændres ikke. GitHub Actions kører fortsat Angular test/build som samlet regressionskontrol efter push.
-
-## Manuel/API-kontrol
-
-Med testtokens for host A og bruger B:
-
-1. A + vilkårligt body-ID på A's ordre lykkes.
-2. B + A's ID i body på A's ordre giver 403.
-3. Intet token giver 401.
-4. Fejlen indeholder ikke stack trace, exception-type eller intern exceptiontekst.
-5. Ikke-host `/pay` udløser intet betalingskald.
+- GitHub Actions' Angular test/build som samlet regressionskontrol efter push til `main`.
 
 ## Exit-kriterier
 
-- Alle nye og eksisterende .NET-tests består.
-- Ingen provider-kald sker ved 401/403.
-- Ingen database-, payment state- eller frontendændring er introduceret.
-- Diffen indeholder kun UC-08-relaterede filer og nødvendige dokumentationsrettelser.
+- DevController findes kun i Development discovery.
+- Almindelige controllers forbliver registreret.
+- Alle eksisterende og nye tests består.
+- Ingen database-, dependency-, frontend- eller betalingsændring er introduceret.
+- Dokumentation opdateres først efter grøn verifikation.
