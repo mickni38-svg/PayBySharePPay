@@ -2,7 +2,7 @@
 
 Statusoversigt over PayNSync pr. seneste kodegennemgang.
 
-**Senest opdateret:** 2. september 2026 — UC-08 JWT-identitet og host-autorisation er implementeret og sammenholdt med `main`.
+**Senest opdateret:** 2. september 2026 — UC-09 beskyttelse af udvikler-endpoints er implementeret og sammenholdt med `main`.
 
 **Symboler:**  
 ✅ Implementeret og fungerende  
@@ -173,7 +173,7 @@ Statusoversigt over PayNSync pr. seneste kodegennemgang.
 
 | Feature | Status | Noter |
 |---------|--------|-------|
-| Swagger/OpenAPI tilgængeligt på `/` | ✅ | Root redirecter til `/swagger` |
+| Swagger/OpenAPI tilgængeligt på `/` | ✅ | Root redirecter til `/swagger`; `DevController` opdages og vises kun i `Development` |
 | `ExceptionHandlingMiddleware` | ✅ | `ArgumentException` → 400, `UnauthorizedAccessException` → 403, `KeyNotFoundException` → 404, `InvalidOperationException` → 409 |
 | SQL Server EF Core med 15 migrationer | ✅ | Seneste migration: `20260815173756_AddMerchantLogo` |
 | Dev: auto-start af Merchant Demo-server | ✅ | `MerchantDemoHostedService` starter `npx http-server` på port 8081 |
@@ -197,6 +197,7 @@ Statusoversigt over PayNSync pr. seneste kodegennemgang.
 | `GroupPaymentOrchestrationServiceTests` | ✅ | Reserve, capture, cancel, idempotens, fejlscenarier — in-memory fakes |
 | `ParticipantPaymentStateServiceTests` | ✅ | State machine-transitioner, ugyldige overgange, event log-skrivning |
 | `OrdersControllerAuthorizationTests` | ✅ | JWT-identitet, manipuleret body-ID, ugyldige claims, host/non-host `/pay`, `[Authorize]` og middleware 403 |
+| `DevelopmentOnlyControllerFeatureProviderTests` | ✅ | DevController registreres i Development, fjernes i Simply/Production/Local/andre miljøer, mens almindelige controllers bevares |
 | `UnitTest1` | ⚠️ | Tom testklasse — placeholder |
 | Integrationstests | ❌ | Intet integrationstestprojekt |
 | Frontend-tests | ✅ | Karma/Jasmine-specs for UC-01-logo-fallback, UC-02-carousel og UC-03–UC-05-wizarden, herunder validering, state, tilbage-navigation, idempotent submit, succes og fejl |
@@ -208,7 +209,7 @@ Statusoversigt over PayNSync pr. seneste kodegennemgang.
 | Use case | Status | Formål |
 |----------|--------|--------|
 | UC-08 – JWT-identitet og host-autorisation | ✅ Implementeret | Host-handlinger bruger JWT-identitet; ugyldig identitet giver 401 og manglende ejerskab 403 |
-| UC-09 – Beskyt dev-endpoints | ❌ Planlagt | Fjern destruktive udvikler-ruter fra Simply/produktion |
+| UC-09 – Beskyt dev-endpoints | ✅ Implementeret | Hele `DevController` fjernes fra routing og Swagger uden for `Development` |
 | UC-10 – Vipps webhook HMAC | ❌ Planlagt | Verificér webhook-secret, body-hash og HMAC før stateændring |
 | UC-11 – Ens JWT-udløbstid | ❌ Planlagt | Ensret tokenets `exp` og auth-responsens `ExpiresAt` |
 | UC-12 – Send påmindelser | ❌ Planlagt | Erstat frontend-placeholder med eksisterende Message-flow |
@@ -237,7 +238,6 @@ Se `docs/usecases/00-IMPLEMENTATION-ORDER.md` for anbefalet rækkefølge og mode
 | Gældspunkt | Beskrivelse |
 |-----------|-------------|
 | `ExternalPaymentService` er en stub | Har `TODO`-kommentarer. `ChargeAsync()` simulerer 300ms forsinkelse og returnerer altid success. Bruges stadig af `/pay`-endpoint. |
-| `DevController` uden auth i prod | `DELETE /api/dev/reset` sletter alle ordrer og `POST /api/dev/seed-merchant-urls` ændrer data. Begge endpoints har ingen authentication-krav. |
 | JWT-udløbstid-inkonsistens | `appsettings.json` har `Jwt:ExpiresInMinutes = 43200` (30 dage). `AuthController` bruger `AddMinutes(480)` (8 timer) hardcodet. `JwtTokenService` læser konfigurationsværdien. Hvilken værdi der reelt bruges afhænger af kodestien. |
 | `FriendRelation` race condition | `RelationExistsAsync` tjekker for duplikat i service, men der er inget unikt DB-constraint. Samtidige kald kan oprette dubletter. |
 | `UnitTest1` er tom | Testklassen eksisterer med en tom `Test1()`-metode — placeholder uden indhold. |
@@ -253,7 +253,6 @@ Se `docs/usecases/00-IMPLEMENTATION-ORDER.md` for anbefalet rækkefølge og mode
 2. **JoinToken-endpoint** — `JoinToken` genereres på alle ordrer men ingen endpoint accepterer det. Er dette en planlagt feature?
 3. **`Completed` vs. `Paid`** — To separate terminal-statuser eksisterer. `Paid` = provider-capture-flow afsluttet. `Completed` = det gamle manuelle flow. Skal de samles til én?
 4. **Webhook-signatur** — Alle webhooks er `[AllowAnonymous]` uden HMAC-validering. En angriber kan sende falske status-opdateringer. Skal dette implementeres inden produktion?
-6. **`DevController` i prod** — Skal den beskyttes (fx `[Authorize]` + env-check) eller fjernes helt fra produktionsmiljøet?
-7. **JWT-udløbstid** — Hvad er den korrekte udløbstid: 480 minutter (hardcodet i `AuthController`) eller 43200 (i `appsettings.json`)?
-8. **`Declined`-status** — Defineret i frontend-enum og `participantStatusLabel()`. Planlægges der backend-logik til at håndtere dette?
-9. **`Refunded`-status** — Transition `Captured → Refunded` er tilladt i state machine. Planlægges der et refund-endpoint?
+5. **JWT-udløbstid** — Hvad er den korrekte udløbstid: 480 minutter (hardcodet i `AuthController`) eller 43200 (i `appsettings.json`)?
+6. **`Declined`-status** — Defineret i frontend-enum og `participantStatusLabel()`. Planlægges der backend-logik til at håndtere dette?
+7. **`Refunded`-status** — Transition `Captured → Refunded` er tilladt i state machine. Planlægges der et refund-endpoint?
