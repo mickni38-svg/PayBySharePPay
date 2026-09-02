@@ -46,6 +46,10 @@ jobs:
         working-directory: src/Frontend.PayBySharePay
         run: npm ci
 
+      - name: Test
+        working-directory: src/Frontend.PayBySharePay
+        run: npx ng test --watch=false --browsers=ChromeHeadless
+
       - name: Build (simply)
         working-directory: src/Frontend.PayBySharePay
         run: npx ng build --configuration simply

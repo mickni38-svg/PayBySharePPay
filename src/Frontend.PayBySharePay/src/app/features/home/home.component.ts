@@ -14,9 +14,17 @@ import { ThemeService } from '../../core/services/theme.service';
 import { DirectoryEntry } from '../../core/models/directory.model';
 import { computePendingSummary } from '../../core/models/order.model';
 import { getStaticMerchantLogoUrl } from '../../core/utils/merchant-logo';
+import {
+  filterAndLimitMerchants,
+  getCarouselScrollTarget,
+  markMerchantAsRecentlyUsed,
+  parseRecentMerchantIds,
+  sortMerchantsByRecentUse
+} from './merchant-carousel.utils';
 import { environment } from '../../../environments/environment';
 
-const MAX_MERCHANTS = 8;
+const RECENT_MERCHANTS_KEY_PREFIX = 'paynsync_recent_merchants';
+const MERCHANT_CARD_SCROLL_STEP = 102;
 
 interface MerchantCard {
   id: number;
@@ -78,16 +86,13 @@ export class HomeComponent implements OnInit, OnDestroy {
   allMerchants = signal<MerchantCard[]>([]);
   merchantSearch = signal('');
 
-  filteredMerchants = computed(() => {
-    const term = this.merchantSearch().toLowerCase().trim();
-    const list = this.allMerchants();
-    const filtered = term
-      ? list.filter(m => m.displayName.toLowerCase().includes(term))
-      : list;
-    return filtered.slice(0, MAX_MERCHANTS);
-  });
+  filteredMerchants = computed(() =>
+    filterAndLimitMerchants(this.allMerchants(), this.merchantSearch())
+  );
 
   private routerSub?: Subscription;
+  private recentMerchantIds: number[] = [];
+  private activeUserId: number | null = null;
 
   constructor(
     readonly auth: AuthService,
@@ -131,12 +136,14 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   private loadMerchants(userId: number): void {
+    this.activeUserId = userId;
+    this.recentMerchantIds = this.readRecentMerchantIds(userId);
+
     this.friendService.getFriends(userId).subscribe({
       next: (list) => {
         this.friendCount.set(list.length);
         const merchants: MerchantCard[] = list
           .filter(e => e.type === 'Merchant')
-          .sort((a, b) => a.displayName.localeCompare(b.displayName, 'da'))
           .map(e => {
             const staticLogoUrl = getStaticMerchantLogoUrl(e);
             const apiLogoUrl = e.logoUrl ? `${environment.apiUrl}${e.logoUrl}` : null;
@@ -150,7 +157,10 @@ export class HomeComponent implements OnInit, OnDestroy {
               fallbackLogoUrl: staticLogoUrl ? apiLogoUrl : null
             };
           });
-        this.allMerchants.set(merchants);
+
+        this.allMerchants.set(
+          sortMerchantsByRecentUse(merchants, this.recentMerchantIds)
+        );
       },
       error: () => {
         this.friendCount.set(0);
@@ -160,6 +170,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   selectMerchant(m: MerchantCard): void {
+    this.rememberMerchantUse(m.id);
+
     this.router.navigate(['/orders/create'], {
       state: {
         merchant: {
@@ -179,6 +191,57 @@ export class HomeComponent implements OnInit, OnDestroy {
         ? { ...merchant, logoUrl: merchant.fallbackLogoUrl, fallbackLogoUrl: null }
         : merchant
     ));
+  }
+
+  onCarouselKeydown(event: KeyboardEvent, carousel: HTMLElement): void {
+    const maximumLeft = Math.max(0, carousel.scrollWidth - carousel.clientWidth);
+    const target = getCarouselScrollTarget(
+      event.key,
+      carousel.scrollLeft,
+      maximumLeft,
+      MERCHANT_CARD_SCROLL_STEP
+    );
+
+    if (target == null) return;
+
+    event.preventDefault();
+    carousel.scrollTo({ left: target, behavior: 'smooth' });
+  }
+
+  private rememberMerchantUse(merchantId: number): void {
+    if (this.activeUserId == null) return;
+
+    this.recentMerchantIds = markMerchantAsRecentlyUsed(
+      this.recentMerchantIds,
+      merchantId
+    );
+
+    try {
+      localStorage.setItem(
+        this.recentMerchantsStorageKey(this.activeUserId),
+        JSON.stringify(this.recentMerchantIds)
+      );
+    } catch {
+      // Storage can be unavailable in privacy-restricted browsers.
+    }
+
+    this.allMerchants.update(merchants =>
+      sortMerchantsByRecentUse(merchants, this.recentMerchantIds)
+    );
+  }
+
+  private readRecentMerchantIds(userId: number): number[] {
+    try {
+      return parseRecentMerchantIds(
+        localStorage.getItem(this.recentMerchantsStorageKey(userId))
+      );
+    } catch {
+      return [];
+    }
+  }
+
+  private recentMerchantsStorageKey(userId: number): string {
+    return `${RECENT_MERCHANTS_KEY_PREFIX}:${userId}`;
   }
 
   private loadStatusCards(userId: number): void {

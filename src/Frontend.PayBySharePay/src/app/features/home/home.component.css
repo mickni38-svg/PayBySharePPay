@@ -686,13 +686,24 @@
 .merchant-carousel {
   display: flex;
   gap: 10px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   overflow-x: auto;
   overflow-y: hidden;
+  overscroll-behavior-inline: contain;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   padding-bottom: 6px;
+  outline: none;
   /* Hide scrollbar but keep functionality */
   scrollbar-width: none;
+}
+
+.merchant-carousel:focus-visible {
+  border-radius: var(--radius-md);
+  box-shadow: 0 0 0 2px var(--color-primary, #38BDF8);
 }
 
 .merchant-carousel::-webkit-scrollbar {

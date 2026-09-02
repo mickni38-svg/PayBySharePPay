@@ -154,7 +154,8 @@ Statusoversigt over PayNSync pr. seneste kode-gennemgang.
 | Afventende deltagere (beregnet client-side) | ✅ | `computePendingSummary()` — kun `Invited`-status tæller |
 | Send påmindelser til afventende deltagere | ⚠️ | Knap og dialog eksisterer — `sendReminders()` logger kun til console, ingen API-kald |
 | Beskedindbakke | ✅ | |
-| Brugerprofil | ✅ | |
+| Brugerprofil | ✅ | Profilredigering, tema, Vipps-testmapping og logout |
+| Merchant-søgning og carousel på forsiden (UC-02) | ✅ | Dynamiske merchant-venner, maks. 8, søgning, logo-fallback, senest anvendt-sortering, tastaturnavigation og låst wizard-state |
 | Dark theme navigation (UC-07) | ✅ | Mørkt tema skjuler Deltagere+Profil-kort, giver neon-glow border på kort, forenkler bottom nav til Hjem/Deltagere/Mere |
 | PayNSync hero-logo på forsiden (dark mode) | ✅ | SVG-kreditkortsillustration + Pay/NSync branding øverst på HomeComponent |
 | Mobil-first responsivt design | ✅ | |
@@ -193,7 +194,7 @@ Statusoversigt over PayNSync pr. seneste kode-gennemgang.
 | `ParticipantPaymentStateServiceTests` | ✅ | State machine-transitioner, ugyldige overgange, event log-skrivning |
 | `UnitTest1` | ⚠️ | Tom testklasse — placeholder |
 | Integrationstests | ❌ | Intet integrationstestprojekt |
-| Frontend-tests | ❌ | Ingen Angular-testfiler (Karma/Jasmine konfigureret men ingen specs) |
+| Frontend-tests | ✅ | Karma/Jasmine-specs for UC-02: filtrering, begrænsning, sortering, tastaturnavigation, wizard-state og logout |
 
 ---
 
