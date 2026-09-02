@@ -1,35 +1,30 @@
-# Implementation plan — UC-03
+# Implementation plan — UC-04
 
 ## Forståelse
 
-UC-03 gør den valgte merchant og valg af deltagere til wizardens første af tre trin. Merchant kommer fra UC-02 og kan ikke ændres i wizarden. Deltagere kommer dynamisk fra den eksisterende venneliste.
+UC-04 gør wizardens trin 2 til siden **Detaljer**. Værten angiver en påkrævet titel og en valgfri besked. Merchant og deltagere kommer fra den eksisterende UC-03 wizard-state, og oplysningerne skal bevares ved frem/tilbage-navigation.
 
 ## Nuværende løsning
 
-Wizarden har fire tekniske trin:
+Wizarden har allerede tre trin efter UC-03, men trin 2 består stadig af de gamle felter titel, obligatorisk emoji og en besked begrænset til 200 tegn. Titel og besked ligger uden for den samlede wizard-state, der mangler tegntællere og dynamisk opsummeringskort, og valideringen kræver fortsat emoji.
 
-1. titel, emoji og besked;
-2. merchant;
-3. deltagere;
-4. kontrol.
-
-Når en merchant kommer fra forsiden, springes merchant-trinnet blot over. Værten filtreres ikke eksplicit, næste-knappen er ikke deaktiveret uden deltagere, og merchant-state valideres kun ved at kontrollere, at et ID findes i browser-state.
+API- og databasemodellen accepterer allerede en valgfri besked uden en 200-tegnsbegrænsning. `Category` er valgfri i create-kontrakten, så emoji kan fjernes fra trin 2 uden API-, database- eller migrationsændringer.
 
 ## Implementering
 
-1. Ændr wizardens struktur til tre trin.
-2. Gør trin 1 til **Vælg deltagere**.
-3. Vis den forudvalgte merchant i et låst, kompakt kort med logo/navn og uden "Valgt", flueben, skift eller merchant-søgning.
-4. Validér merchant-ID mod den aktuelle brugers dynamiske merchant-venner og brug data fra API-resultatet.
-5. Indlæs kun personer fra den eksisterende venneliste.
-6. Filtrér værten og den valgte merchant eksplicit, og dedupliker personer efter ID.
-7. Bevar eksisterende valg ved genindlæsning og ved frem/tilbage-navigation.
-8. Vis søgning, valgte markeringer og antal valgte.
-9. Deaktivér **Næste**, indtil mindst én gyldig deltager er valgt.
-10. Flyt de eksisterende titel/emoji/besked-felter urørte til trin 2 som midlertidig kompatibilitet med UC-04.
-11. Flyt den eksisterende kontrolside urørt til trin 3 som midlertidig kompatibilitet med UC-05.
-12. Bevar den eksisterende create-request og betalingsfunktionalitet.
-13. Opdatér UC-03 og `docs/current-state.md` efter bestået verifikation.
+1. Udvid den eksisterende `CreateOrderWizardState` med titel og besked; opret ikke en parallel state-løsning.
+2. Gør trin 2 til **Detaljer** med hjælpetekst og eksisterende trinindikator 2 af 3.
+3. Erstat de gamle felter med:
+   - **Titel**, placeholder **Fx Pizzaaften**, påkrævet, maks. 80 tegn og synlig tegntæller.
+   - **Besked**, placeholder **Skriv en besked til deltagerne...**, valgfri, maks. 500 tegn og synlig tegntæller.
+4. Fjern emoji som obligatorisk felt og valideringskrav. Den eksisterende valgfrie `category`-egenskab sendes fortsat kompatibelt som `undefined`.
+5. Trim kun titel ved validering og før den gemmes i wizard-state. Bevar beskedens præcise tekst, linjeskift, danske tegn og emoji.
+6. Deaktivér **Næste**, når titlen efter trim er tom eller over 80 tegn, når beskeden er over 500 tegn, eller når UC-03-state mangler gyldig merchant/deltager.
+7. Vis et kompakt, dynamisk opsummeringskort med merchantens validerede navn/logo og aktuelt deltagerantal.
+8. Bevar titel, besked, merchant og deltagere ved navigation tilbage til trin 1 og frem til trin 2 igen.
+9. Beskyt trin 2 mod ugyldig wizard-state via den eksisterende komponentnavigation: tilbage til trin 1, eller forsiden hvis merchant-state ikke længere er gyldig.
+10. Lad trin 3 og den endelige oprettelse være funktionelt uændret; UC-05 implementeres ikke.
+11. Opdatér UC-04 og `docs/current-state.md` efter bestået verifikation.
 
 ## Forventede filer
 
@@ -37,7 +32,7 @@ Når en merchant kommer fra forsiden, springes merchant-trinnet blot over. Vært
 - `src/Frontend.PayBySharePay/src/app/features/create-order/create-order.component.html`
 - `src/Frontend.PayBySharePay/src/app/features/create-order/create-order.component.scss`
 - `src/Frontend.PayBySharePay/src/app/features/create-order/create-order.component.spec.ts`
-- `docs/usecases/UC-03-wizard-step-1-participants.md`
+- `docs/usecases/UC-04-wizard-step-2-details.md`
 - `docs/current-state.md`
 - `implementation-plan.md`
 - `test-plan.md`
@@ -48,10 +43,10 @@ Når en merchant kommer fra forsiden, springes merchant-trinnet blot over. Vært
 - API: ingen kontraktændring.
 - Database/migration: ingen.
 - Betaling/Vipps: ingen.
-- Authentication/authorization: ingen ændring; HostUserId læses fortsat fra den aktuelle session.
+- Authentication/authorization: ingen.
 - Dependencies: ingen.
 - Deployment: ingen workflowændring.
 
 ## Risici og afgrænsning
 
-Fjernelsen af merchant-trinnet er tilsigtet af UC-02/03: en ny merchant vælges på forsiden. UC-04 og UC-05 implementeres ikke nu; deres eksisterende indhold flyttes kun til de korrekte trin, så det nuværende oprettelsesflow fortsat virker.
+Trin 3 viser indtil UC-05 den eksisterende kontrolside. Emoji fjernes fra trin 2, fordi UC-04 ikke indeholder kategorivalg, og backend-kontrakten allerede gør `category` valgfri. Create-request, invitationer og betalingsflow ændres ikke.
