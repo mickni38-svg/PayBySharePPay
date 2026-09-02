@@ -70,7 +70,7 @@ Der er desuden en demo-merchant (Pizzeria Roma) indbygget i løsningen til test 
 
 | Funktion | Implementeret |
 |----------|---------------|
-| Registrering som Merchant-deltager | ✅ |
+| Registrering som Merchant-deltager | ⚠️ Backend findes; nuværende frontend mangler påkrævet MSN og merchant-login |
 | Modtag gruppebestillinger via anonym API | ✅ |
 | Modtag HTTP callback ved afsluttet betaling | ✅ |
 | Konfigurér egen bestillings-URL (`GroupOrderUrl`) | ✅ |
@@ -227,7 +227,7 @@ Koden afspejler en ambition om et fuldt integreret betalingsflow, hvor:
 
 ## Open Questions
 
-1. **Merchant-registrering** — `POST /api/auth/register-merchant` eksisterer i `AuthController`. Det er uklart om merchants logger ind og bruger frontenden, eller om de udelukkende integrerer via API og callback.
+1. **Merchant-kontooplevelse** — UC-15 fastlægger, at merchants skal kunne registrere sig og logge ind i kontocenteret. Et egentligt merchant-dashboard, ordrebehandling og POS-administration er fortsat uafklaret/uden for UC-15.
 2. **Vision for deltagerbetaling** — Koden returnerer en `redirectUrl` fra reserve-kaldet (til MobilePay-app). Det er uklart om slutbrugeren skal omdirigeres automatisk, eller om dette kun bruges i testscenarier.
 3. **JWT `ExpiresAt` i response-body** — `JwtTokenService` udsteder et token med `Jwt:ExpiresInMinutes = 43200` (30 dage). `AuthController` returnerer dog `ExpiresAt = DateTime.UtcNow.AddMinutes(480)` hardkodet i alle tre auth-svar (login, register, register-merchant). Klienten tror dermed at sessionen udløber om 8 timer, selvom tokenet er gyldigt i 30 dage.
 4. **Skalering til andre merchanttyper** — Systemet er designet til restaurant-bestillinger (ordrelinjer, menupunkter). Det er ikke tydeligt fra koden, om visionen omfatter andre merchanttyper (fx events, transport, tjenester).
