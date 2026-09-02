@@ -420,7 +420,9 @@ Alle notifikationer gemmes som `Message`-records i databasen — **ingen push, i
 | `FriendsController` | Ingen auth-attribut — effektivt anonymous |
 | `MessagesController` | Ingen auth-attribut — effektivt anonymous |
 | `DirectoryController` | Ingen auth-attribut — effektivt anonymous |
-| `DevController` | Ingen auth-attribut — effektivt anonymous |
+| `DevController` | Kun registreret i `Development`; findes ikke som route i andre environments |
+
+**Udviklerruter** er deny-by-default. Hele `DevController` fjernes fra MVC discovery uden for det præcise environment `Development`, så ruterne returnerer 404 og ikke vises i Swagger. Der tilføjes ikke et produktions-adminpassword som alternativ adgang.
 
 **Host-ejerskab** håndhæves ved at udlede `currentParticipantId` fra det validerede JWT-claim `NameIdentifier`/`sub` i controlleren og sammenligne det med `order.CreatedByParticipantId` i service-laget. Legacy-feltet `requestingParticipantId` i request-body ignoreres ved autorisation.
 
@@ -444,10 +446,9 @@ Alle notifikationer gemmes som `Message`-records i databasen — **ingen push, i
 
 ## Open Questions
 
-1. **`DevController` uden auth** — `DELETE /api/dev/reset` sletter alle ordrer og er tilgængeligt uden authentication i produktion. Bevidst valg?
-2. **`Declined`-status** — Defineret i frontend-enum og `participantStatusLabel()`, men ingen backend-service eller endpoint sætter denne status. Er det en planlagt feature?
-3. **`Refunded`-status** — Defineret i `ParticipantPaymentStatus`-enum og tilladte transitions (`Captured → Refunded`), men ingen service-metode implementerer refundering. Er det planlagt?
-4. **Vipps `CAPTURED` callback ignoreres** — `VippsCallbackController` logger kun ved `CAPTURED` og laver ingen state-ændring. Afhænger dette af at capture altid startes fra vores eget flow, så Vipps' bekræftelse er overflødig?
-5. **FriendRelation-unikhed** — `FriendRelationRepository.RelationExistsAsync` tjekker for eksisterende relation og kaster ved duplikat. Men der er intet unikt DB-constraint — hvad sker der ved race conditions?
-6. **`MerchantOrderDraft.Status` defaultværdi vs. faktisk tildelt værdi** — Entiteten har `Status = "Draft"` som default, men `MerchantOrderService` sætter `"Submitted"`. Er `MerchantOrderDraft.Status` aktivt brugt nogen steder?
-7. **`CheckAndSetReadyToPayAsync` er effektivt ubrugt i produktionsflowet** — Metoden tjekker `OrderParticipant.Status == "OrderSubmitted"` og er tilgængelig via `IOrderService`, men kaldes ingen steder i produktionskode. `ReadyToPay` sættes i stedet via `CheckAndSetReadyToPayByReservedAsync` (Reserved-baseret). Bør metoden fjernes eller erstattes?
+1. **`Declined`-status** — Defineret i frontend-enum og `participantStatusLabel()`, men ingen backend-service eller endpoint sætter denne status. Er det en planlagt feature?
+2. **`Refunded`-status** — Defineret i `ParticipantPaymentStatus`-enum og tilladte transitions (`Captured → Refunded`), men ingen service-metode implementerer refundering. Er det planlagt?
+3. **Vipps `CAPTURED` callback ignoreres** — `VippsCallbackController` logger kun ved `CAPTURED` og laver ingen state-ændring. Afhænger dette af at capture altid startes fra vores eget flow, så Vipps' bekræftelse er overflødig?
+4. **FriendRelation-unikhed** — `FriendRelationRepository.RelationExistsAsync` tjekker for eksisterende relation og kaster ved duplikat. Men der er intet unikt DB-constraint — hvad sker der ved race conditions?
+5. **`MerchantOrderDraft.Status` defaultværdi vs. faktisk tildelt værdi** — Entiteten har `Status = "Draft"` som default, men `MerchantOrderService` sætter `"Submitted"`. Er `MerchantOrderDraft.Status` aktivt brugt nogen steder?
+6. **`CheckAndSetReadyToPayAsync` er effektivt ubrugt i produktionsflowet** — Metoden tjekker `OrderParticipant.Status == "OrderSubmitted"` og er tilgængelig via `IOrderService`, men kaldes ingen steder i produktionskode. `ReadyToPay` sættes i stedet via `CheckAndSetReadyToPayByReservedAsync` (Reserved-baseret). Bør metoden fjernes eller erstattes?
