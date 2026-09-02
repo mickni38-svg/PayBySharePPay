@@ -150,7 +150,9 @@ Swagger → ExceptionHandlingMiddleware → CORS → (HTTPS redirect i prod) →
 | `DirectoryController` | `/api/directory` | Ingen | Tværgående søgning (person + merchant) |
 | `MessagesController` | `/api/messages` | Ingen | Ordrebeskeder + ulæst-count |
 | `VippsCallbackController` | `/api/payments/vipps` | `[AllowAnonymous]` | Vipps MobilePay webhook-modtagelse |
-| `DevController` | `/api/dev` | Ingen | `DELETE /reset` + `POST /seed-merchant-urls` (test only) |
+| `DevController` | `/api/dev` | Kun registreret i `Development` | Reset, seed merchant-URL'er, simuleret autorisation og callback-inspektion |
+
+`DevelopmentOnlyControllerFeatureProvider` fjerner hele `DevController` fra MVC controller discovery i alle andre environments. Dermed registreres ingen `/api/dev/*`-routes, og ApiExplorer/Swagger eksponerer dem ikke i Simply, Production, Local eller ukendte miljøer.
 
 **Nye endpoints i eksisterende controllere** *(NYT)*:
 
@@ -774,5 +776,4 @@ Vipps MobilePay
 1. **`Jwt:ExpiresInMinutes` i appsettings vs. kode** — `appsettings.json` indeholder `43200` (30 dage), men `JwtTokenService` bruger værdien direkte og `AuthController` bruger `AddMinutes(480)` hardcodet. Hvad er den faktiske udløbstid?
 2. **CI/CD** — `deploy-simply.yml` er konfigureret til manuel deploy via `workflow_dispatch`. Ingen automatisk deploy ved push til `main`.
 3. **Angular environment-filer** — Tre filer: `environment.ts` (dev → `localhost:7007`), `environment.simply.ts` (prod → `https://api.paynsync.dk`), `environment.test.ts` (test). Konfigureres i `angular.json` via `fileReplacements`.
-4. **`DevController` i prod** — `DELETE /api/dev/reset` og `POST /api/dev/seed-merchant-urls` er deployet til produktion uden auth-beskyttelse.
-5. **ReadyToPay-implementering** — Hvis eksisterende kode stadig sætter `ReadyToPay` på baggrund af `OrderSubmitted`, skal den ændres. Fremadrettet må `ReadyToPay` kun sættes, når alle relevante `ParticipantPayment`-records er `Reserved`.
+4. **ReadyToPay-implementering** — Hvis eksisterende kode stadig sætter `ReadyToPay` på baggrund af `OrderSubmitted`, skal den ændres. Fremadrettet må `ReadyToPay` kun sættes, når alle relevante `ParticipantPayment`-records er `Reserved`.
