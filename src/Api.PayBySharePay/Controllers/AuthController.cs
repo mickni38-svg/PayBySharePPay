@@ -161,6 +161,7 @@ public class AuthController : ControllerBase
                 Token = token,
                 ParticipantId = person.Id,
                 Name = person.Name,
+                ParticipantType = person.Type,
                 ExpiresAt = expiresAt
             });
         }
