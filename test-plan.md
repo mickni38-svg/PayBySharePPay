@@ -1,37 +1,37 @@
-# Test plan — UC-03
+# Test plan — UC-04
 
-## Automatiske tests
+## Automatiske komponenttests
 
 Udvid `create-order.component.spec.ts` med:
 
-- direkte adgang uden merchant-state sender brugeren til forsiden;
-- ukendt eller ikke-ven merchant-ID sender brugeren til forsiden;
-- merchantkortet bruger valideret navn og logo fra den eksisterende service;
-- kun `Person`-venner vises som deltagere;
-- værten filtreres fra;
-- den valgte merchant filtreres fra;
-- dublerede personer deduplikeres efter ID;
-- søgning matcher navn og sekundær tekst uden forskel på store/små bogstaver;
-- valg og fravalg ændrer kun den valgte persons state;
-- samme deltager kan ikke forekomme eller vælges to gange;
-- næste-knappen er deaktiveret uden deltagere;
-- mindst én deltager gør trin 1 gyldigt og åbner trin 2;
-- merchant, HostUserId og valgte deltager-ID'er er bevaret i wizard-state;
-- frem/tilbage-navigation bevarer deltagervalg;
-- fejlet venneindlæsning giver en stabil fejltilstand.
+- trin 2 viser overskrift, hjælpetekst og trinindikator 2 af 3;
+- tom titel og titel med kun mellemrum holder **Næste** deaktiveret;
+- titel på 80 tegn accepteres, og titel på 81 tegn afvises defensivt;
+- titel trimmes før lagring i wizard-state;
+- tom besked accepteres;
+- besked på 500 tegn accepteres, og besked på 501 tegn afvises defensivt;
+- titel- og beskedtællere følger de aktuelle værdier;
+- flere linjer, danske tegn og emoji bevares uændret i beskeden;
+- emoji er ikke længere et obligatorisk felt eller valideringskrav;
+- opsummeringskortet viser dynamisk merchantnavn, rigtigt logo og korrekt deltagerantal;
+- tilbage til trin 1 og frem igen bevarer titel, besked og deltagervalg;
+- næste gemmer detaljerne i den eksisterende wizard-state og åbner trin 3;
+- manglende deltager-state forhindrer trin 2 og sender brugeren tilbage til trin 1;
+- ugyldig merchant-state følger den eksisterende navigation tilbage til forsiden;
+- den eksisterende create-request kan fortsat oprettes med `category` udeladt.
 
 ## Build og test
 
 - Kør `npx ng test --watch=false --browsers=ChromeHeadless`.
 - Kør `npx ng build --configuration simply`.
-- Lad GitHub Actions køre både .NET-testjobbet og Angular-test/build-jobbet.
-- Gennemgå PR-diffen for ændringer uden for UC-03.
+- Lad GitHub Actions køre .NET-testjobbet og Angular-test/build-jobbet.
+- Gennemgå PR-diffen for ændringer uden for UC-04.
 
 ## Manuel kontrol
 
-- Sammenlign trin 1 med `docs/images/wizard1.jpeg`.
-- Kontrollér den smalle mobilbredde og sort/blå styling.
-- Kontrollér kompakt merchant-logo i samme visuelle størrelse som på forsiden.
-- Kontrollér fravær af "Valgt", flueben, Skift og merchant-søgning.
-- Kontrollér søgning, valg/fravalg og valgt antal med touch.
-- Kontrollér at tilbage fra trin 1 går til forsiden uden at oprette data.
+- Sammenlign trin 2 med `docs/images/wizard2.jpeg`.
+- Kontrollér sort tema, smal mobilbredde og blå accent.
+- Kontrollér placering, størrelse og læsbarhed af begge tegntællere.
+- Kontrollér at merchantlogoet bevarer proportionerne og ikke beskæres uhensigtsmæssigt.
+- Kontrollér at langt indhold og 500 tegn ikke bryder mobil-layoutet.
+- Kontrollér frem/tilbage-navigation med touch uden tab af state.
