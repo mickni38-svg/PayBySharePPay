@@ -4,7 +4,7 @@
 
 Mappen er PayNSyncs nummererede feature-backlog. Implementér kun én use case ad gangen. Hver ny opgave skal følge repoets analyse-, plan-, approval-, test- og review-workflow.
 
-## Implementeringsprofil for UC-08–UC-14
+## Implementeringsprofil for UC-08–UC-15
 
 - **Anbefalet model:** GPT-5.6 Sol
 - **Reasoning:** Medium
