@@ -3,7 +3,7 @@ import { of, throwError } from 'rxjs';
 import { DirectoryEntry } from '../../core/models/directory.model';
 import { CreateOrderComponent } from './create-order.component';
 
-describe('CreateOrderComponent UC-03 participant step', () => {
+describe('CreateOrderComponent UC-03/UC-04 wizard', () => {
   const host: DirectoryEntry = {
     id: 7,
     type: 'Person',
@@ -74,6 +74,15 @@ describe('CreateOrderComponent UC-03 participant step', () => {
       ),
       router
     };
+  }
+
+  function openStep2(): CreateOrderComponent {
+    setMerchantState();
+    const { component } = createComponent();
+    component.ngOnInit();
+    component.togglePerson(component.persons()[0]);
+    component.goNext();
+    return component;
   }
 
   it('redirects home when opened without merchant state', () => {
@@ -222,5 +231,98 @@ describe('CreateOrderComponent UC-03 participant step', () => {
     expect(component.loadError()).toBe('Kunne ikke hente deltagere. Prøv igen.');
     expect(component.persons()).toEqual([]);
     expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it('UC-04 rejects empty and whitespace-only titles', () => {
+    const component = openStep2();
+
+    component.title.set('   ');
+    expect(component.canContinue()).toBeFalse();
+    component.goNext();
+
+    expect(component.currentStep()).toBe(2);
+    expect(component.stepError()).toBe('Titel skal udfyldes');
+  });
+
+  it('UC-04 accepts 80 title characters, rejects 81, and trims before storing', () => {
+    const component = openStep2();
+
+    component.title.set('x'.repeat(80));
+    expect(component.canContinue()).toBeTrue();
+
+    component.title.set('x'.repeat(81));
+    expect(component.canContinue()).toBeFalse();
+
+    component.title.set('  Pizzaaften  ');
+    component.goNext();
+
+    expect(component.currentStep()).toBe(3);
+    expect(component.title()).toBe('Pizzaaften');
+    expect(component.wizardState().title).toBe('Pizzaaften');
+  });
+
+  it('UC-04 accepts an empty or 500-character message and rejects 501 characters', () => {
+    const component = openStep2();
+    component.title.set('Pizzaaften');
+
+    component.message.set('');
+    expect(component.canContinue()).toBeTrue();
+
+    component.message.set('a'.repeat(500));
+    expect(component.canContinue()).toBeTrue();
+
+    component.message.set('a'.repeat(501));
+    expect(component.canContinue()).toBeFalse();
+  });
+
+  it('UC-04 preserves multiline Danish text and emoji exactly in wizard state', () => {
+    const component = openStep2();
+    const message = 'Hej alle 👋\nVi mødes kl. 18.30\nGlæder mig til pizza 🍕';
+
+    component.title.set('  Fredagspizza  ');
+    component.message.set(message);
+    component.goNext();
+
+    expect(component.currentStep()).toBe(3);
+    expect(component.wizardState().title).toBe('Fredagspizza');
+    expect(component.wizardState().message).toBe(message);
+  });
+
+  it('UC-04 exposes the dynamic merchant and participant count from step 1 state', () => {
+    const component = openStep2();
+
+    expect(component.wizardState().merchant?.displayName).toBe('Test Bistro');
+    expect(component.wizardState().participantIds).toEqual([anna.id]);
+    expect(component.selectedParticipants().length).toBe(1);
+  });
+
+  it('UC-04 preserves title, message and participants when navigating back and forward', () => {
+    const component = openStep2();
+    const message = 'Linje 1\nLinje 2 😊';
+
+    component.title.set('Pizzaaften');
+    component.message.set(message);
+    component.goBack();
+
+    expect(component.currentStep()).toBe(1);
+    expect(component.selectedParticipants().map(person => person.id)).toEqual([anna.id]);
+
+    component.goNext();
+    expect(component.currentStep()).toBe(2);
+    expect(component.title()).toBe('Pizzaaften');
+    expect(component.message()).toBe(message);
+  });
+
+  it('UC-04 returns to participant step if participants become invalid before continuing', () => {
+    const component = openStep2();
+    component.goBack();
+    component.togglePerson(component.persons()[0]);
+    component.currentStep.set(2);
+    component.title.set('Pizzaaften');
+
+    component.goNext();
+
+    expect(component.currentStep()).toBe(1);
+    expect(component.stepError()).toBe('Vælg mindst én deltager');
   });
 });
