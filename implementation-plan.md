@@ -1,70 +1,62 @@
-# Implementation plan — UC-09
+# Implementation plan — UC-15
 
-## Klassifikation
+## Klassifikation og approval
 
-- Opgavetype: `SECURITY_FIX`
-- Use case: `docs/usecases/UC-09-beskyt-dev-endpoints.md`
-- Database/migration: ingen
+- Opgavetype: `NEW_USE_CASE`
+- Use case: `docs/usecases/UC-15-profil-og-kontocenter.md`
+- Modelprofil: GPT-5.6 Sol, Medium
+- Approval: Product Owner godkendte implementering direkte på `main`
+- Database/migration: ingen forventet
 - Dependencies: ingen nye
-- Frontend: ingen ændring
-- Deployment/secrets: ingen ændring
-- Godkendelse: brugerens direkte implementeringsordre dækker det afgrænsede UC-09-scope
+- Deployment: ingen
 
-## Forståelse
+## Nuværende gaps
 
-UC-09 skal gøre hele `DevController` utilgængelig i Simply, Production, Local og alle andre miljøer end ASP.NET Core `Development`. I Development skal de eksisterende udviklerruter fungere uændret.
+- Profil, tema, mapping og development-værktøjer ligger i én lang formular.
+- Merchant-frontend sender ikke det påkrævede MSN.
+- Merchantregistrering gemmer ikke konto-email eller password-hash.
+- Login finder kun Person.
+- En tom password-request omgår den nuværende password-verifikation.
+- Development-panelet vises i production-frontend, selv om UC-09 har fjernet backend-ruterne.
 
-Controlleren indeholder fire actions:
+## Backend
 
-- `DELETE /api/dev/reset`
-- `POST /api/dev/seed-merchant-urls`
-- `POST /api/dev/simulate-authorized`
-- `GET /api/dev/merchant-callbacks/latest`
+1. Udvid `RegisterMerchantRequest` og `CreateMerchantDto` med required konto-email og password.
+2. Gem merchant-email i `Participant.Email` og hash password med samme BCrypt-mønster som Person.
+3. Gør repository email-lookup typeuafhængigt.
+4. Gør login fælles for Person og Merchant.
+5. Kræv password ved normalt login.
+6. Tillad kun passwordløst login for passwordløse Person-seedkonti i ASP.NET Core Development.
+7. Udvid `LoginResponse` med `ParticipantType` og returnér typen fra login, registrering og Google-login.
+8. Bevar generiske 401-fejl og eksponér aldrig password-hash.
+9. Ingen entity- eller migrationsændring.
 
-## Trusselsanalyse
+## Frontend
 
-| Punkt | Vurdering |
-|---|---|
-| Trussel | En ekstern bruger kalder test-/udviklerruter i et deployet miljø |
-| Aktiv | Ordrer, betalinger, beskeder, merchant-konfiguration og test-callbackdata |
-| Angriberens mulighed | Ruterne er offentligt registreret uden authentication |
-| Svaghed | `DevController` opdages og mappes i alle environments |
-| Konsekvens | Destruktiv datasletning, test-stateændringer og informationslæk |
-| Mitigation | Fjern hele `DevController` fra MVC controller discovery uden for `Development` |
-| Residual risiko | Andre anonyme endpoints og generel adminfunktionalitet er uden for UC-09 |
-
-## Design
-
-1. Tilføj en lille `IApplicationFeatureProvider<ControllerFeature>`, der fjerner `DevController` fra controller feature-listen, medmindre environment-navnet er `Development`.
-2. Registrér provideren ved `AddControllers()` i `Program.cs`.
-3. Bevar `DevController` og alle fire actions uændret.
-4. Fordi controlleren ikke opdages i ikke-Development:
-   - registreres ingen `/api/dev/*` routes;
-   - kald returnerer 404;
-   - controllerens database-/serviceafhængigheder kan ikke aktiveres gennem HTTP;
-   - Swagger/OpenAPI får ingen dev-actions at beskrive.
-5. Ingen JWT-rolle eller skjult admin-password tilføjes.
+1. Udvid AuthService-sessionen med participant-type under de eksisterende localStorage-nøgler.
+2. Udvid merchant-requesten med email, password og Vipps MSN.
+3. Gør `/profile` til samlet kontocenter med hovedfanerne Konto, Vipps-test og Development-only Udvikler.
+4. Konto indeholder modes Min profil, Log ind og Opret konto; oprettelse skifter mellem Bruger og Merchant.
+5. Genbrug eksisterende profil-, theme-, auth-, directory-, Vipps- og dev-services.
+6. Hent directory/Vipps-data først, når den relevante fane åbnes.
+7. Skjul Vipps-test for ikke-Person/ikke-logget ind og Udvikler helt i production.
+8. Bevar gamle `/login` og `/register` links som redirects til query-parametre på `/profile`.
+9. Bevar mobil-first, temaer, touch targets, bottom-nav-frirum og tilgængelige tab-semantikker.
+10. Person går til home efter login/oprettelse; Merchant går til Min profil.
 
 ## Forventede filer
 
-- `src/Api.PayBySharePay/Program.cs`
-- ny feature-provider under `src/Api.PayBySharePay/Controllers`
-- ny fokuseret testfil under `src/Tests.PayBySharePay`
-- `implementation-plan.md`
-- `test-plan.md`
-- `docs/usecases/UC-09-beskyt-dev-endpoints.md`
-- `docs/current-state.md`
-- relevante sikkerheds-/arkitekturdokumenter
+- API auth controller og auth DTO'er
+- participant DTO/service/repository
+- Angular AuthService, routes og profile component/template/styles/tests
+- eventuelt login/register komponenter kun hvis kompatibilitetsredirect kræver det
+- fokuserede backend auth-tests
+- berørte dokumenter efter grøn verification
 
-## API- og kompatibilitetspåvirkning
+## Risici
 
-- Development: ingen ændring.
-- Simply/Production/Local/andre miljøer: alle `/api/dev/*` routes fjernes og giver 404.
-- Ingen almindelige API-ruter ændres.
-- Ingen database-, provider-, frontend- eller kontraktændring.
-
-## Risici og afværgning
-
-- En action kan overses ved individuel route-filtrering; derfor fjernes hele controlleren.
-- Et filter kunne stadig annoncere routes i Swagger; controller discovery anvendes, så både routing og OpenAPI udelades.
-- Environment-navne kan variere; kun frameworkets præcise `Development`-navn tillades, alt andet er deny-by-default.
+- Eksisterende passwordløse production-data må ikke kunne logge ind uden password.
+- Email-lookup på tværs af typer kan afdække historiske dubletter; nye registreringer skal afvise dem deterministisk.
+- Gamle localStorage-sessioner mangler participant-type; UI skal kunne falde tilbage til indlæst profiltype.
+- UC-09 må ikke svækkes: dev-fanen er frontend-skjult, og backend forbliver route-fraværende uden for Development.
+- Merchant-dashboard og merchant-masterdataredigering er uden for scope.
