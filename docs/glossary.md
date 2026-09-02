@@ -26,7 +26,7 @@ Host har eneret til at:
 - Annullere ordren (`/cancel`)
 - Afslutte via det gamle flow (`/complete`, `/pay`)
 
-Host-tjek sker i koden ved at sammenligne `requestingParticipantId` med `Order.CreatedByParticipantId`.
+Host-tjek sker ved at udlede den aktuelle deltagers ID fra det validerede JWT-claim `NameIdentifier`/`sub` og sammenligne det med `Order.CreatedByParticipantId`. Et legacy `requestingParticipantId` i request-body ignoreres ved autorisation. Manglende identitet giver 401; en autentificeret ikke-host får 403.
 
 > Kode: `Order.CreatedByParticipantId`  
 > Dansk: "Vært"
