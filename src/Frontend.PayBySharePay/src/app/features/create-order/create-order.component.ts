@@ -35,6 +35,8 @@ export interface CreateOrderWizardState {
   merchant: MerchantVM | null;
   participantIds: number[];
   participants: ParticipantVM[];
+  title: string;
+  message: string;
 }
 
 const AVATAR_COLORS = [
@@ -88,17 +90,19 @@ export class CreateOrderComponent implements OnInit {
     this.persons().filter(person => person.selected)
   );
 
+  title = signal('');
+  message = signal('');
+  emoji = signal('');
+
   wizardState = computed<CreateOrderWizardState>(() => ({
     hostUserId: this.hostUserId(),
     merchantId: this.selectedMerchant()?.id ?? null,
     merchant: this.selectedMerchant(),
     participantIds: this.selectedParticipants().map(person => person.id),
-    participants: this.selectedParticipants()
+    participants: this.selectedParticipants(),
+    title: this.title(),
+    message: this.message()
   }));
-
-  title = signal('');
-  emoji = signal('');
-  message = '';
 
   isSubmitting = signal(false);
   errorMessage = signal<string | null>(null);
@@ -109,7 +113,12 @@ export class CreateOrderComponent implements OnInit {
     }
 
     if (this.currentStep() === 2) {
-      return this.title().trim().length > 0 && this.emoji().trim().length > 0;
+      const trimmedTitle = this.title().trim();
+      return trimmedTitle.length > 0 &&
+        trimmedTitle.length <= 80 &&
+        this.message().length <= 500 &&
+        this.selectedMerchant() !== null &&
+        this.selectedParticipants().length > 0;
     }
 
     return true;
@@ -117,7 +126,8 @@ export class CreateOrderComponent implements OnInit {
 
   canSubmit = computed(() =>
     this.title().trim().length > 0 &&
-    this.emoji().trim().length > 0 &&
+    this.title().trim().length <= 80 &&
+    this.message().length <= 500 &&
     this.selectedMerchant() !== null &&
     this.selectedParticipants().length > 0 &&
     !this.isSubmitting()
@@ -211,14 +221,31 @@ export class CreateOrderComponent implements OnInit {
     }
 
     if (this.currentStep() === 2) {
-      if (!this.title().trim()) {
+      if (!this.selectedMerchant()) {
+        this.router.navigate(['/home']);
+        return false;
+      }
+      if (this.selectedParticipants().length === 0) {
+        this.currentStep.set(1);
+        this.stepError.set('Vælg mindst én deltager');
+        return false;
+      }
+
+      const trimmedTitle = this.title().trim();
+      if (!trimmedTitle) {
         this.stepError.set('Titel skal udfyldes');
         return false;
       }
-      if (!this.emoji().trim()) {
-        this.stepError.set('Vælg en emoji');
+      if (trimmedTitle.length > 80) {
+        this.stepError.set('Titel må højst være 80 tegn');
         return false;
       }
+      if (this.message().length > 500) {
+        this.stepError.set('Besked må højst være 500 tegn');
+        return false;
+      }
+
+      this.title.set(trimmedTitle);
     }
 
     return true;
@@ -275,8 +302,13 @@ export class CreateOrderComponent implements OnInit {
   submit(): void {
     this.stepError.set(null);
 
-    if (!this.title().trim() || !this.emoji().trim()) {
-      this.stepError.set('Udfyld venligst titel og kategori.');
+    const trimmedTitle = this.title().trim();
+    if (!trimmedTitle || trimmedTitle.length > 80) {
+      this.stepError.set('Udfyld venligst en gyldig titel.');
+      return;
+    }
+    if (this.message().length > 500) {
+      this.stepError.set('Besked må højst være 500 tegn');
       return;
     }
     if (!this.selectedMerchant()) {
@@ -289,14 +321,15 @@ export class CreateOrderComponent implements OnInit {
     }
     if (this.isSubmitting()) return;
 
+    this.title.set(trimmedTitle);
     this.isSubmitting.set(true);
     this.errorMessage.set(null);
 
     this.orderService.createOrder({
       createdByParticipantId: this.hostUserId() ?? 0,
-      title: this.title().trim(),
+      title: trimmedTitle,
       category: this.emoji().trim() || undefined,
-      message: this.message.trim() || undefined,
+      message: this.message() || undefined,
       merchantParticipantId: this.selectedMerchant()?.id,
       participantIds: this.selectedParticipants().map(person => person.id)
     }).subscribe({
