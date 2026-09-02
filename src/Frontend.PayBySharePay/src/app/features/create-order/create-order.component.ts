@@ -35,6 +35,8 @@ export interface CreateOrderWizardState {
   merchant: MerchantVM | null;
   participantIds: number[];
   participants: ParticipantVM[];
+  title: string;
+  message: string;
 }
 
 const AVATAR_COLORS = [
@@ -64,6 +66,8 @@ function avatarColor(name: string): string {
 export class CreateOrderComponent implements OnInit {
   currentStep = signal(1);
   readonly totalSteps = 3;
+  readonly titleMaxLength = 80;
+  readonly messageMaxLength = 500;
   stepError = signal<string | null>(null);
 
   hostUserId = signal<number | null>(null);
@@ -93,33 +97,44 @@ export class CreateOrderComponent implements OnInit {
     merchantId: this.selectedMerchant()?.id ?? null,
     merchant: this.selectedMerchant(),
     participantIds: this.selectedParticipants().map(person => person.id),
-    participants: this.selectedParticipants()
+    participants: this.selectedParticipants(),
+    title: this.title(),
+    message: this.message()
   }));
 
   title = signal('');
   emoji = signal('');
-  message = '';
+  message = signal('');
 
   isSubmitting = signal(false);
   errorMessage = signal<string | null>(null);
 
+  hasValidWizardBase = computed(() =>
+    this.selectedMerchant() !== null && this.selectedParticipants().length > 0
+  );
+
+  detailsAreValid = computed(() => {
+    const titleLength = this.title().trim().length;
+    return this.hasValidWizardBase() &&
+      titleLength > 0 &&
+      titleLength <= this.titleMaxLength &&
+      this.message().length <= this.messageMaxLength;
+  });
+
   canContinue = computed(() => {
     if (this.currentStep() === 1) {
-      return this.selectedParticipants().length > 0;
+      return this.hasValidWizardBase();
     }
 
     if (this.currentStep() === 2) {
-      return this.title().trim().length > 0 && this.emoji().trim().length > 0;
+      return this.detailsAreValid();
     }
 
     return true;
   });
 
   canSubmit = computed(() =>
-    this.title().trim().length > 0 &&
-    this.emoji().trim().length > 0 &&
-    this.selectedMerchant() !== null &&
-    this.selectedParticipants().length > 0 &&
+    this.detailsAreValid() &&
     !this.isSubmitting()
   );
 
@@ -211,12 +226,27 @@ export class CreateOrderComponent implements OnInit {
     }
 
     if (this.currentStep() === 2) {
-      if (!this.title().trim()) {
+      if (!this.selectedMerchant()) {
+        this.router.navigate(['/home']);
+        return false;
+      }
+      if (this.selectedParticipants().length === 0) {
+        this.currentStep.set(1);
+        this.stepError.set('Vælg mindst én deltager');
+        return false;
+      }
+
+      const trimmedTitle = this.title().trim();
+      if (!trimmedTitle) {
         this.stepError.set('Titel skal udfyldes');
         return false;
       }
-      if (!this.emoji().trim()) {
-        this.stepError.set('Vælg en emoji');
+      if (trimmedTitle.length > this.titleMaxLength) {
+        this.stepError.set(`Titel må højst være ${this.titleMaxLength} tegn`);
+        return false;
+      }
+      if (this.message().length > this.messageMaxLength) {
+        this.stepError.set(`Besked må højst være ${this.messageMaxLength} tegn`);
         return false;
       }
     }
@@ -226,6 +256,9 @@ export class CreateOrderComponent implements OnInit {
 
   goNext(): void {
     if (!this.validateCurrentStep()) return;
+    if (this.currentStep() === 2) {
+      this.title.set(this.title().trim());
+    }
     if (this.currentStep() < this.totalSteps) {
       this.currentStep.update(step => step + 1);
     }
@@ -275,8 +308,8 @@ export class CreateOrderComponent implements OnInit {
   submit(): void {
     this.stepError.set(null);
 
-    if (!this.title().trim() || !this.emoji().trim()) {
-      this.stepError.set('Udfyld venligst titel og kategori.');
+    if (!this.detailsAreValid()) {
+      this.stepError.set('Udfyld venligst en gyldig titel og besked.');
       return;
     }
     if (!this.selectedMerchant()) {
@@ -296,7 +329,7 @@ export class CreateOrderComponent implements OnInit {
       createdByParticipantId: this.hostUserId() ?? 0,
       title: this.title().trim(),
       category: this.emoji().trim() || undefined,
-      message: this.message.trim() || undefined,
+      message: this.message().length > 0 ? this.message() : undefined,
       merchantParticipantId: this.selectedMerchant()?.id,
       participantIds: this.selectedParticipants().map(person => person.id)
     }).subscribe({
