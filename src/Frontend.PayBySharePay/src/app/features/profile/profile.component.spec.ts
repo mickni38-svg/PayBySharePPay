@@ -4,7 +4,7 @@ import { ProfileComponent } from './profile.component';
 
 describe('ProfileComponent', () => {
   function createComponent(options?: {
-    loginResult?: ReturnType<typeof of> | ReturnType<typeof throwError>;
+    loginResult?: any;
   }): {
     component: ProfileComponent;
     auth: {
