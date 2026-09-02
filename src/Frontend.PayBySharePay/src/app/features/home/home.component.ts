@@ -5,13 +5,10 @@ import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
-import { DirectoryService } from '../../core/services/directory.service';
 import { OrderService } from '../../core/services/order.service';
 import { MessageService } from '../../core/services/message.service';
-import { DevService } from '../../core/services/dev.service';
 import { FriendService } from '../../core/services/friend.service';
 import { ThemeService } from '../../core/services/theme.service';
-import { DirectoryEntry } from '../../core/models/directory.model';
 import { computePendingSummary } from '../../core/models/order.model';
 import { getStaticMerchantLogoUrl } from '../../core/utils/merchant-logo';
 import {
@@ -73,14 +70,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   statusCards = signal<StatusCard[]>([]);
   dismissedAllPaidIds = signal<Set<number>>(new Set());
   readyToPayCount = signal<number>(0);
-  persons = signal<DirectoryEntry[]>([]);
   friendCount = signal<number | null>(null);
-  selectedEmail = '';
-  loginError = signal<string | null>(null);
-  loginLoading = signal(false);
-  resetLoading = signal(false);
-  resetMessage = signal<string | null>(null);
-  devPanelOpen = signal(false);
 
   // Merchant carousel
   allMerchants = signal<MerchantCard[]>([]);
@@ -96,20 +86,14 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   constructor(
     readonly auth: AuthService,
-    private directory: DirectoryService,
     private orderService: OrderService,
     readonly messageService: MessageService,
     protected readonly themeService: ThemeService,
     private friendService: FriendService,
-    private devService: DevService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
-    this.directory.search('').subscribe({
-      next: (list) => this.persons.set(list.filter(e => e.type === 'Person')),
-      error: () => {}
-    });
     this.refreshData();
 
     this.routerSub = this.router.events.pipe(
@@ -308,41 +292,4 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.statusCards.set(this.statusCards().filter(c => c.orderId !== card.orderId));
   }
 
-  devReset(): void {
-    if (!confirm('Er du sikker? Dette sletter ALLE ordre og beskeder i databasen.')) return;
-    this.resetLoading.set(true);
-    this.resetMessage.set(null);
-    this.devService.resetData().subscribe({
-      next: () => {
-        this.resetLoading.set(false);
-        this.resetMessage.set('? Alle ordre og beskeder er slettet.');
-        this.refreshData();
-        setTimeout(() => this.resetMessage.set(null), 4000);
-      },
-      error: () => {
-        this.resetLoading.set(false);
-        this.resetMessage.set('? Fejl ved sletning – prøv igen.');
-      }
-    });
-  }
-
-  toggleDevPanel(): void {
-    this.devPanelOpen.update(v => !v);
-  }
-
-  devLogin(): void {
-    if (!this.selectedEmail) return;
-    this.loginLoading.set(true);
-    this.loginError.set(null);
-    this.auth.login(this.selectedEmail, '').subscribe({
-      next: () => {
-        this.loginLoading.set(false);
-        this.refreshData();
-      },
-      error: (err) => {
-        this.loginLoading.set(false);
-        this.loginError.set(err?.error?.message ?? 'Login fejlede');
-      }
-    });
-  }
 }
