@@ -200,7 +200,7 @@
                 <input id="login-password" [type]="showLoginPassword() ? 'text' : 'password'"
                   name="loginPassword" autocomplete="current-password"
                   [(ngModel)]="loginPassword" required />
-                <button type="button" (click)="showLoginPassword.update(value => !value)"
+                <button type="button" (click)="toggleLoginPasswordVisibility()"
                   [attr.aria-label]="showLoginPassword() ? 'Skjul adgangskode' : 'Vis adgangskode'">
                   {{ showLoginPassword() ? 'Skjul' : 'Vis' }}
                 </button>
