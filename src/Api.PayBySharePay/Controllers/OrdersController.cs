@@ -46,13 +46,35 @@ public class OrdersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest request)
     {
+        var title = request.Title.Trim();
+        if (title.Length == 0 || title.Length > 80)
+            return BadRequest(new { message = "Titel skal udfyldes og må højst være 80 tegn." });
+
+        if (request.Message?.Length > 500)
+            return BadRequest(new { message = "Besked må højst være 500 tegn." });
+
+        if (!request.MerchantParticipantId.HasValue)
+            return BadRequest(new { message = "Der skal vælges et spisested." });
+
+        if (request.ParticipantIds.Count == 0)
+            return BadRequest(new { message = "Vælg mindst én deltager." });
+
+        if (request.ParticipantIds.Contains(request.CreatedByParticipantId))
+            return BadRequest(new { message = "Værten må ikke være med i deltagerlisten." });
+
+        if (request.ParticipantIds.Contains(request.MerchantParticipantId.Value))
+            return BadRequest(new { message = "Spisestedet må ikke være med i deltagerlisten." });
+
+        if (request.ParticipantIds.Distinct().Count() != request.ParticipantIds.Count)
+            return BadRequest(new { message = "En deltager må kun vælges én gang." });
+
         var key = request.IdempotencyKey.Trim();
         var lazyCreate = CreateRequests.GetOrAdd(key, _ => new Lazy<Task<OrderDto>>(() =>
         {
             var dto = new CreateOrderDto
             {
                 CreatedByParticipantId = request.CreatedByParticipantId,
-                Title = request.Title,
+                Title = title,
                 Category = request.Category,
                 Message = request.Message,
                 MerchantParticipantId = request.MerchantParticipantId,
@@ -157,7 +179,6 @@ public class OrdersController : ControllerBase
     public async Task<IActionResult> PayOrder(int id, [FromBody] PayOrderRequest request)
     {
         var overview = await _orderService.GetOrderOverviewAsync(id);
-
         var amount = request.Amount > 0 ? request.Amount : overview.TotalAmount;
         var paymentResult = await _externalPaymentService.ChargeAsync(new(
             OrderId: id,
