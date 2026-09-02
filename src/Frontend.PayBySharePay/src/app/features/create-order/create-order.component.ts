@@ -9,13 +9,13 @@ import { DirectoryEntry } from '../../core/models/directory.model';
 import { getStaticMerchantLogoUrl } from '../../core/utils/merchant-logo';
 import { environment } from '../../../environments/environment';
 
-interface ParticipantVM extends DirectoryEntry {
+export interface ParticipantVM extends DirectoryEntry {
   initials: string;
   avatarColor: string;
   selected: boolean;
 }
 
-interface MerchantVM extends DirectoryEntry {
+export interface MerchantVM extends DirectoryEntry {
   initials: string;
   avatarColor: string;
   fallbackLogoUrl?: string;
@@ -70,12 +70,12 @@ export class CreateOrderComponent implements OnInit {
   selectedMerchant = signal<MerchantVM | null>(null);
 
   persons = signal<ParticipantVM[]>([]);
-  searchTerm = '';
+  searchTerm = signal('');
   isLoading = signal(false);
   loadError = signal<string | null>(null);
 
   filtered = computed(() => {
-    const term = this.searchTerm.toLocaleLowerCase('da').trim();
+    const term = this.searchTerm().toLocaleLowerCase('da').trim();
     if (!term) return this.persons();
 
     return this.persons().filter(person =>
