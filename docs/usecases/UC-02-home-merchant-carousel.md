@@ -1,5 +1,9 @@
 # FEATURE 02: Merchant-søgning og carousel på forsiden
 
+**Status:** Implementeret
+
+**Teknisk note:** Senest anvendte merchants gemmes pr. bruger i browserens `localStorage`. Brugere uden historik får alfabetisk sortering.
+
 ## Mål
 
 Den gamle knap **Opret ny gruppebetaling** erstattes af et søgefelt og en kompakt carousel med brugerens merchant-venner. Valg af en merchant er den eneste adgang til en ny gruppebetalingswizard.
