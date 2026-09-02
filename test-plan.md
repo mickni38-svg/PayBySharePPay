@@ -35,3 +35,10 @@ Udvid `create-order.component.spec.ts` med:
 - Kontrollér at merchantlogoet bevarer proportionerne og ikke beskæres uhensigtsmæssigt.
 - Kontrollér at langt indhold og 500 tegn ikke bryder mobil-layoutet.
 - Kontrollér frem/tilbage-navigation med touch uden tab af state.
+
+## Resultat
+
+- Angular komponenttests: ✅ bestået i GitHub Actions **Build & Test #122**.
+- Angular Simply-build: ✅ bestået lokalt og i GitHub Actions.
+- .NET build og tests: ✅ bestået i GitHub Actions.
+- Lokal Karma-kørsel kunne ikke starte, fordi arbejdscontaineren ikke har en Chrome-binær; den samme testkommando blev gennemført succesfuldt i CI.
