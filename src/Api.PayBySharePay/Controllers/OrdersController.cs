@@ -1,4 +1,6 @@
 using System.Collections.Concurrent;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using Api.PayBySharePay.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -144,7 +146,10 @@ public class OrdersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CompleteOrder(int id, [FromBody] CompleteOrderRequest request)
     {
-        var result = await _orderService.CompleteOrderAsync(id, request.RequestingParticipantId);
+        if (!TryGetAuthenticatedParticipantId(out var currentParticipantId))
+            return Unauthorized(new { error = "Tokenet indeholder ikke en gyldig brugeridentitet." });
+
+        var result = await _orderService.CompleteOrderAsync(id, currentParticipantId);
         return Ok(result);
     }
 
@@ -155,7 +160,10 @@ public class OrdersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CancelOrder(int id, [FromBody] CancelOrderRequest request)
     {
-        var result = await _orchestration.CancelOrderAsync(id, request.RequestingParticipantId);
+        if (!TryGetAuthenticatedParticipantId(out var currentParticipantId))
+            return Unauthorized(new { error = "Tokenet indeholder ikke en gyldig brugeridentitet." });
+
+        var result = await _orchestration.CancelOrderAsync(id, currentParticipantId);
         return Ok(result);
     }
 
@@ -166,7 +174,10 @@ public class OrdersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ApproveOrder(int id, [FromBody] ApproveOrderRequest request)
     {
-        var result = await _orchestration.ApproveAndCaptureAllAsync(id, request.RequestingParticipantId);
+        if (!TryGetAuthenticatedParticipantId(out var currentParticipantId))
+            return Unauthorized(new { error = "Tokenet indeholder ikke en gyldig brugeridentitet." });
+
+        var result = await _orchestration.ApproveAndCaptureAllAsync(id, currentParticipantId);
         return Ok(result);
     }
 
@@ -178,7 +189,13 @@ public class OrdersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> PayOrder(int id, [FromBody] PayOrderRequest request)
     {
+        if (!TryGetAuthenticatedParticipantId(out var currentParticipantId))
+            return Unauthorized(new { error = "Tokenet indeholder ikke en gyldig brugeridentitet." });
+
         var overview = await _orderService.GetOrderOverviewAsync(id);
+        if (overview.CreatedByParticipantId != currentParticipantId)
+            throw new UnauthorizedAccessException("Kun værten kan gennemføre betalingen.");
+
         var amount = request.Amount > 0 ? request.Amount : overview.TotalAmount;
         var paymentResult = await _externalPaymentService.ChargeAsync(new(
             OrderId: id,
@@ -193,7 +210,7 @@ public class OrdersController : ControllerBase
                 new { error = paymentResult.ErrorMessage ?? "Betaling afvist af betalingsudbyderen." });
         }
 
-        var order = await _orderService.CompleteOrderAsync(id, request.RequestingParticipantId);
+        var order = await _orderService.CompleteOrderAsync(id, currentParticipantId);
 
         return Ok(new PayOrderResponse
         {
@@ -201,5 +218,17 @@ public class OrdersController : ControllerBase
             Status = order.Status,
             PaymentReference = paymentResult.PaymentReference
         });
+    }
+    private bool TryGetAuthenticatedParticipantId(out int participantId)
+    {
+        participantId = 0;
+
+        if (User?.Identity?.IsAuthenticated != true)
+            return false;
+
+        var claimValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+
+        return int.TryParse(claimValue, out participantId) && participantId > 0;
     }
 }
