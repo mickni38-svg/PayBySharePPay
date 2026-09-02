@@ -1,5 +1,6 @@
 using System.Text;
 using Api.PayBySharePay.Auth;
+using Api.PayBySharePay.Controllers;
 using Api.PayBySharePay.Middleware;
 using Api.PayBySharePay.Services;
 using DataStorage.PayBySharePay.Context;
@@ -19,7 +20,12 @@ builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.Environment
 // Indlæs lokal override (aldrig committed til git — indeholder lokale secrets/nøgler)
 builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 
-builder.Services.AddControllers();
+var mvcBuilder = builder.Services.AddControllers();
+mvcBuilder.ConfigureApplicationPartManager(manager =>
+{
+    manager.FeatureProviders.Add(
+        new DevelopmentOnlyControllerFeatureProvider(builder.Environment.EnvironmentName));
+});
 
 // ── HttpClient til udgående kald (merchant callbacks) ────────────────────────
 builder.Services.AddHttpClient("MerchantCallback");
