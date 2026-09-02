@@ -49,6 +49,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Usecases", "Usecases", "{83
 		docs\usecases\UC-03-wizard-step-1-participants.md = docs\usecases\UC-03-wizard-step-1-participants.md
 		docs\usecases\UC-04-wizard-step-2-details.md = docs\usecases\UC-04-wizard-step-2-details.md
 		docs\usecases\UC-05-wizard-step-3-review-create.md = docs\usecases\UC-05-wizard-step-3-review-create.md
+		docs\usecases\UC-08-jwt-identitet-og-host-autorisation.md = docs\usecases\UC-08-jwt-identitet-og-host-autorisation.md
+		docs\usecases\UC-09-beskyt-dev-endpoints.md = docs\usecases\UC-09-beskyt-dev-endpoints.md
+		docs\usecases\UC-10-vipps-webhook-hmac.md = docs\usecases\UC-10-vipps-webhook-hmac.md
+		docs\usecases\UC-11-ens-jwt-udloebstid.md = docs\usecases\UC-11-ens-jwt-udloebstid.md
+		docs\usecases\UC-12-send-paamindelser.md = docs\usecases\UC-12-send-paamindelser.md
+		docs\usecases\UC-13-join-gruppeordre-med-token.md = docs\usecases\UC-13-join-gruppeordre-med-token.md
+		docs\usecases\UC-14-refunder-captured-betaling.md = docs\usecases\UC-14-refunder-captured-betaling.md
 	EndProjectSection
 EndProject
 Global
