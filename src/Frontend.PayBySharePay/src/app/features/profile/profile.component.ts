@@ -223,6 +223,10 @@ export class ProfileComponent implements OnInit, AfterViewInit {
     });
   }
 
+  toggleLoginPasswordVisibility(): void {
+    this.showLoginPassword.update(value => !value);
+  }
+
   private finishAuthentication(response: LoginResponse): void {
     this.loginLoading.set(false);
     this.registerLoading.set(false);
