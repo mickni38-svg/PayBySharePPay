@@ -52,10 +52,10 @@ public class ParticipantRepository : IParticipantRepository
 
     public async Task<Participant?> GetByEmailAsync(string email)
     {
+        var normalizedEmail = email.Trim().ToLower();
         return await _context.Participants
             .FirstOrDefaultAsync(p => p.Email != null &&
-                p.Email.ToLower() == email.ToLower() &&
-                p.Type == ParticipantType.Person);
+                p.Email.ToLower() == normalizedEmail);
     }
 
     public async Task<Participant> AddAsync(Participant participant)
