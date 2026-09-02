@@ -17,8 +17,6 @@ describe('HomeComponent UC-02', () => {
       {} as any,
       {} as any,
       {} as any,
-      {} as any,
-      {} as any,
       router as any
     );
   });

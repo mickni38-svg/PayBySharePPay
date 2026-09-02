@@ -108,6 +108,63 @@
           {{ isSaving() ? 'Gemmer&#8230;' : 'Gem &#230;ndringer' }}
         </button>
         <div class="profile__divider"></div>
+        <section class="profile__dev-panel" [class.profile__dev-panel--open]="devPanelOpen()">
+          <button
+            type="button"
+            class="dev-panel__title"
+            (click)="toggleDevPanel()"
+            [attr.aria-expanded]="devPanelOpen()"
+          >
+            <span>🛠 UDVIKLER LOGIN</span>
+            <span class="dev-panel__chevron" [class.dev-panel__chevron--open]="devPanelOpen()">▲</span>
+          </button>
+
+          @if (devPanelOpen()) {
+            <p class="dev-panel__info">Denne login bruges kun til udvikling.</p>
+
+            @if (!auth.isLoggedIn()) {
+              <select
+                class="profile__input dev-panel__select"
+                [(ngModel)]="selectedEmail"
+                name="developerEmail"
+                aria-label="Vælg testperson"
+              >
+                <option value="" disabled>Vælg testperson…</option>
+                @for (person of persons(); track person.id) {
+                  <option [value]="person.handle">
+                    {{ person.displayName }} ({{ person.handle }})
+                  </option>
+                }
+              </select>
+              @if (loginError()) {
+                <p class="dev-panel__error">{{ loginError() }}</p>
+              }
+              <button
+                type="button"
+                class="dev-panel__btn"
+                (click)="devLogin()"
+                [disabled]="!selectedEmail || loginLoading()"
+              >
+                {{ loginLoading() ? 'Logger ind…' : 'Log ind' }}
+              </button>
+              <a class="dev-panel__link" routerLink="/register">Opret dig som bruger</a>
+            }
+
+            <div class="dev-panel__divider"></div>
+            <button
+              type="button"
+              class="dev-panel__btn dev-panel__btn--danger"
+              (click)="devReset()"
+              [disabled]="resetLoading()"
+            >
+              {{ resetLoading() ? 'Sletter…' : '🗑 Slet alle ordre og beskeder' }}
+            </button>
+            @if (resetMessage()) {
+              <p class="dev-panel__reset-msg">{{ resetMessage() }}</p>
+            }
+          }
+        </section>
+        <div class="profile__divider"></div>
         <button type="button" class="profile__logout-btn" (click)="logout()">
           Log ud
         </button>

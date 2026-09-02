@@ -6,6 +6,9 @@ import { AuthService } from '../../core/services/auth.service';
 import { ProfileService, UpdateProfileRequest, VippsTestPersonDto } from '../../core/services/profile.service';
 import { ParticipantApiDto } from '../../core/models/participant.model';
 import { ThemeService } from '../../core/services/theme.service';
+import { DirectoryService } from '../../core/services/directory.service';
+import { DevService } from '../../core/services/dev.service';
+import { DirectoryEntry } from '../../core/models/directory.model';
 
 const NOTIF_KEY = 'sbys_notifications_enabled';
 
@@ -32,14 +35,29 @@ export class ProfileComponent implements OnInit {
   vippsSaving = signal(false);
   vippsSaveSuccess = signal(false);
 
+  persons = signal<DirectoryEntry[]>([]);
+  selectedEmail = '';
+  loginError = signal<string | null>(null);
+  loginLoading = signal(false);
+  resetLoading = signal(false);
+  resetMessage = signal<string | null>(null);
+  devPanelOpen = signal(false);
+
   constructor(
-    private readonly auth: AuthService,
+    readonly auth: AuthService,
     private readonly router: Router,
     private readonly profileService: ProfileService,
-    protected readonly themeService: ThemeService
+    protected readonly themeService: ThemeService,
+    private readonly directory: DirectoryService,
+    private readonly devService: DevService
   ) {}
 
   ngOnInit(): void {
+    this.directory.search('').subscribe({
+      next: (list) => this.persons.set(list.filter(entry => entry.type === 'Person')),
+      error: () => this.persons.set([])
+    });
+
     const stored = localStorage.getItem(NOTIF_KEY);
     this.notificationsEnabled.set(stored !== 'false');
 
@@ -87,6 +105,45 @@ export class ProfileComponent implements OnInit {
       },
       error: () => {
         this.vippsSaving.set(false);
+      }
+    });
+  }
+
+  toggleDevPanel(): void {
+    this.devPanelOpen.update(open => !open);
+  }
+
+  devLogin(): void {
+    if (!this.selectedEmail) return;
+
+    this.loginLoading.set(true);
+    this.loginError.set(null);
+    this.auth.login(this.selectedEmail, '').subscribe({
+      next: () => {
+        this.loginLoading.set(false);
+        this.router.navigate(['/home']);
+      },
+      error: (error) => {
+        this.loginLoading.set(false);
+        this.loginError.set(error?.error?.message ?? 'Login fejlede');
+      }
+    });
+  }
+
+  devReset(): void {
+    if (!confirm('Er du sikker? Dette sletter ALLE ordre og beskeder i databasen.')) return;
+
+    this.resetLoading.set(true);
+    this.resetMessage.set(null);
+    this.devService.resetData().subscribe({
+      next: () => {
+        this.resetLoading.set(false);
+        this.resetMessage.set('Alle ordre og beskeder er slettet.');
+        setTimeout(() => this.resetMessage.set(null), 4000);
+      },
+      error: () => {
+        this.resetLoading.set(false);
+        this.resetMessage.set('Fejl ved sletning – prøv igen.');
       }
     });
   }

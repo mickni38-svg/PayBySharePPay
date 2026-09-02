@@ -226,43 +226,4 @@
 
 
 
-  <!-- Diskret dev-panel nederst -->
-  <section class="home__dev-panel" [class.home__dev-panel--open]="devPanelOpen()">
-    <button class="dev-panel__title" (click)="toggleDevPanel()"
-            [attr.aria-expanded]="devPanelOpen()">
-      <span>🛠 UDVIKLER LOGIN</span>
-      <span class="dev-panel__chevron" [class.dev-panel__chevron--open]="devPanelOpen()">▲</span>
-    </button>
-
-    @if (devPanelOpen()) {
-      <p class="dev-panel__info">Denne login bruges kun til udvikling.</p>
-
-      @if (!auth.isLoggedIn()) {
-        <select class="form-input dev-panel__select" [(ngModel)]="selectedEmail">
-          <option value="" disabled>Vælg testperson…</option>
-          @for (p of persons(); track p.id) {
-            <option [value]="p.handle">{{ p.displayName }} ({{ p.handle }})</option>
-          }
-        </select>
-        @if (loginError()) {
-          <p class="dev-panel__error">{{ loginError() }}</p>
-        }
-        <button class="dev-panel__btn" (click)="devLogin()"
-                [disabled]="!selectedEmail || loginLoading()">
-          {{ loginLoading() ? 'Logger ind…' : 'Log ind' }}
-        </button>
-        <a class="dev-panel__link" routerLink="/register">Opret dig som bruger</a>
-      }
-
-      <div class="dev-panel__divider"></div>
-      <button class="dev-panel__btn dev-panel__btn--danger" (click)="devReset()"
-              [disabled]="resetLoading()">
-        {{ resetLoading() ? 'Sletter…' : '🗑 Slet alle ordre og beskeder' }}
-      </button>
-      @if (resetMessage()) {
-        <p class="dev-panel__reset-msg">{{ resetMessage() }}</p>
-      }
-    }
-  </section>
-
 </div>
