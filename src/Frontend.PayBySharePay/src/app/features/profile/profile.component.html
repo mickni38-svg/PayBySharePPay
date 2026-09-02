@@ -1,174 +1,453 @@
-<div class="profile">
-  <div class="profile__header">
-    <a class="page-back" routerLink="/home">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+<div class="account-center">
+  <header class="account-center__header">
+    <a class="page-back" routerLink="/home" aria-label="Tilbage til forsiden">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
       Hjem
     </a>
-  </div>
-  <div class="profile__body">
-    @if (isLoading()) {
-      <div class="profile__loading">Henter profil&#8230;</div>
-    } @else {
-      <form class="profile__form" (ngSubmit)="save()">
-        <div class="profile__field">
-          <label class="profile__label" for="profile-name">Navn</label>
-          <input id="profile-name" class="profile__input" type="text"
-            [ngModel]="name()" (ngModelChange)="name.set($event)"
-            name="name" placeholder="Dit navn" required />
-        </div>
-        <div class="profile__field">
-          <label class="profile__label" for="profile-email">E-mail</label>
-          <input id="profile-email" class="profile__input" type="email"
-            [ngModel]="email()" (ngModelChange)="email.set($event)"
-            name="email" placeholder="din@email.dk" />
-        </div>
-        <div class="profile__field">
-          <label class="profile__label" for="profile-phone">Telefon</label>
-          <input id="profile-phone" class="profile__input" type="tel"
-            [ngModel]="phone()" (ngModelChange)="phone.set($event)"
-            name="phone" placeholder="+45 12 34 56 78" />
-        </div>
-        <div class="profile__divider"></div>
-        <div class="profile__toggle-row">
-          <div class="profile__toggle-info">
-            <span class="profile__toggle-label">Notifikationer</span>
-            <span class="profile__toggle-desc">Modtag beskeder om dine betalinger</span>
-          </div>
-          <button type="button" class="profile__toggle"
-            [class.profile__toggle--on]="notificationsEnabled()"
-            (click)="toggleNotifications()"
-            [attr.aria-checked]="notificationsEnabled()" role="switch">
-            <span class="profile__toggle-thumb"></span>
-          </button>
-        </div>
-        <div class="profile__divider"></div>
-        <div class="profile__section-title">&#x1F9EA; Vipps testperson</div>
-        <p class="profile__section-desc">V&#230;lg hvilken testperson du er i Vipps sandbox</p>
-        <div class="profile__field">
-          <select class="profile__input profile__select"
-            [ngModel]="selectedVippsTestUserId()"
-            (ngModelChange)="selectedVippsTestUserId.set($event === 'null' ? null : +$event)"
-            name="vippsTestUser">
-            <option [ngValue]="null">&#8212; Ingen &#8212;</option>
-            @for (person of vippsTestPersons(); track person.id) {
-              <option [ngValue]="person.id"
-                      [disabled]="isVippsPersonDisabled(person)">
-                {{ person.name }}
-                @if (person.phone) { ({{ person.phone }}) }
-                @if (isVippsPersonDisabled(person)) { &#8212; optaget }
-              </option>
-            }
-          </select>
-        </div>
-        @if (vippsSaveSuccess()) {
-          <div class="profile__feedback profile__feedback--success">&#10003; Mapping gemt</div>
-        }
-        <button type="button" class="profile__save-btn profile__save-btn--secondary"
-          [disabled]="vippsSaving()"
-          (click)="saveVippsMapping()">
-          {{ vippsSaving() ? 'Gemmer&#8230;' : 'Gem Vipps-mapping' }}
-        </button>
-        <div class="profile__divider"></div>
-        <div class="profile__section-title">Tema</div>
-        <div class="profile__themes">
-          <button type="button" class="profile__theme-btn"
-            [class.profile__theme-btn--active]="themeService.current() === 'default'"
-            (click)="themeService.setTheme('default')">
-            <span class="profile__theme-preview profile__theme-preview--default"></span>
-            <span class="profile__theme-name">Standard</span>
-          </button>
-          <button type="button" class="profile__theme-btn"
-            [class.profile__theme-btn--active]="themeService.current() === 'color'"
-            (click)="themeService.setTheme('color')">
-            <span class="profile__theme-preview profile__theme-preview--color"></span>
-            <span class="profile__theme-name">Color</span>
-          </button>
-          <button type="button" class="profile__theme-btn"
-            [class.profile__theme-btn--active]="themeService.current() === 'minimal'"
-            (click)="themeService.setTheme('minimal')">
-            <span class="profile__theme-preview profile__theme-preview--minimal"></span>
-            <span class="profile__theme-name">Minimal</span>
-          </button>
-          <button type="button" class="profile__theme-btn"
-            [class.profile__theme-btn--active]="themeService.current() === 'charcoal'"
-            (click)="themeService.setTheme('charcoal')">
-            <span class="profile__theme-preview profile__theme-preview--charcoal"></span>
-            <span class="profile__theme-name">Charcoal</span>
-          </button>
-        </div>
-        <div class="profile__divider"></div>
-        @if (saveSuccess()) {
-          <div class="profile__feedback profile__feedback--success">&#10003; &#198;ndringer gemt</div>
-        }
-        @if (saveError()) {
-          <div class="profile__feedback profile__feedback--error">Noget gik galt. Pr&#248;v igen.</div>
-        }
-        <button type="submit" class="profile__save-btn"
-          [disabled]="isSaving() || !name().trim()">
-          {{ isSaving() ? 'Gemmer&#8230;' : 'Gem &#230;ndringer' }}
-        </button>
-        <div class="profile__divider"></div>
-        <section class="profile__dev-panel" [class.profile__dev-panel--open]="devPanelOpen()">
-          <button
-            type="button"
-            class="dev-panel__title"
-            (click)="toggleDevPanel()"
-            [attr.aria-expanded]="devPanelOpen()"
-          >
-            <span>🛠 UDVIKLER LOGIN</span>
-            <span class="dev-panel__chevron" [class.dev-panel__chevron--open]="devPanelOpen()">▲</span>
-          </button>
+    <div>
+      <h1>Profil og konto</h1>
+      <p>Administrér din konto og dine PayNSync-indstillinger.</p>
+    </div>
+  </header>
 
-          @if (devPanelOpen()) {
-            <p class="dev-panel__info">Denne login bruges kun til udvikling.</p>
+  <nav class="main-tabs" role="tablist" aria-label="Profil og konto">
+    <button
+      id="profile-tab-account"
+      type="button"
+      role="tab"
+      class="main-tabs__tab"
+      [class.main-tabs__tab--active]="mainTab() === 'account'"
+      [attr.aria-selected]="mainTab() === 'account'"
+      aria-controls="profile-panel-account"
+      (click)="selectMainTab('account')"
+      (keydown)="onTabKeydown($event, 'account')">
+      Konto
+    </button>
 
-            @if (!auth.isLoggedIn()) {
-              <select
-                class="profile__input dev-panel__select"
-                [(ngModel)]="selectedEmail"
-                name="developerEmail"
-                aria-label="Vælg testperson"
-              >
-                <option value="" disabled>Vælg testperson…</option>
-                @for (person of persons(); track person.id) {
-                  <option [value]="person.handle">
-                    {{ person.displayName }} ({{ person.handle }})
-                  </option>
+    @if (canUseVipps()) {
+      <button
+        id="profile-tab-vipps"
+        type="button"
+        role="tab"
+        class="main-tabs__tab"
+        [class.main-tabs__tab--active]="mainTab() === 'vipps'"
+        [attr.aria-selected]="mainTab() === 'vipps'"
+        aria-controls="profile-panel-vipps"
+        (click)="selectMainTab('vipps')"
+        (keydown)="onTabKeydown($event, 'vipps')">
+        Vipps-test
+      </button>
+    }
+
+    @if (!isProduction) {
+      <button
+        id="profile-tab-developer"
+        type="button"
+        role="tab"
+        class="main-tabs__tab"
+        [class.main-tabs__tab--active]="mainTab() === 'developer'"
+        [attr.aria-selected]="mainTab() === 'developer'"
+        aria-controls="profile-panel-developer"
+        (click)="selectMainTab('developer')"
+        (keydown)="onTabKeydown($event, 'developer')">
+        Udvikler
+      </button>
+    }
+  </nav>
+
+  @if (mainTab() === 'account') {
+    <main id="profile-panel-account" class="tab-panel" role="tabpanel" aria-labelledby="profile-tab-account" tabindex="-1">
+      <nav class="mode-tabs" role="tablist" aria-label="Kontohandling">
+        @if (auth.isLoggedIn()) {
+          <button type="button" role="tab"
+            [class.mode-tabs__tab--active]="accountMode() === 'profile'"
+            [attr.aria-selected]="accountMode() === 'profile'"
+            class="mode-tabs__tab"
+            (click)="setAccountMode('profile')">
+            Min profil
+          </button>
+        }
+        <button type="button" role="tab"
+          [class.mode-tabs__tab--active]="accountMode() === 'login'"
+          [attr.aria-selected]="accountMode() === 'login'"
+          class="mode-tabs__tab"
+          (click)="setAccountMode('login')">
+          Log ind
+        </button>
+        <button type="button" role="tab"
+          [class.mode-tabs__tab--active]="accountMode() === 'register'"
+          [attr.aria-selected]="accountMode() === 'register'"
+          class="mode-tabs__tab"
+          (click)="setAccountMode('register')">
+          Opret konto
+        </button>
+      </nav>
+
+      @if (accountMode() === 'profile' && auth.isLoggedIn()) {
+        <section class="account-card" aria-labelledby="profile-heading">
+          @if (isLoading()) {
+            <p class="status-text" aria-live="polite">Henter profil…</p>
+          } @else {
+            <div class="identity-card">
+              <span class="identity-card__avatar">{{ name().charAt(0) || '?' }}</span>
+              <div>
+                <h2 id="profile-heading">{{ name() || auth.currentUserName() }}</h2>
+                <p>{{ effectiveParticipantType() === 'Merchant' ? 'Merchantkonto' : 'Personkonto' }}</p>
+                @if (effectiveParticipantType() === 'Merchant' && companyName()) {
+                  <p class="identity-card__company">{{ companyName() }}</p>
                 }
-              </select>
-              @if (loginError()) {
-                <p class="dev-panel__error">{{ loginError() }}</p>
-              }
-              <button
-                type="button"
-                class="dev-panel__btn"
-                (click)="devLogin()"
-                [disabled]="!selectedEmail || loginLoading()"
-              >
-                {{ loginLoading() ? 'Logger ind…' : 'Log ind' }}
-              </button>
-              <a class="dev-panel__link" routerLink="/register">Opret dig som bruger</a>
-            }
+              </div>
+            </div>
 
-            <div class="dev-panel__divider"></div>
-            <button
-              type="button"
-              class="dev-panel__btn dev-panel__btn--danger"
-              (click)="devReset()"
-              [disabled]="resetLoading()"
-            >
-              {{ resetLoading() ? 'Sletter…' : '🗑 Slet alle ordre og beskeder' }}
-            </button>
-            @if (resetMessage()) {
-              <p class="dev-panel__reset-msg">{{ resetMessage() }}</p>
-            }
+            <form class="field-stack" (ngSubmit)="saveProfile()">
+              <div class="form-field">
+                <label for="profile-name">Navn</label>
+                <input id="profile-name" type="text" name="profileName" autocomplete="name"
+                  [ngModel]="name()" (ngModelChange)="name.set($event)" required />
+              </div>
+              <div class="form-field">
+                <label for="profile-email">Email</label>
+                <input id="profile-email" type="email" name="profileEmail" autocomplete="email"
+                  [ngModel]="email()" (ngModelChange)="email.set($event)" />
+              </div>
+              <div class="form-field">
+                <label for="profile-phone">Telefon <span>(valgfri)</span></label>
+                <input id="profile-phone" type="tel" name="profilePhone" autocomplete="tel"
+                  [ngModel]="phone()" (ngModelChange)="phone.set($event)" />
+              </div>
+
+              @if (saveSuccess()) {
+                <p class="feedback feedback--success" role="status">Profilen er gemt.</p>
+              }
+              @if (saveError()) {
+                <p class="feedback feedback--error" role="alert">Profilen kunne ikke gemmes.</p>
+              }
+
+              <button class="primary-btn" type="submit" [disabled]="isSaving() || !name().trim()">
+                {{ isSaving() ? 'Gemmer…' : 'Gem profil' }}
+              </button>
+            </form>
           }
         </section>
-        <div class="profile__divider"></div>
-        <button type="button" class="profile__logout-btn" (click)="logout()">
-          Log ud
+
+        <section class="account-card" aria-labelledby="preferences-heading">
+          <div class="card-heading">
+            <h2 id="preferences-heading">Indstillinger</h2>
+            <p>Disse indstillinger gemmes med det samme på denne enhed.</p>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <strong>Notifikationer</strong>
+              <span>Modtag beskeder om dine betalinger</span>
+            </div>
+            <button type="button" class="switch"
+              [class.switch--on]="notificationsEnabled()"
+              [attr.aria-checked]="notificationsEnabled()"
+              (click)="toggleNotifications()"
+              role="switch">
+              <span></span>
+            </button>
+          </div>
+
+          <fieldset class="theme-picker">
+            <legend>Tema</legend>
+            <div class="theme-picker__grid">
+              <button type="button" [class.theme-option--active]="themeService.current() === 'default'"
+                class="theme-option" (click)="themeService.setTheme('default')">
+                <span class="theme-preview theme-preview--default"></span><span>Standard</span>
+              </button>
+              <button type="button" [class.theme-option--active]="themeService.current() === 'color'"
+                class="theme-option" (click)="themeService.setTheme('color')">
+                <span class="theme-preview theme-preview--color"></span><span>Color</span>
+              </button>
+              <button type="button" [class.theme-option--active]="themeService.current() === 'minimal'"
+                class="theme-option" (click)="themeService.setTheme('minimal')">
+                <span class="theme-preview theme-preview--minimal"></span><span>Minimal</span>
+              </button>
+              <button type="button" [class.theme-option--active]="themeService.current() === 'charcoal'"
+                class="theme-option" (click)="themeService.setTheme('charcoal')">
+                <span class="theme-preview theme-preview--charcoal"></span><span>Charcoal</span>
+              </button>
+            </div>
+          </fieldset>
+        </section>
+
+        <button type="button" class="danger-outline-btn" (click)="logout()">Log ud</button>
+      }
+
+      @if (accountMode() === 'login') {
+        <section class="account-card auth-card" aria-labelledby="login-heading">
+          <div class="card-heading">
+            <h2 id="login-heading">Log ind</h2>
+            <p>Brug samme login til en person- eller merchantkonto.</p>
+          </div>
+
+          <div id="profile-google-signin-btn" class="google-button" aria-label="Google-login for personkonto"></div>
+          <div class="or-divider"><span>eller</span></div>
+
+          <form class="field-stack" (ngSubmit)="login()">
+            <div class="form-field">
+              <label for="login-email">Email</label>
+              <input id="login-email" type="email" name="loginEmail" autocomplete="email"
+                [(ngModel)]="loginEmail" required />
+            </div>
+            <div class="form-field">
+              <label for="login-password">Adgangskode</label>
+              <div class="password-field">
+                <input id="login-password" [type]="showLoginPassword() ? 'text' : 'password'"
+                  name="loginPassword" autocomplete="current-password"
+                  [(ngModel)]="loginPassword" required />
+                <button type="button" (click)="showLoginPassword.update(value => !value)"
+                  [attr.aria-label]="showLoginPassword() ? 'Skjul adgangskode' : 'Vis adgangskode'">
+                  {{ showLoginPassword() ? 'Skjul' : 'Vis' }}
+                </button>
+              </div>
+            </div>
+
+            @if (loginError()) {
+              <p class="feedback feedback--error" role="alert">{{ loginError() }}</p>
+            }
+
+            <button class="primary-btn" type="submit"
+              [disabled]="loginLoading() || !loginEmail.trim() || !loginPassword">
+              {{ loginLoading() ? 'Logger ind…' : 'Log ind' }}
+            </button>
+          </form>
+          <p class="auth-note">Google-login opretter eller åbner en personlig brugerkonto.</p>
+        </section>
+      }
+
+      @if (accountMode() === 'register') {
+        <section class="account-card auth-card" aria-labelledby="register-heading">
+          <div class="card-heading">
+            <h2 id="register-heading">Opret konto</h2>
+            <p>Vælg den kontotype, der passer til dig.</p>
+          </div>
+
+          <div class="account-type-toggle" role="tablist" aria-label="Kontotype">
+            <button type="button" role="tab" class="account-type-toggle__button"
+              [class.account-type-toggle__button--active]="registerType() === 'person'"
+              [attr.aria-selected]="registerType() === 'person'"
+              (click)="setRegisterType('person')">Bruger</button>
+            <button type="button" role="tab" class="account-type-toggle__button"
+              [class.account-type-toggle__button--active]="registerType() === 'merchant'"
+              [attr.aria-selected]="registerType() === 'merchant'"
+              (click)="setRegisterType('merchant')">Merchant</button>
+          </div>
+
+          @if (registerType() === 'person') {
+            <form class="field-stack" (ngSubmit)="registerPerson()">
+              <div class="form-field">
+                <label for="person-name">Fulde navn</label>
+                <input id="person-name" type="text" name="personName" autocomplete="name"
+                  [(ngModel)]="personName" required />
+              </div>
+              <div class="form-field">
+                <label for="person-email">Email</label>
+                <input id="person-email" type="email" name="personEmail" autocomplete="email"
+                  [(ngModel)]="personEmail" required />
+              </div>
+              <div class="form-field">
+                <label for="person-phone">Telefon <span>(valgfri)</span></label>
+                <input id="person-phone" type="tel" name="personPhone" autocomplete="tel"
+                  [(ngModel)]="personPhone" />
+              </div>
+              <div class="form-field">
+                <label for="person-password">Adgangskode</label>
+                <input id="person-password" type="password" name="personPassword"
+                  autocomplete="new-password" minlength="6" [(ngModel)]="personPassword" required />
+                <small>Mindst 6 tegn</small>
+              </div>
+              <div class="form-field">
+                <label for="person-password-confirm">Gentag adgangskode</label>
+                <input id="person-password-confirm" type="password" name="personPasswordConfirm"
+                  autocomplete="new-password" [(ngModel)]="personPasswordConfirm" required
+                  [attr.aria-invalid]="personPasswordConfirm && personPassword !== personPasswordConfirm" />
+                @if (personPasswordConfirm && personPassword !== personPasswordConfirm) {
+                  <small class="field-error">Adgangskoderne er ikke ens.</small>
+                }
+              </div>
+              @if (registerError()) {
+                <p class="feedback feedback--error" role="alert">{{ registerError() }}</p>
+              }
+              <button class="primary-btn" type="submit"
+                [disabled]="registerLoading() || !canRegisterPerson()">
+                {{ registerLoading() ? 'Opretter…' : 'Opret brugerkonto' }}
+              </button>
+            </form>
+          } @else {
+            <form class="field-stack" (ngSubmit)="registerMerchant()">
+              <div class="form-section-title">Konto</div>
+              <div class="form-field">
+                <label for="merchant-name">Spisestedets navn</label>
+                <input id="merchant-name" type="text" name="merchantName"
+                  [(ngModel)]="merchantName" required />
+              </div>
+              <div class="form-field">
+                <label for="merchant-company">Firmanavn</label>
+                <input id="merchant-company" type="text" name="merchantCompany"
+                  [(ngModel)]="merchantCompany" required />
+              </div>
+              <div class="form-field">
+                <label for="merchant-email">Konto-email</label>
+                <input id="merchant-email" type="email" name="merchantEmail" autocomplete="email"
+                  [(ngModel)]="merchantEmail" required />
+              </div>
+              <div class="form-field">
+                <label for="merchant-password">Adgangskode</label>
+                <input id="merchant-password" type="password" name="merchantPassword"
+                  autocomplete="new-password" minlength="6" [(ngModel)]="merchantPassword" required />
+                <small>Mindst 6 tegn</small>
+              </div>
+              <div class="form-field">
+                <label for="merchant-password-confirm">Gentag adgangskode</label>
+                <input id="merchant-password-confirm" type="password" name="merchantPasswordConfirm"
+                  autocomplete="new-password" [(ngModel)]="merchantPasswordConfirm" required />
+                @if (merchantPasswordConfirm && merchantPassword !== merchantPasswordConfirm) {
+                  <small class="field-error">Adgangskoderne er ikke ens.</small>
+                }
+              </div>
+              <div class="form-field">
+                <label for="merchant-msn">Vipps Merchant Serial Number</label>
+                <input id="merchant-msn" type="text" name="merchantMsn"
+                  [(ngModel)]="merchantMsn" aria-describedby="merchant-msn-help" required />
+                <small id="merchant-msn-help">MSN findes i Vipps MobilePay-portalen for dit salgssted.</small>
+              </div>
+
+              <div class="form-section-title">Virksomhed og kontakt <span>(valgfrit)</span></div>
+              <div class="form-field">
+                <label for="merchant-cvr">CVR-nummer <span>(valgfri)</span></label>
+                <input id="merchant-cvr" type="text" name="merchantCvr" [(ngModel)]="merchantCvr" />
+              </div>
+              <div class="form-field">
+                <label for="merchant-address">Adresse <span>(valgfri)</span></label>
+                <input id="merchant-address" type="text" name="merchantAddress"
+                  autocomplete="street-address" [(ngModel)]="merchantAddress" />
+              </div>
+              <div class="form-field">
+                <label for="merchant-contact">Kontaktperson <span>(valgfri)</span></label>
+                <input id="merchant-contact" type="text" name="merchantContact"
+                  [(ngModel)]="merchantContact" />
+              </div>
+              <div class="form-field">
+                <label for="merchant-contact-email">Kontakt-email <span>(valgfri)</span></label>
+                <input id="merchant-contact-email" type="email" name="merchantContactEmail"
+                  [(ngModel)]="merchantContactEmail" />
+              </div>
+              <div class="form-field">
+                <label for="merchant-phone">Kontakttelefon <span>(valgfri)</span></label>
+                <input id="merchant-phone" type="tel" name="merchantPhone"
+                  [(ngModel)]="merchantPhone" />
+              </div>
+
+              @if (registerError()) {
+                <p class="feedback feedback--error" role="alert">{{ registerError() }}</p>
+              }
+              <button class="primary-btn" type="submit"
+                [disabled]="registerLoading() || !canRegisterMerchant()">
+                {{ registerLoading() ? 'Opretter…' : 'Opret merchantkonto' }}
+              </button>
+            </form>
+          }
+        </section>
+      }
+    </main>
+  }
+
+  @if (mainTab() === 'vipps' && canUseVipps()) {
+    <main id="profile-panel-vipps" class="tab-panel" role="tabpanel"
+      aria-labelledby="profile-tab-vipps" tabindex="-1">
+      <section class="account-card">
+        <div class="card-heading">
+          <span class="environment-badge">Sandbox</span>
+          <h2>Vipps-testperson</h2>
+          <p>Vælg hvilken testperson der repræsenterer dig i Vipps MobilePay sandbox.</p>
+        </div>
+
+        @if (vippsLoading()) {
+          <p class="status-text" aria-live="polite">Henter testpersoner…</p>
+        } @else {
+          <div class="form-field">
+            <label for="vipps-person">Testperson</label>
+            <select id="vipps-person"
+              [ngModel]="selectedVippsTestUserId()"
+              (ngModelChange)="selectedVippsTestUserId.set($event === 'null' ? null : +$event)"
+              name="vippsTestUser">
+              <option [ngValue]="null">Ingen mapping</option>
+              @for (person of vippsTestPersons(); track person.id) {
+                <option [ngValue]="person.id" [disabled]="isVippsPersonDisabled(person)">
+                  {{ person.name }}
+                  @if (person.phone) { ({{ person.phone }}) }
+                  @if (isVippsPersonDisabled(person)) { — optaget }
+                </option>
+              }
+            </select>
+          </div>
+
+          @if (vippsSaveSuccess()) {
+            <p class="feedback feedback--success" role="status">Vipps-mappingen er gemt.</p>
+          }
+          @if (vippsError()) {
+            <p class="feedback feedback--error" role="alert">{{ vippsError() }}</p>
+          }
+
+          <button type="button" class="primary-btn" (click)="saveVippsMapping()"
+            [disabled]="vippsSaving()">
+            {{ vippsSaving() ? 'Gemmer…' : 'Gem Vipps-mapping' }}
+          </button>
+        }
+      </section>
+    </main>
+  }
+
+  @if (mainTab() === 'developer' && !isProduction) {
+    <main id="profile-panel-developer" class="tab-panel" role="tabpanel"
+      aria-labelledby="profile-tab-developer" tabindex="-1">
+      <section class="account-card developer-card">
+        <div class="card-heading">
+          <span class="environment-badge environment-badge--warning">Kun Development</span>
+          <h2>Testbruger</h2>
+          <p>Skift til en seedet personkonto uden at bruge produktionslogin.</p>
+        </div>
+
+        @if (developerLoading()) {
+          <p class="status-text">Henter testkonti…</p>
+        } @else {
+          <div class="form-field">
+            <label for="developer-account">Testkonto</label>
+            <select id="developer-account" [(ngModel)]="selectedEmail" name="developerEmail">
+              <option value="" disabled>Vælg testperson</option>
+              @for (person of persons(); track person.id) {
+                <option [value]="person.handle">{{ person.displayName }} ({{ person.handle }})</option>
+              }
+            </select>
+          </div>
+          @if (developerLoginError()) {
+            <p class="feedback feedback--error" role="alert">{{ developerLoginError() }}</p>
+          }
+          <button type="button" class="secondary-btn" (click)="developerLogin()"
+            [disabled]="!selectedEmail || developerLoginLoading()">
+            {{ developerLoginLoading() ? 'Logger ind…' : 'Log ind som testbruger' }}
+          </button>
+        }
+      </section>
+
+      <section class="account-card danger-card">
+        <div class="card-heading">
+          <h2>Nulstil udviklingsdata</h2>
+          <p>Sletter alle ordrer, betalinger og beskeder i udviklingsdatabasen.</p>
+        </div>
+        <button type="button" class="danger-btn" (click)="developerReset()"
+          [disabled]="resetLoading()">
+          {{ resetLoading() ? 'Nulstiller…' : 'Nulstil udviklingsdata' }}
         </button>
-      </form>
-    }
-  </div>
+        @if (resetMessage()) {
+          <p class="feedback" role="status">{{ resetMessage() }}</p>
+        }
+      </section>
+    </main>
+  }
 </div>
