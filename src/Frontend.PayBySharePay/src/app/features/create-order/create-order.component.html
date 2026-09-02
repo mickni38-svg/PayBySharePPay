@@ -130,44 +130,72 @@
     }
 
     @if (currentStep() === 2) {
+      <header class="wizard__page-heading">
+        <h1 class="wizard__title">Detaljer</h1>
+        <p class="wizard__helper-copy">
+          Giv gruppebetalingen en titel og skriv eventuelt en besked til deltagerne.
+        </p>
+        <p class="wizard__step-copy">Trin 2 af 3</p>
+      </header>
+
+      @if (selectedMerchant()) {
+        <section class="details-summary" aria-label="Valgt spisested og deltagere">
+          <div class="details-summary__logo" [style.background]="selectedMerchant()!.avatarColor">
+            @if (selectedMerchant()!.logoUrl) {
+              <img
+                class="row__avatar-image"
+                [src]="selectedMerchant()!.logoUrl"
+                [alt]="selectedMerchant()!.displayName"
+                (error)="onMerchantLogoError()"
+              />
+            } @else {
+              <span>{{ selectedMerchant()!.initials }}</span>
+            }
+          </div>
+          <div class="details-summary__content">
+            <span class="details-summary__name">{{ selectedMerchant()!.displayName }}</span>
+            <span class="details-summary__count">
+              {{ selectedParticipants().length }}
+              {{ selectedParticipants().length === 1 ? 'deltager' : 'deltagere' }}
+            </span>
+          </div>
+        </section>
+      }
+
       <div class="field">
-        <label class="field__label">TITEL</label>
+        <label class="field__label" for="group-payment-title">Titel</label>
         <input
+          id="group-payment-title"
           class="field__input"
           type="text"
-          placeholder="fx pizza aften"
+          placeholder="Fx Pizzaaften"
           [ngModel]="title()"
           (ngModelChange)="title.set($event)"
-          maxlength="80"
+          [maxlength]="titleMaxLength"
+          aria-describedby="title-character-count"
         />
+        <span id="title-character-count" class="field__character-count">
+          {{ title().length }}/{{ titleMaxLength }}
+        </span>
       </div>
 
       <div class="field">
-        <label class="field__label">
-          INDTAST EMOJI <span class="field__required">*</span>
+        <label class="field__label" for="group-payment-message">
+          Besked <span class="field__optional">Valgfri</span>
         </label>
-        <input
-          class="field__input field__input--emoji"
-          type="text"
-          placeholder="Tryk på 😊 på dit tastatur og vælg en emoji…"
-          [ngModel]="emoji()"
-          (ngModelChange)="emoji.set($event)"
-          maxlength="2"
-        />
-        @if (emoji()) {
-          <span class="emoji-preview">{{ emoji() }}</span>
-        }
-      </div>
-
-      <div class="field">
-        <label class="field__label">BESKED (VALGFRI)</label>
         <textarea
+          id="group-payment-message"
           class="field__textarea"
-          placeholder="Skriv en kort besked til deltagerne…"
-          [(ngModel)]="message"
-          maxlength="200"
-          rows="3"
+          placeholder="Skriv en besked til deltagerne..."
+          [ngModel]="message()"
+          (ngModelChange)="message.set($event)"
+          [maxlength]="messageMaxLength"
+          aria-describedby="message-character-count"
+          rows="5"
         ></textarea>
+        <span id="message-character-count" class="field__character-count">
+          {{ message().length }}/{{ messageMaxLength }}
+        </span>
       </div>
     }
 
@@ -193,8 +221,8 @@
           <span class="review-row__icon">💬</span>
           <span class="review-row__label">Besked</span>
           <span class="review-row__value">
-            @if (message.trim()) {
-              {{ message }}
+            @if (message().length) {
+              <span class="review-row__message">{{ message() }}</span>
             } @else {
               <span class="review-row__empty">Ingen besked</span>
             }
