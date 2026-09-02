@@ -31,6 +31,9 @@ export class RegisterComponent {
   merchantCvr = '';
   merchantContact = '';
   merchantEmail = '';
+  merchantPassword = '';
+  merchantPasswordConfirm = '';
+  merchantMsn = '';
   merchantPhone = '';
   merchantAddress = '';
 
@@ -76,6 +79,9 @@ export class RegisterComponent {
       this.auth.registerMerchant({
         name: this.merchantName,
         companyName: this.merchantCompany,
+        email: this.merchantEmail,
+        password: this.merchantPassword,
+        vippsMerchantSerialNumber: this.merchantMsn,
         cvrNumber: this.merchantCvr || undefined,
         contactPerson: this.merchantContact || undefined,
         contactEmail: this.merchantEmail || undefined,
