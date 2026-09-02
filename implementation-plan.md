@@ -1,32 +1,57 @@
-# Implementation plan — UC-02
+# Implementation plan — UC-03
 
-## Scope
+## Forståelse
 
-Complete the remaining acceptance criteria in `docs/usecases/UC-02-home-merchant-carousel.md`.
+UC-03 gør den valgte merchant og valg af deltagere til wizardens første af tre trin. Merchant kommer fra UC-02 og kan ikke ændres i wizarden. Deltagere kommer dynamisk fra den eksisterende venneliste.
 
-## Current implementation
+## Nuværende løsning
 
-The home page already loads merchant friends dynamically, limits the carousel to eight cards, supports case-insensitive name search, displays logos with initials fallback, transfers the merchant ID to the wizard, and redirects invalid direct wizard navigation to the home page.
+Wizarden har fire tekniske trin:
 
-## Changes
+1. titel, emoji og besked;
+2. merchant;
+3. deltagere;
+4. kontrol.
 
-1. Store selected merchant IDs per logged-in user in `localStorage`.
-2. Sort merchant friends by the stored recent-use order and then alphabetically.
-3. Add keyboard navigation (ArrowLeft, ArrowRight, Home and End) to the carousel.
-4. Keep the carousel viewport contained within the page content width.
-5. Remove username/logout controls from the home page development panel.
-6. Add the existing logout action to the profile page and navigate to login after logout.
-7. Add focused unit tests for filtering, limits, recent ordering and keyboard scroll targets.
-8. Update UC-02 and current-state documentation after verification.
+Når en merchant kommer fra forsiden, springes merchant-trinnet blot over. Værten filtreres ikke eksplicit, næste-knappen er ikke deaktiveret uden deltagere, og merchant-state valideres kun ved at kontrollere, at et ID findes i browser-state.
 
-## Impact
+## Implementering
 
-- Frontend only.
-- No API changes.
-- No database or migration changes.
-- No payment or external integration changes.
-- No dependency or deployment changes.
+1. Ændr wizardens struktur til tre trin.
+2. Gør trin 1 til **Vælg deltagere**.
+3. Vis den forudvalgte merchant i et låst, kompakt kort med logo/navn og uden "Valgt", flueben, skift eller merchant-søgning.
+4. Validér merchant-ID mod den aktuelle brugers dynamiske merchant-venner og brug data fra API-resultatet.
+5. Indlæs kun personer fra den eksisterende venneliste.
+6. Filtrér værten og den valgte merchant eksplicit, og dedupliker personer efter ID.
+7. Bevar eksisterende valg ved genindlæsning og ved frem/tilbage-navigation.
+8. Vis søgning, valgte markeringer og antal valgte.
+9. Deaktivér **Næste**, indtil mindst én gyldig deltager er valgt.
+10. Flyt de eksisterende titel/emoji/besked-felter urørte til trin 2 som midlertidig kompatibilitet med UC-04.
+11. Flyt den eksisterende kontrolside urørt til trin 3 som midlertidig kompatibilitet med UC-05.
+12. Bevar den eksisterende create-request og betalingsfunktionalitet.
+13. Opdatér UC-03 og `docs/current-state.md` efter bestået verifikation.
 
-## Compatibility and risks
+## Forventede filer
 
-Existing users without recent-merchant data see alphabetical ordering. Recent ordering is device/browser-local and is isolated by participant ID. Invalid or unavailable local storage falls back safely to alphabetical ordering.
+- `src/Frontend.PayBySharePay/src/app/features/create-order/create-order.component.ts`
+- `src/Frontend.PayBySharePay/src/app/features/create-order/create-order.component.html`
+- `src/Frontend.PayBySharePay/src/app/features/create-order/create-order.component.scss`
+- `src/Frontend.PayBySharePay/src/app/features/create-order/create-order.component.spec.ts`
+- `docs/usecases/UC-03-wizard-step-1-participants.md`
+- `docs/current-state.md`
+- `implementation-plan.md`
+- `test-plan.md`
+
+## Påvirkning
+
+- Frontend: ja.
+- API: ingen kontraktændring.
+- Database/migration: ingen.
+- Betaling/Vipps: ingen.
+- Authentication/authorization: ingen ændring; HostUserId læses fortsat fra den aktuelle session.
+- Dependencies: ingen.
+- Deployment: ingen workflowændring.
+
+## Risici og afgrænsning
+
+Fjernelsen af merchant-trinnet er tilsigtet af UC-02/03: en ny merchant vælges på forsiden. UC-04 og UC-05 implementeres ikke nu; deres eksisterende indhold flyttes kun til de korrekte trin, så det nuværende oprettelsesflow fortsat virker.
