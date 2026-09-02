@@ -202,6 +202,22 @@ Statusoversigt over PayNSync pr. seneste kodegennemgang.
 
 ---
 
+## Planlagte use cases
+
+| Use case | Status | Formål |
+|----------|--------|--------|
+| UC-08 – JWT-identitet og host-autorisation | ❌ Planlagt | Brug JWT-identitet i stedet for bruger-ID fra request-body |
+| UC-09 – Beskyt dev-endpoints | ❌ Planlagt | Fjern destruktive udvikler-ruter fra Simply/produktion |
+| UC-10 – Vipps webhook HMAC | ❌ Planlagt | Verificér webhook-secret, body-hash og HMAC før stateændring |
+| UC-11 – Ens JWT-udløbstid | ❌ Planlagt | Ensret tokenets `exp` og auth-responsens `ExpiresAt` |
+| UC-12 – Send påmindelser | ❌ Planlagt | Erstat frontend-placeholder med eksisterende Message-flow |
+| UC-13 – Join med token | ❌ Planlagt | Aktivér eksisterende `JoinToken` efter Product Owner-beslutninger |
+| UC-14 – Refund captured betaling | ❌ Planlagt | Idempotent refund gennem provider/state machine efter betalingsbeslutning |
+
+Se `docs/usecases/00-IMPLEMENTATION-ORDER.md` for anbefalet rækkefølge og modelprofil.
+
+---
+
 ## Kendte begrænsninger
 
 | Begrænsning | Beskrivelse |
