@@ -8,4 +8,5 @@ public class CreateOrderDto
     public string? Message { get; set; }
     public int? MerchantParticipantId { get; set; }
     public List<int> ParticipantIds { get; set; } = new();
+    public string IdempotencyKey { get; set; } = string.Empty;
 }
