@@ -1,4 +1,5 @@
-import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { Router, Routes } from '@angular/router';
 
 export const routes: Routes = [
   {
@@ -8,11 +9,15 @@ export const routes: Routes = [
   },
   {
     path: 'login',
-    loadComponent: () => import('./features/login/login.component').then(m => m.LoginComponent)
+    redirectTo: () => inject(Router).createUrlTree(['/profile'], {
+      queryParams: { mode: 'login' }
+    })
   },
   {
     path: 'register',
-    loadComponent: () => import('./features/register/register.component').then(m => m.RegisterComponent)
+    redirectTo: () => inject(Router).createUrlTree(['/profile'], {
+      queryParams: { mode: 'register' }
+    })
   },
   {
     path: 'home',
