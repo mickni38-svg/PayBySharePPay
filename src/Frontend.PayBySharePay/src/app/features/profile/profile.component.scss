@@ -296,3 +296,124 @@
     background: rgba(239, 68, 68, 0.18);
   }
 }
+
+
+/* Udviklerværktøjer er samlet på profilsiden og holdes diskrete som standard. */
+.profile__dev-panel {
+  padding: 0 14px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  opacity: 0.55;
+  transition: opacity 0.2s;
+}
+
+.profile__dev-panel:hover,
+.profile__dev-panel:focus-within,
+.profile__dev-panel--open {
+  opacity: 1;
+}
+
+.profile__dev-panel--open {
+  padding-bottom: 14px;
+}
+
+.dev-panel__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 46px;
+  padding: 12px 0;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 0;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-align: left;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.dev-panel__title:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.dev-panel__chevron {
+  color: var(--color-text-muted);
+  font-size: 9px;
+  transform: rotate(180deg);
+  transition: transform 0.2s;
+}
+
+.dev-panel__chevron--open {
+  transform: rotate(0deg);
+}
+
+.dev-panel__info,
+.dev-panel__reset-msg {
+  margin: 0 0 10px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.dev-panel__reset-msg {
+  margin: 10px 0 0;
+  text-align: center;
+}
+
+.dev-panel__select {
+  width: 100%;
+  min-height: 46px;
+  margin-bottom: 10px;
+}
+
+.dev-panel__error {
+  margin: 0 0 10px;
+  color: var(--color-danger);
+  font-size: 12px;
+}
+
+.dev-panel__btn {
+  width: 100%;
+  min-height: 46px;
+  padding: 12px;
+  color: var(--color-text-secondary);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dev-panel__btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.dev-panel__btn--danger {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.dev-panel__divider {
+  height: 1px;
+  margin: 12px 0 10px;
+  background: var(--color-border);
+}
+
+.dev-panel__link {
+  display: block;
+  margin-top: 10px;
+  color: var(--color-primary);
+  font-size: 12px;
+  text-align: center;
+  text-decoration: none;
+}
