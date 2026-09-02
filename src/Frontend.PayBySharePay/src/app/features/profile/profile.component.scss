@@ -271,3 +271,28 @@
   color: var(--color-text-muted);
   margin: -8px 0 4px;
 }
+
+
+.profile__logout-btn {
+  width: 100%;
+  min-height: 46px;
+  background: transparent;
+  color: var(--color-danger, #ef4444);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 12px;
+  font-family: var(--font-family);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover,
+  &:focus-visible {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: var(--color-danger, #ef4444);
+  }
+
+  &:active {
+    background: rgba(239, 68, 68, 0.18);
+  }
+}
