@@ -65,12 +65,13 @@ Der er desuden en demo-merchant (Pizzeria Roma) indbygget i løsningen til test 
 | Se afventende deltagere og send påmindelser | ✅ (reminder er frontend-placeholder) |
 | Beskedindbakke med systemmeddelelser | ✅ |
 | Venneliste og deltager-søgning | ✅ |
+| Samlet profil- og kontocenter med rollebaserede faner | ✅ |
 
 ### For merchants
 
 | Funktion | Implementeret |
 |----------|---------------|
-| Registrering som Merchant-deltager | ⚠️ Backend findes; nuværende frontend mangler påkrævet MSN og merchant-login |
+| Registrering og login som Merchant | ✅ Konto-email, BCrypt-password og Vipps MSN via det fælles kontocenter |
 | Modtag gruppebestillinger via anonym API | ✅ |
 | Modtag HTTP callback ved afsluttet betaling | ✅ |
 | Konfigurér egen bestillings-URL (`GroupOrderUrl`) | ✅ |
