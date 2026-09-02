@@ -85,7 +85,7 @@ Token og brugerinfo gemmes i `localStorage` under nøglerne `sbys_token` og `sby
 |-------|-----------|--------|
 | `/home` | `HomeComponent` | Dashboard med action-cards og status-oversigt |
 | `/orders` | `OrdersComponent` | Ordreoversigt (aktiv/afsluttet tabs) |
-| `/orders/create` | `CreateOrderComponent` | 4-trins wizard: titel → merchant → deltagere → opret |
+| `/orders/create` | `CreateOrderComponent` | 3-trins wizard: låst merchant + deltagere → detaljer → kontrol/opret. Trin 1 følger UC-03; trin 2-3 afventer UC-04/UC-05. |
 | `/orders/:id` | `OrderDetailComponent` | Ordredetaljer + betalingsstatus + Host-handlinger |
 | `/messages` | `MessagesComponent` | Beskedindbakke |
 | `/pending-participants` | `PendingParticipantsComponent` | Host-view: deltagere der mangler at bestille |
