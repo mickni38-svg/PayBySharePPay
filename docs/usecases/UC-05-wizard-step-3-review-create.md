@@ -32,12 +32,12 @@ Vis data fra wizard-state:
 
 Der må ikke udføres nye opslag med hardcodede ID'er. Hvis den eksisterende løsning genindlæser eller validerer data gennem API'et, skal den eksisterende mekanisme genbruges.
 
-## Redigering
+## Tilbage-navigation
 
-- Redigering af titel eller besked navigerer til trin 2.
-- Redigering af deltagere navigerer til trin 1.
-- Alle øvrige wizard-data skal bevares.
-- Merchant kan ikke redigeres i wizarden; en anden merchant kræver tilbagevenden til forsiden og et nyt flow.
+- Kontrolsiden viser ingen **Redigér**-knapper eller direkte genveje til tidligere trin.
+- Hvis brugeren vil ændre noget, navigerer brugeren tilbage ét trin ad gangen med **Tilbage**-knappen.
+- Alle øvrige wizard-data skal bevares ved tilbage-navigation.
+- Merchant kan ikke ændres i wizarden; en anden merchant kræver tilbagevenden til forsiden og et nyt flow.
 
 ## Oprettelse
 
@@ -73,7 +73,7 @@ Backend har ansvaret for servergenererede værdier som status og oprettelsestids
 ## Brugeroplevelse
 
 - Brug samme sorte theme, smalle indholdsbredde og blå accent som de øvrige sider.
-- Vis redigeringshandlinger ved de relevante sektioner som i mockuppen.
+- Vis ingen redigeringshandlinger på kontrolsiden.
 - Vis **Klar til oprettelse**, når state er gyldig.
 - Deaktivér oprettelsesknappen under behandling.
 - Ved succes navigeres til den eksisterende detaljeside for den nye gruppebetaling.
@@ -87,11 +87,12 @@ Backend har ansvaret for servergenererede værdier som status og oprettelsestids
 **Når** trin 3 åbnes  
 **Så** vises korrekt merchant, titel, besked og deltagere uden hardcodede data.
 
-### AC2 – Redigering
+### AC2 – Tilbage-navigation
 
 **Givet** kontrolsiden  
-**Når** brugeren redigerer deltagere eller detaljer  
-**Så** åbnes det relevante trin, og øvrige data bevares.
+**Når** brugeren vil ændre oplysninger og trykker **Tilbage**  
+**Så** åbnes det forrige trin, og øvrige data bevares  
+**Og** kontrolsiden viser ingen direkte redigeringsgenveje.
 
 ### AC3 – Opret én gang
 
@@ -117,7 +118,7 @@ Backend har ansvaret for servergenererede værdier som status og oprettelsestids
 
 - Korrekt visning af dynamisk merchant, titel, besked og deltagere.
 - Tom besked viser **Ingen besked**.
-- Redigeringsnavigation uden datatab.
+- Tilbage-navigation uden datatab og uden direkte redigeringsgenveje.
 - Dobbeltklik og gentaget idempotent API-kald.
 - Backend afviser vært, merchant, dublet eller inaktiv relation som deltager.
 - Atomisk rollback ved fejl under oprettelse af invitationer.
