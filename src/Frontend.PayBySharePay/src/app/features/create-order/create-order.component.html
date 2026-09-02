@@ -1,9 +1,7 @@
 <div class="wizard">
-
   <div class="wizard__header">
     <a class="page-back" routerLink="/home">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-           stroke-linecap="round" stroke-linejoin="round">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="15 18 9 12 15 6"/>
       </svg>
       Hjem
@@ -19,12 +17,10 @@
         [class.wizard__step--done]="isStepDone(step)"
         [attr.aria-current]="currentStep() === step ? 'step' : null"
         [attr.aria-label]="'Trin ' + step + ' af 3'"
-        (click)="goToStep(step)"
-      >
+        (click)="goToStep(step)">
         <span class="wizard__step-circle">
           @if (isStepDone(step)) {
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-                 stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="20 6 9 17 4 12"/>
             </svg>
           } @else {
@@ -33,16 +29,12 @@
         </span>
       </button>
       @if (step < totalSteps) {
-        <div
-          class="wizard__step-line"
-          [class.wizard__step-line--done]="currentStep() > step"
-        ></div>
+        <div class="wizard__step-line" [class.wizard__step-line--done]="currentStep() > step"></div>
       }
     }
   </div>
 
   <div class="wizard__content">
-
     @if (currentStep() === 1) {
       <header class="wizard__page-heading">
         <h1 class="wizard__title">Vælg deltagere</h1>
@@ -59,12 +51,7 @@
           <div class="merchant-summary">
             <div class="merchant-summary__logo" [style.background]="selectedMerchant()!.avatarColor">
               @if (selectedMerchant()!.logoUrl) {
-                <img
-                  class="row__avatar-image"
-                  [src]="selectedMerchant()!.logoUrl"
-                  [alt]="selectedMerchant()!.displayName"
-                  (error)="onMerchantLogoError()"
-                />
+                <img class="row__avatar-image" [src]="selectedMerchant()!.logoUrl" [alt]="selectedMerchant()!.displayName" (error)="onMerchantLogoError()" />
               } @else {
                 <span>{{ selectedMerchant()!.initials }}</span>
               }
@@ -76,20 +63,11 @@
         <section class="participants-section">
           <div class="participants-section__header">
             <h2 class="participants-section__title">Deltagere</h2>
-            <span class="participants-section__count">
-              {{ selectedParticipants().length }} valgt
-            </span>
+            <span class="participants-section__count">{{ selectedParticipants().length }} valgt</span>
           </div>
 
           <div class="field">
-            <input
-              class="field__input"
-              type="search"
-              placeholder="Søg venner..."
-              [ngModel]="searchTerm()"
-              (ngModelChange)="searchTerm.set($event)"
-              aria-label="Søg venner"
-            />
+            <input class="field__input" type="search" placeholder="Søg venner..." [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" aria-label="Søg venner" />
           </div>
 
           @if (filtered().length === 0) {
@@ -97,26 +75,15 @@
           } @else {
             <div class="row-list">
               @for (person of filtered(); track person.id) {
-                <button
-                  type="button"
-                  class="row"
-                  [class.row--selected]="person.selected"
-                  [attr.aria-pressed]="person.selected"
-                  (click)="togglePerson(person)"
-                >
-                  <span class="row__avatar" [style.background]="person.avatarColor">
-                    {{ person.initials }}
-                  </span>
+                <button type="button" class="row" [class.row--selected]="person.selected" [attr.aria-pressed]="person.selected" (click)="togglePerson(person)">
+                  <span class="row__avatar" [style.background]="person.avatarColor">{{ person.initials }}</span>
                   <span class="row__info">
                     <span class="row__name">{{ person.displayName }}</span>
-                    @if (person.handle) {
-                      <span class="row__sub">{{ person.handle }}</span>
-                    }
+                    @if (person.handle) { <span class="row__sub">{{ person.handle }}</span> }
                   </span>
                   <span class="row__check" [class.row__check--on]="person.selected">
                     @if (person.selected) {
-                      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8"
-                           stroke-linecap="round" stroke-linejoin="round">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="20 6 9 17 4 12"/>
                       </svg>
                     }
@@ -141,80 +108,71 @@
           <div class="merchant-summary">
             <div class="merchant-summary__logo" [style.background]="selectedMerchant()!.avatarColor">
               @if (selectedMerchant()!.logoUrl) {
-                <img
-                  class="row__avatar-image"
-                  [src]="selectedMerchant()!.logoUrl"
-                  [alt]="selectedMerchant()!.displayName"
-                  (error)="onMerchantLogoError()"
-                />
+                <img class="row__avatar-image" [src]="selectedMerchant()!.logoUrl" [alt]="selectedMerchant()!.displayName" (error)="onMerchantLogoError()" />
               } @else {
                 <span>{{ selectedMerchant()!.initials }}</span>
               }
             </div>
-            <span class="merchant-summary__name">
-              {{ selectedMerchant()!.displayName }} · {{ selectedParticipants().length }} deltagere
-            </span>
+            <span class="merchant-summary__name">{{ selectedMerchant()!.displayName }} · {{ selectedParticipants().length }} deltagere</span>
           </div>
         </section>
       }
 
       <div class="field">
         <label class="field__label" for="order-title">Titel</label>
-        <input
-          id="order-title"
-          class="field__input"
-          type="text"
-          placeholder="Fx Pizzaaften"
-          [ngModel]="title()"
-          (ngModelChange)="title.set($event)"
-          maxlength="80"
-          required
-        />
+        <input id="order-title" class="field__input" type="text" placeholder="Fx Pizzaaften" [ngModel]="title()" (ngModelChange)="title.set($event)" maxlength="80" required />
         <span class="field__hint">{{ title().length }}/80 tegn</span>
       </div>
 
       <div class="field">
         <label class="field__label" for="order-message">Besked</label>
-        <textarea
-          id="order-message"
-          class="field__textarea"
-          placeholder="Skriv en besked til deltagerne..."
-          [ngModel]="message()"
-          (ngModelChange)="message.set($event)"
-          maxlength="500"
-          rows="5"
-        ></textarea>
+        <textarea id="order-message" class="field__textarea" placeholder="Skriv en besked til deltagerne..." [ngModel]="message()" (ngModelChange)="message.set($event)" maxlength="500" rows="5"></textarea>
         <span class="field__hint">{{ message().length }}/500 tegn</span>
       </div>
     }
 
     @if (currentStep() === 3) {
+      <header class="wizard__page-heading">
+        <h1 class="wizard__title">Kontrollér og opret</h1>
+        <p class="wizard__step-copy">Trin 3 af 3 · Kontrollér oplysningerne før gruppebetalingen oprettes.</p>
+      </header>
+
+      @if (selectedMerchant()) {
+        <section class="preselected-merchant" aria-label="Valgt spisested">
+          <p class="preselected-merchant__label">SPISESTED</p>
+          <div class="merchant-summary">
+            <div class="merchant-summary__logo" [style.background]="selectedMerchant()!.avatarColor">
+              @if (selectedMerchant()!.logoUrl) {
+                <img class="row__avatar-image" [src]="selectedMerchant()!.logoUrl" [alt]="selectedMerchant()!.displayName" (error)="onMerchantLogoError()" />
+              } @else {
+                <span>{{ selectedMerchant()!.initials }}</span>
+              }
+            </div>
+            <span class="merchant-summary__name">{{ selectedMerchant()!.displayName }}</span>
+          </div>
+        </section>
+      }
+
       <div class="review-card">
         <div class="review-row">
           <span class="review-row__icon">◇</span>
           <span class="review-row__label">Titel</span>
           <span class="review-row__value">{{ title() }}</span>
+          <button type="button" class="review-row__edit" (click)="editDetails()">Redigér</button>
         </div>
         <div class="review-row">
           <span class="review-row__icon">💬</span>
           <span class="review-row__label">Besked</span>
           <span class="review-row__value">
-            @if (message()) {
-              {{ message() }}
-            } @else {
-              <span class="review-row__empty">Ingen besked</span>
-            }
+            @if (message()) { {{ message() }} } @else { <span class="review-row__empty">Ingen besked</span> }
           </span>
-        </div>
-        <div class="review-row">
-          <span class="review-row__icon">🏪</span>
-          <span class="review-row__label">Spisested</span>
-          <span class="review-row__value">{{ selectedMerchant()?.displayName }}</span>
+          <button type="button" class="review-row__edit" (click)="editDetails()">Redigér</button>
         </div>
         <div class="review-row">
           <span class="review-row__icon">👥</span>
           <span class="review-row__label">Deltagere</span>
           <span class="review-row__value">{{ selectedParticipants().length }} valgt</span>
+          <button type="button" class="review-row__edit" (click)="editParticipants()">Redigér</button>
         </div>
       </div>
 
@@ -223,9 +181,7 @@
           <p class="review-participants__label">Valgte deltagere</p>
           @for (person of selectedParticipants(); track person.id) {
             <div class="review-participant">
-              <div class="row__avatar row__avatar--sm" [style.background]="person.avatarColor">
-                {{ person.initials }}
-              </div>
+              <div class="row__avatar row__avatar--sm" [style.background]="person.avatarColor">{{ person.initials }}</div>
               <span>{{ person.displayName }}</span>
             </div>
           }
@@ -233,57 +189,31 @@
       }
 
       <div class="review-status">
-        <svg class="review-status__icon" viewBox="0 0 24 24" fill="none"
-             stroke="#2ecc71" stroke-width="2.5" stroke-linecap="round"
-             stroke-linejoin="round">
+        <svg class="review-status__icon" viewBox="0 0 24 24" fill="none" stroke="#2ecc71" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="20 6 9 17 4 12"/>
         </svg>
         <div>
           <p class="review-status__title">Klar til oprettelse</p>
-          <p class="review-status__sub">
-            Alt ser godt ud. Du kan nu oprette din gruppebetaling.
-          </p>
+          <p class="review-status__sub">Alt ser godt ud. Du kan nu oprette din gruppebetaling.</p>
         </div>
       </div>
 
-      @if (errorMessage()) {
-        <p class="field__error">{{ errorMessage() }}</p>
-      }
+      @if (errorMessage()) { <p class="field__error">{{ errorMessage() }}</p> }
     }
 
-    @if (stepError()) {
-      <p class="field__error">{{ stepError() }}</p>
-    }
+    @if (stepError()) { <p class="field__error">{{ stepError() }}</p> }
   </div>
 
   <div class="wizard__footer">
     <div class="wizard__footer__actions">
       @if (currentStep() > 1) {
-        <button type="button" class="btn-back" (click)="goBack()" aria-label="Tilbage">
-          ←
-        </button>
+        <button type="button" class="btn-back" (click)="goBack()" aria-label="Tilbage">←</button>
       }
       @if (currentStep() < totalSteps) {
-        <button
-          type="button"
-          class="btn-primary"
-          [disabled]="!canContinue()"
-          (click)="goNext()"
-        >
-          Næste
-        </button>
+        <button type="button" class="btn-primary" [disabled]="!canContinue()" (click)="goNext()">Næste</button>
       } @else {
-        <button
-          type="button"
-          class="btn-primary btn-primary--green"
-          [disabled]="!canSubmit() || isSubmitting()"
-          (click)="submit()"
-        >
-          @if (isSubmitting()) {
-            Opretter…
-          } @else {
-            Opret gruppebetaling
-          }
+        <button type="button" class="btn-primary btn-primary--green" [disabled]="!canSubmit() || isSubmitting()" (click)="submit()">
+          @if (isSubmitting()) { Opretter… } @else { Opret gruppebetaling }
         </button>
       }
     </div>
