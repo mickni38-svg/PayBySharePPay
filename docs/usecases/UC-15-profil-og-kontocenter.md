@@ -139,7 +139,8 @@ Ved succes logges merchant automatisk ind og vises **Min profil** med en bekræf
 - Login-opslaget må ikke filtrere til `ParticipantType.Person`.
 - Email skal være unik på tværs af Person og Merchant.
 - LoginResponse udvides med `participantType` (`Person` eller `Merchant`).
-- Legacy seed-personer uden password bevarer det dokumenterede development-login; passwordløst login må ikke udvides til nye konti eller merchants.
+- Password er påkrævet ved almindeligt login. En request uden password må ikke kunne omgå et eksisterende password-hash.
+- Legacy passwordløst testlogin må kun fungere i ASP.NET Core `Development` og kun for eksisterende seed-personer uden password-hash; det må aldrig fungere i Simply/Production eller for merchants.
 
 ### 6. Vipps-test-fanen
 
@@ -219,37 +220,43 @@ Ved succes logges merchant automatisk ind og vises **Min profil** med en bekræf
 **Når** korrekt email og password indsendes  
 **Så** returnerer API’et JWT og participant-type, og UI navigerer efter kontotypen.
 
-### AC6 — Profilgemning
+### AC6 — Password kan ikke omgås
+
+**Givet** en konto med password eller et kald i Simply/Production  
+**Når** login-requesten mangler password  
+**Så** returneres 401 uden session eller JWT. Kun en passwordløs seed-person i Development kan bruge det eksplicitte udviklerlogin.
+
+### AC7 — Profilgemning
 
 **Givet** en autentificeret bruger med ændrede profilfelter  
 **Når** **Gem profil** vælges  
 **Så** opdateres kun profilfelterne, mens tema og Vipps-mapping ikke gensendes.
 
-### AC7 — Vipps-testmapping
+### AC8 — Vipps-testmapping
 
 **Givet** en autentificeret Person i et miljø med sandboxfunktion  
 **Når** en ledig testperson vælges og gemmes  
 **Så** opdateres mappingen med selvstændig feedback uden at gemme profilformularen.
 
-### AC8 — Udviklerværktøjer
+### AC9 — Udviklerværktøjer
 
 **Givet** en Simply/Production-build  
 **Når** profilen vises  
 **Så** findes Udvikler-fanen ikke i DOM’en, og frontend kalder ingen `/api/dev/*`-rute.
 
-### AC9 — Development
+### AC10 — Development
 
 **Givet** lokal frontend og backend i Development  
 **Når** Udvikler-fanen åbnes  
 **Så** kan en seedet testperson vælges, og reset kan udføres efter eksplicit bekræftelse som før.
 
-### AC10 — Navigation
+### AC11 — Navigation
 
 **Givet** et gammelt link til `/login` eller `/register`  
 **Når** linket åbnes  
 **Så** lander brugeren i korrekt mode i det nye kontocenter uden 404 eller tab af redirect-intention.
 
-### AC11 — Responsivitet og accessibility
+### AC12 — Responsivitet og accessibility
 
 **Givet** en viewport fra 320 px mobilbredde til tablet  
 **Når** faner og formularer bruges med touch eller tastatur  
@@ -275,7 +282,9 @@ Ved succes logges merchant automatisk ind og vises **Min profil** med en bekræf
 - Merchant password hashes og returneres aldrig.
 - Email-unikhed gælder på tværs af Person og Merchant.
 - Login virker for både Person og Merchant og afviser forkert password.
-- Legacy passwordløst login kan kun bruges af eksisterende dokumenterede seed-personer.
+- Login uden password afvises i Simply/Production, også når en gammel participant mangler password-hash.
+- Login uden password kan kun bruges i Development af eksisterende seed-personer uden password-hash.
+- En tom password-request kan ikke omgå password-verifikation for en konto med password-hash.
 - LoginResponse indeholder korrekt participant-type.
 
 Alle HTTP-, Google- og eksterne integrationer mockes i frontendtests. Ingen live Google-, Vipps- eller MobilePay-kald.
