@@ -56,6 +56,13 @@ function avatarColor(name: string): string {
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
+function createIdempotencyKey(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+}
+
 @Component({
   selector: 'app-create-order',
   standalone: true,
@@ -106,6 +113,7 @@ export class CreateOrderComponent implements OnInit {
 
   isSubmitting = signal(false);
   errorMessage = signal<string | null>(null);
+  private readonly idempotencyKey = createIdempotencyKey();
 
   canContinue = computed(() => {
     if (this.currentStep() === 1) {
@@ -128,6 +136,7 @@ export class CreateOrderComponent implements OnInit {
     this.title().trim().length > 0 &&
     this.title().trim().length <= 80 &&
     this.message().length <= 500 &&
+    this.hostUserId() !== null &&
     this.selectedMerchant() !== null &&
     this.selectedParticipants().length > 0 &&
     !this.isSubmitting()
@@ -272,6 +281,14 @@ export class CreateOrderComponent implements OnInit {
     }
   }
 
+  editParticipants(): void {
+    this.goToStep(1);
+  }
+
+  editDetails(): void {
+    this.goToStep(2);
+  }
+
   isStepDone(step: number): boolean {
     return step < this.currentStep();
   }
@@ -302,7 +319,11 @@ export class CreateOrderComponent implements OnInit {
   submit(): void {
     this.stepError.set(null);
 
+    const hostUserId = this.hostUserId();
+    const merchant = this.selectedMerchant();
+    const participantIds = this.selectedParticipants().map(person => person.id);
     const trimmedTitle = this.title().trim();
+
     if (!trimmedTitle || trimmedTitle.length > 80) {
       this.stepError.set('Udfyld venligst en gyldig titel.');
       return;
@@ -311,12 +332,20 @@ export class CreateOrderComponent implements OnInit {
       this.stepError.set('Besked må højst være 500 tegn');
       return;
     }
-    if (!this.selectedMerchant()) {
+    if (hostUserId == null) {
+      this.stepError.set('Din session er udløbet. Log ind igen.');
+      return;
+    }
+    if (!merchant) {
       this.stepError.set('Du skal vælge et spisested for at oprette en gruppebetaling.');
       return;
     }
-    if (this.selectedParticipants().length === 0) {
+    if (participantIds.length === 0) {
       this.stepError.set('Vælg mindst én deltager');
+      return;
+    }
+    if (participantIds.includes(hostUserId) || participantIds.includes(merchant.id) || new Set(participantIds).size !== participantIds.length) {
+      this.stepError.set('Deltagerlisten er ugyldig. Gå tilbage og vælg deltagere igen.');
       return;
     }
     if (this.isSubmitting()) return;
@@ -326,18 +355,20 @@ export class CreateOrderComponent implements OnInit {
     this.errorMessage.set(null);
 
     this.orderService.createOrder({
-      createdByParticipantId: this.hostUserId() ?? 0,
+      createdByParticipantId: hostUserId,
       title: trimmedTitle,
       category: this.emoji().trim() || undefined,
       message: this.message() || undefined,
-      merchantParticipantId: this.selectedMerchant()?.id,
-      participantIds: this.selectedParticipants().map(person => person.id)
+      merchantParticipantId: merchant.id,
+      participantIds,
+      idempotencyKey: this.idempotencyKey
     }).subscribe({
-      next: () => {
-        this.router.navigate(['/home']);
+      next: (created) => {
+        this.router.navigate(['/orders', created.id]);
       },
-      error: () => {
-        this.errorMessage.set('Kunne ikke oprette ordre. Prøv igen.');
+      error: (error) => {
+        const apiMessage = error?.error?.message ?? error?.error?.title;
+        this.errorMessage.set(apiMessage || 'Kunne ikke oprette gruppebetalingen. Prøv igen.');
         this.isSubmitting.set(false);
       }
     });
