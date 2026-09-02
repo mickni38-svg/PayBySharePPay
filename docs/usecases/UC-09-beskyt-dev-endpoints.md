@@ -7,6 +7,12 @@
 - **Opgavetype:** SECURITY_FIX
 - **Størrelse:** Lille backend- og konfigurationsændring
 
+## Status
+
+✅ Implementeret på `main` den 2. september 2026.
+
+`DevelopmentOnlyControllerFeatureProvider` bevarer `DevController` i `Development` og fjerner hele controlleren fra MVC discovery i Simply, Production, Local og andre environments. Alle fire dev-actions er dermed fraværende fra både routing og Swagger uden for Development.
+
 ## Mål
 
 Endpoints der nulstiller eller ændrer testdata må ikke være tilgængelige i Simply/produktion. De skal fortsat kunne bruges i det dokumenterede lokale udviklingsmiljø.
