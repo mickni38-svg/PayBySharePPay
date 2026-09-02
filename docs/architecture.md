@@ -90,9 +90,9 @@ Token og brugerinfo gemmes i `localStorage` under nøglerne `sbys_token` og `sby
 | `/messages` | `MessagesComponent` | Beskedindbakke |
 | `/pending-participants` | `PendingParticipantsComponent` | Host-view: deltagere der mangler at bestille |
 | `/find-participants` | `FindParticipantsComponent` | Søg + tilføj venner |
-| `/profile` | `ProfileComponent` | Brugerprofil |
-| `/login` | `LoginComponent` | Login |
-| `/register` | `RegisterComponent` | Registrering |
+| `/profile` | `ProfileComponent` | Kanonisk profil- og kontocenter med Konto, rollebeskyttet Vipps-test og Development-only Udvikler |
+| `/login` | Redirect | Viderestiller til `/profile?mode=login` |
+| `/register` | Redirect | Viderestiller til `/profile?mode=register` |
 
 ### Azure Static Web Apps routing
 
