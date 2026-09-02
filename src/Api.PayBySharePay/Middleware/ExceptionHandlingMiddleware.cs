@@ -31,6 +31,13 @@ public class ExceptionHandlingMiddleware
             context.Response.ContentType = "application/json";
             await context.Response.WriteAsJsonAsync(new { error = ex.Message });
         }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning(ex, "Adgang nægtet");
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsJsonAsync(new { error = "Du har ikke adgang til denne handling." });
+        }
         catch (InvalidOperationException ex)
         {
             _logger.LogWarning(ex, "Ugyldig operation");
