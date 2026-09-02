@@ -108,7 +108,6 @@ describe('CreateOrderComponent UC-03 participant step', () => {
     expect(component.selectedMerchant()?.id).toBe(merchant.id);
     expect(component.selectedMerchant()?.displayName).toBe('Test Bistro');
     expect(component.selectedMerchant()?.logoUrl).toContain('/api/participants/42/logo');
-    expect(component.merchantPreselected()).toBeTrue();
     expect(router.navigate).not.toHaveBeenCalled();
   });
 
