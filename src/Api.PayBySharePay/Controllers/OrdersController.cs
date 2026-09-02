@@ -92,7 +92,7 @@ public class OrdersController : ControllerBase
         }
         catch
         {
-            CreateRequests.TryRemove(new KeyValuePair<string, Lazy<Task<OrderDto>>>(key, lazyCreate));
+            CreateRequests.TryRemove(key, out _);
             throw;
         }
     }
