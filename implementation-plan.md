@@ -50,3 +50,7 @@ API- og databasemodellen accepterer allerede en valgfri besked uden en 200-tegns
 ## Risici og afgrænsning
 
 Trin 3 viser indtil UC-05 den eksisterende kontrolside. Emoji fjernes fra trin 2, fordi UC-04 ikke indeholder kategorivalg, og backend-kontrakten allerede gør `category` valgfri. Create-request, invitationer og betalingsflow ændres ikke.
+
+## Verifikation
+
+Implementeringen er gennemført på `feature/uc04-wizard-details` og automatisk verificeret i PR #12. GitHub Actions **Build & Test #122** bestod både Angular-tests, Angular Simply-build, .NET build og .NET-tests.
