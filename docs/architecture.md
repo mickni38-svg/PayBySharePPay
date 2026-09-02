@@ -114,8 +114,10 @@ Token og brugerinfo gemmes i `localStorage` under nøglerne `sbys_token` og `sby
 - `name` = deltagerens navn
 - `jti` = unikt token-id (GUID)
 
-Token-levetid: konfigurerbar via `Jwt:ExpiresInMinutes`. Default i `appsettings.json`: **43200 min (30 dage)**. `AuthController.Login()` returnerer hardkodet `expiresAt = now + 480 min` i response-body — dette er **ikke** den faktiske token-levetid (se Open Questions #2).  
+Token-levetid: konfigurerbar via `Jwt:ExpiresInMinutes`. Default i `appsettings.json`: **43200 min (30 dage)**. `AuthController.Login()` returnerer hardkodet `expiresAt = now + 480 min` i response-body — dette er **ikke** den faktiske token-levetid (se Open Questions #1).  
 Validering: issuer, audience, levetid og signatur valideres.
+
+På host-only ordrehandlinger (`/approve`, `/cancel`, `/complete` og legacy `/pay`) udleder `OrdersController` det aktuelle participant-ID fra det validerede `NameIdentifier`/`sub`-claim. Et eventuelt `requestingParticipantId` i body bevares kun for bagudkompatibilitet og bruges ikke til autorisation. Manglende eller ugyldigt ID-claim giver 401.
 
 ### Middleware-pipeline (rækkefølge)
 
@@ -130,10 +132,10 @@ Swagger → ExceptionHandlingMiddleware → CORS → (HTTPS redirect i prod) →
 | `ArgumentException` | 400 Bad Request |
 | `KeyNotFoundException` | 404 Not Found |
 | `InvalidOperationException` | 409 Conflict |
-| `UnauthorizedAccessException` | 500 Internal Server Error (fanges af generisk handler — se note) |
+| `UnauthorizedAccessException` | 403 Forbidden |
 | Alle andre | 500 Internal Server Error |
 
-> Note: `UnauthorizedAccessException` fanges **ikke** eksplicit — den fanges af den generiske `Exception`-handler og returnerer HTTP 500 med JSON-body `{ "error": "Der opstod en uventet fejl.", "detail": "<ex.Message>", "type": "UnauthorizedAccessException" }`. Host-tjek i services kaster denne exception (f.eks. `"Kun ordrevært (host) kan godkende og capture."`), og `detail` eksponerer dermed interne beskeder i 500-svaret.
+> `UnauthorizedAccessException` mappes til et generisk 403-svar. Den interne exception-besked logges, men eksponeres ikke til klienten.
 
 ### Controllers
 
@@ -727,7 +729,8 @@ Vigtigt: Merchant får ikke endelig ordre endnu. Merchant må kun vise, at delta
 Angular (OrderDetailComponent)
   → POST /api/orders/{id}/approve  [JWT]
   → OrdersController.ApproveOrder()
-  → GroupPaymentOrchestrationService.ApproveAndCaptureAllAsync()
+    → Udled currentParticipantId fra JWT NameIdentifier/sub; ugyldigt claim → 401
+  → GroupPaymentOrchestrationService.ApproveAndCaptureAllAsync(currentParticipantId)
 	→ OrderRepository.GetByIdWithDetailsAsync()           [SQL]
 	→ ParticipantPaymentRepository.GetByOrderIdAsync()    [SQL]
 	→ ParticipantPaymentStateService.SetCapturePendingAsync()
@@ -768,9 +771,8 @@ Vipps MobilePay
 
 ## Open Questions
 
-1. **`UnauthorizedAccessException` → 500** — Host-tjek i services kaster `UnauthorizedAccessException`, men middleware mapper det ikke til 403. Det resulterer i HTTP 500. Er dette bevidst?
-2. **`Jwt:ExpiresInMinutes` i appsettings vs. kode** — `appsettings.json` indeholder `43200` (30 dage), men `JwtTokenService` bruger værdien direkte og `AuthController` bruger `AddMinutes(480)` hardcodet. Hvad er den faktiske udløbstid?
-3. **CI/CD** — `deploy-simply.yml` er konfigureret til manuel deploy via `workflow_dispatch`. Ingen automatisk deploy ved push til `main`.
-4. **Angular environment-filer** — Tre filer: `environment.ts` (dev → `localhost:7007`), `environment.simply.ts` (prod → `https://api.paynsync.dk`), `environment.test.ts` (test). Konfigureres i `angular.json` via `fileReplacements`.
-5. **`DevController` i prod** — `DELETE /api/dev/reset` og `POST /api/dev/seed-merchant-urls` er deployet til produktion uden auth-beskyttelse.
-6. **ReadyToPay-implementering** — Hvis eksisterende kode stadig sætter `ReadyToPay` på baggrund af `OrderSubmitted`, skal den ændres. Fremadrettet må `ReadyToPay` kun sættes, når alle relevante `ParticipantPayment`-records er `Reserved`.
+1. **`Jwt:ExpiresInMinutes` i appsettings vs. kode** — `appsettings.json` indeholder `43200` (30 dage), men `JwtTokenService` bruger værdien direkte og `AuthController` bruger `AddMinutes(480)` hardcodet. Hvad er den faktiske udløbstid?
+2. **CI/CD** — `deploy-simply.yml` er konfigureret til manuel deploy via `workflow_dispatch`. Ingen automatisk deploy ved push til `main`.
+3. **Angular environment-filer** — Tre filer: `environment.ts` (dev → `localhost:7007`), `environment.simply.ts` (prod → `https://api.paynsync.dk`), `environment.test.ts` (test). Konfigureres i `angular.json` via `fileReplacements`.
+4. **`DevController` i prod** — `DELETE /api/dev/reset` og `POST /api/dev/seed-merchant-urls` er deployet til produktion uden auth-beskyttelse.
+5. **ReadyToPay-implementering** — Hvis eksisterende kode stadig sætter `ReadyToPay` på baggrund af `OrderSubmitted`, skal den ændres. Fremadrettet må `ReadyToPay` kun sættes, når alle relevante `ParticipantPayment`-records er `Reserved`.
