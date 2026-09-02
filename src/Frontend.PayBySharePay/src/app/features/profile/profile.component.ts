@@ -1,14 +1,28 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { AfterViewInit, Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../../core/services/auth.service';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { AuthService, LoginResponse, ParticipantType } from '../../core/services/auth.service';
 import { ProfileService, UpdateProfileRequest, VippsTestPersonDto } from '../../core/services/profile.service';
 import { ParticipantApiDto } from '../../core/models/participant.model';
 import { ThemeService } from '../../core/services/theme.service';
 import { DirectoryService } from '../../core/services/directory.service';
 import { DevService } from '../../core/services/dev.service';
 import { DirectoryEntry } from '../../core/models/directory.model';
+import { environment } from '../../../environments/environment';
+
+declare const google: {
+  accounts: {
+    id: {
+      initialize: (config: object) => void;
+      renderButton: (parent: HTMLElement, options: object) => void;
+    };
+  };
+};
+
+type MainTab = 'account' | 'vipps' | 'developer';
+type AccountMode = 'profile' | 'login' | 'register';
+type RegisterType = 'person' | 'merchant';
 
 const NOTIF_KEY = 'sbys_notifications_enabled';
 
@@ -19,33 +33,75 @@ const NOTIF_KEY = 'sbys_notifications_enabled';
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss'
 })
-export class ProfileComponent implements OnInit {
-  isLoading = signal(true);
+export class ProfileComponent implements OnInit, AfterViewInit {
+  readonly isProduction = environment.production;
+
+  mainTab = signal<MainTab>('account');
+  accountMode = signal<AccountMode>('login');
+  registerType = signal<RegisterType>('person');
+
+  isLoading = signal(false);
   isSaving = signal(false);
   saveSuccess = signal(false);
   saveError = signal(false);
+  profileType = signal<ParticipantType | null>(null);
+  companyName = signal('');
 
   name = signal('');
   email = signal('');
   phone = signal('');
   notificationsEnabled = signal(true);
 
+  loginEmail = '';
+  loginPassword = '';
+  showLoginPassword = signal(false);
+  loginError = signal<string | null>(null);
+  loginLoading = signal(false);
+
+  personName = '';
+  personEmail = '';
+  personPhone = '';
+  personPassword = '';
+  personPasswordConfirm = '';
+
+  merchantName = '';
+  merchantCompany = '';
+  merchantEmail = '';
+  merchantPassword = '';
+  merchantPasswordConfirm = '';
+  merchantMsn = '';
+  merchantCvr = '';
+  merchantContact = '';
+  merchantContactEmail = '';
+  merchantPhone = '';
+  merchantAddress = '';
+
+  registerError = signal<string | null>(null);
+  registerLoading = signal(false);
+
   vippsTestPersons = signal<VippsTestPersonDto[]>([]);
   selectedVippsTestUserId = signal<number | null>(null);
+  vippsLoading = signal(false);
+  vippsLoaded = signal(false);
   vippsSaving = signal(false);
   vippsSaveSuccess = signal(false);
+  vippsError = signal<string | null>(null);
 
   persons = signal<DirectoryEntry[]>([]);
   selectedEmail = '';
-  loginError = signal<string | null>(null);
-  loginLoading = signal(false);
+  developerLoaded = signal(false);
+  developerLoading = signal(false);
+  developerLoginError = signal<string | null>(null);
+  developerLoginLoading = signal(false);
   resetLoading = signal(false);
   resetMessage = signal<string | null>(null);
-  devPanelOpen = signal(false);
+
+  private googleRendered = false;
 
   constructor(
     readonly auth: AuthService,
     private readonly router: Router,
+    private readonly route: ActivatedRoute,
     private readonly profileService: ProfileService,
     protected readonly themeService: ThemeService,
     private readonly directory: DirectoryService,
@@ -53,115 +109,240 @@ export class ProfileComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.directory.search('').subscribe({
-      next: (list) => this.persons.set(list.filter(entry => entry.type === 'Person')),
-      error: () => this.persons.set([])
-    });
+    this.notificationsEnabled.set(localStorage.getItem(NOTIF_KEY) !== 'false');
 
-    const stored = localStorage.getItem(NOTIF_KEY);
-    this.notificationsEnabled.set(stored !== 'false');
+    const requestedMode = this.route.snapshot.queryParamMap.get('mode');
+    if (requestedMode === 'register') {
+      this.accountMode.set('register');
+    } else if (requestedMode === 'login') {
+      this.accountMode.set('login');
+    } else {
+      this.accountMode.set(this.auth.isLoggedIn() ? 'profile' : 'login');
+    }
 
-    const userId = this.auth.currentUserId();
-    if (!userId) { this.isLoading.set(false); return; }
-
-    this.profileService.getProfile(userId).subscribe({
-      next: (p: ParticipantApiDto) => {
-        this.name.set(p.name);
-        this.email.set(p.email ?? '');
-        this.phone.set(p.phone ?? '');
-        this.isLoading.set(false);
-      },
-      error: () => {
-        this.isLoading.set(false);
-      }
-    });
-
-    this.profileService.getVippsTestPersons().subscribe({
-      next: (persons) => {
-        this.vippsTestPersons.set(persons);
-        const myMapping = persons.find(p => p.mappedByParticipantId === userId);
-        this.selectedVippsTestUserId.set(myMapping?.id ?? null);
-      }
-    });
+    if (this.auth.isLoggedIn()) {
+      this.loadProfile();
+    }
   }
 
-  isVippsPersonDisabled(person: VippsTestPersonDto): boolean {
-    const userId = this.auth.currentUserId();
-    return person.mappedByParticipantId != null && person.mappedByParticipantId !== userId;
+  ngAfterViewInit(): void {
+    this.renderGoogleButton();
   }
 
-  saveVippsMapping(): void {
+  effectiveParticipantType(): ParticipantType | null {
+    return this.auth.currentUserType() ?? this.profileType();
+  }
+
+  canUseVipps(): boolean {
+    return this.auth.isLoggedIn() && this.effectiveParticipantType() === 'Person';
+  }
+
+  selectMainTab(tab: MainTab): void {
+    if (tab === 'vipps' && !this.canUseVipps()) return;
+    if (tab === 'developer' && this.isProduction) return;
+
+    this.mainTab.set(tab);
+    if (tab === 'vipps') this.loadVippsMapping();
+    if (tab === 'developer') this.loadDeveloperAccounts();
+  }
+
+  setAccountMode(mode: AccountMode): void {
+    if (mode === 'profile' && !this.auth.isLoggedIn()) return;
+    this.accountMode.set(mode);
+    this.loginError.set(null);
+    this.registerError.set(null);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { mode },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
+
+    if (mode === 'login') {
+      this.googleRendered = false;
+      setTimeout(() => this.renderGoogleButton());
+    }
+  }
+
+  setRegisterType(type: RegisterType): void {
+    this.registerType.set(type);
+    this.registerError.set(null);
+  }
+
+  onTabKeydown(event: KeyboardEvent, current: MainTab): void {
+    const tabs: MainTab[] = ['account'];
+    if (this.canUseVipps()) tabs.push('vipps');
+    if (!this.isProduction) tabs.push('developer');
+
+    let index = tabs.indexOf(current);
+    if (event.key === 'ArrowRight') index = (index + 1) % tabs.length;
+    else if (event.key === 'ArrowLeft') index = (index - 1 + tabs.length) % tabs.length;
+    else if (event.key === 'Home') index = 0;
+    else if (event.key === 'End') index = tabs.length - 1;
+    else return;
+
+    event.preventDefault();
+    const next = tabs[index];
+    this.selectMainTab(next);
+    document.getElementById(`profile-tab-${next}`)?.focus();
+  }
+
+  private loadProfile(): void {
     const userId = this.auth.currentUserId();
     if (!userId) return;
-    this.vippsSaving.set(true);
-    this.vippsSaveSuccess.set(false);
-    this.profileService.setVippsTestUser(userId, this.selectedVippsTestUserId()).subscribe({
-      next: () => {
-        this.vippsSaving.set(false);
-        this.vippsSaveSuccess.set(true);
-        setTimeout(() => this.vippsSaveSuccess.set(false), 3000);
-        // Opdatér local state så disable-logikken er korrekt
-        this.profileService.getVippsTestPersons().subscribe(persons => this.vippsTestPersons.set(persons));
+
+    this.isLoading.set(true);
+    this.profileService.getProfile(userId).subscribe({
+      next: (profile: ParticipantApiDto) => {
+        this.name.set(profile.name);
+        this.email.set(profile.email ?? '');
+        this.phone.set(profile.phone ?? '');
+        this.companyName.set(profile.companyName ?? '');
+        this.profileType.set(profile.type === 'Merchant' ? 'Merchant' : 'Person');
+        this.isLoading.set(false);
       },
       error: () => {
-        this.vippsSaving.set(false);
+        this.isLoading.set(false);
+        this.saveError.set(true);
       }
     });
   }
 
-  toggleDevPanel(): void {
-    this.devPanelOpen.update(open => !open);
-  }
-
-  devLogin(): void {
-    if (!this.selectedEmail) return;
+  login(): void {
+    const email = this.loginEmail.trim();
+    if (!email || !this.loginPassword) return;
 
     this.loginLoading.set(true);
     this.loginError.set(null);
-    this.auth.login(this.selectedEmail, '').subscribe({
-      next: () => {
+    this.auth.login(email, this.loginPassword).subscribe({
+      next: (response) => this.finishAuthentication(response),
+      error: () => {
         this.loginLoading.set(false);
-        this.router.navigate(['/home']);
-      },
+        this.loginError.set('Email eller adgangskode er forkert.');
+      }
+    });
+  }
+
+  private finishAuthentication(response: LoginResponse): void {
+    this.loginLoading.set(false);
+    this.registerLoading.set(false);
+    if (response.participantType === 'Merchant') {
+      this.profileType.set('Merchant');
+      this.mainTab.set('account');
+      this.accountMode.set('profile');
+      this.loadProfile();
+      this.router.navigate(['/profile'], {
+        queryParams: { mode: 'profile' },
+        replaceUrl: true
+      });
+    } else {
+      this.router.navigate(['/home']);
+    }
+  }
+
+  private renderGoogleButton(): void {
+    if (this.googleRendered || this.accountMode() !== 'login' || typeof google === 'undefined') return;
+    const button = document.getElementById('profile-google-signin-btn');
+    if (!button) return;
+
+    google.accounts.id.initialize({
+      client_id: environment.googleClientId,
+      callback: (response: { credential: string }) => this.handleGoogleResponse(response)
+    });
+    google.accounts.id.renderButton(button, {
+      theme: 'outline',
+      size: 'large',
+      width: 312,
+      text: 'continue_with',
+      locale: 'da'
+    });
+    this.googleRendered = true;
+  }
+
+  private handleGoogleResponse(response: { credential: string }): void {
+    this.loginLoading.set(true);
+    this.loginError.set(null);
+    this.auth.googleLogin(response.credential).subscribe({
+      next: () => this.router.navigate(['/home']),
       error: (error) => {
         this.loginLoading.set(false);
-        this.loginError.set(error?.error?.message ?? 'Login fejlede');
+        this.loginError.set(error?.error?.error ?? 'Google-login mislykkedes. Prøv igen.');
       }
     });
   }
 
-  devReset(): void {
-    if (!confirm('Er du sikker? Dette sletter ALLE ordre og beskeder i databasen.')) return;
+  canRegisterPerson(): boolean {
+    return !!this.personName.trim() &&
+      !!this.personEmail.trim() &&
+      this.personPassword.length >= 6 &&
+      this.personPassword === this.personPasswordConfirm;
+  }
 
-    this.resetLoading.set(true);
-    this.resetMessage.set(null);
-    this.devService.resetData().subscribe({
-      next: () => {
-        this.resetLoading.set(false);
-        this.resetMessage.set('Alle ordre og beskeder er slettet.');
-        setTimeout(() => this.resetMessage.set(null), 4000);
-      },
-      error: () => {
-        this.resetLoading.set(false);
-        this.resetMessage.set('Fejl ved sletning – prøv igen.');
+  canRegisterMerchant(): boolean {
+    return !!this.merchantName.trim() &&
+      !!this.merchantCompany.trim() &&
+      !!this.merchantEmail.trim() &&
+      !!this.merchantMsn.trim() &&
+      this.merchantPassword.length >= 6 &&
+      this.merchantPassword === this.merchantPasswordConfirm;
+  }
+
+  registerPerson(): void {
+    if (!this.canRegisterPerson()) {
+      this.registerError.set('Udfyld de obligatoriske felter, og kontrollér adgangskoderne.');
+      return;
+    }
+
+    this.registerLoading.set(true);
+    this.registerError.set(null);
+    this.auth.register({
+      name: this.personName.trim(),
+      email: this.personEmail.trim(),
+      phone: this.personPhone.trim() || undefined,
+      password: this.personPassword
+    }).subscribe({
+      next: (response) => this.finishAuthentication(response),
+      error: (error) => {
+        this.registerLoading.set(false);
+        this.registerError.set(error.status === 409
+          ? 'Der findes allerede en konto med denne email.'
+          : 'Kontoen kunne ikke oprettes. Prøv igen.');
       }
     });
   }
 
-  logout(): void {
-    this.auth.logout();
-    this.router.navigate(['/login']);
+  registerMerchant(): void {
+    if (!this.canRegisterMerchant()) {
+      this.registerError.set('Udfyld firmanavn, konto-email, adgangskode og Vipps MSN.');
+      return;
+    }
+
+    this.registerLoading.set(true);
+    this.registerError.set(null);
+    this.auth.registerMerchant({
+      name: this.merchantName.trim(),
+      companyName: this.merchantCompany.trim(),
+      email: this.merchantEmail.trim(),
+      password: this.merchantPassword,
+      vippsMerchantSerialNumber: this.merchantMsn.trim(),
+      cvrNumber: this.merchantCvr.trim() || undefined,
+      contactPerson: this.merchantContact.trim() || undefined,
+      contactEmail: this.merchantContactEmail.trim() || undefined,
+      contactPhone: this.merchantPhone.trim() || undefined,
+      companyAddress: this.merchantAddress.trim() || undefined
+    }).subscribe({
+      next: (response) => this.finishAuthentication(response),
+      error: (error) => {
+        this.registerLoading.set(false);
+        this.registerError.set(error.status === 409
+          ? 'Der findes allerede en konto med denne email.'
+          : error?.error?.error ?? 'Merchantkontoen kunne ikke oprettes. Prøv igen.');
+      }
+    });
   }
 
-  toggleNotifications(): void {
-    const next = !this.notificationsEnabled();
-    this.notificationsEnabled.set(next);
-    localStorage.setItem(NOTIF_KEY, next ? 'true' : 'false');
-  }
-
-  save(): void {
+  saveProfile(): void {
     if (!this.name().trim()) return;
-
     const userId = this.auth.currentUserId();
     if (!userId) return;
 
@@ -171,8 +352,8 @@ export class ProfileComponent implements OnInit {
 
     const request: UpdateProfileRequest = {
       name: this.name().trim(),
-      email: this.email() || undefined,
-      phone: this.phone() || undefined
+      email: this.email().trim() || undefined,
+      phone: this.phone().trim() || undefined
     };
 
     this.profileService.updateProfile(userId, request).subscribe({
@@ -185,6 +366,132 @@ export class ProfileComponent implements OnInit {
       error: () => {
         this.isSaving.set(false);
         this.saveError.set(true);
+      }
+    });
+  }
+
+  toggleNotifications(): void {
+    const enabled = !this.notificationsEnabled();
+    this.notificationsEnabled.set(enabled);
+    localStorage.setItem(NOTIF_KEY, enabled ? 'true' : 'false');
+  }
+
+  logout(): void {
+    this.auth.logout();
+    this.profileType.set(null);
+    this.mainTab.set('account');
+    this.accountMode.set('login');
+    this.router.navigate(['/profile'], {
+      queryParams: { mode: 'login' },
+      replaceUrl: true
+    });
+    this.googleRendered = false;
+    setTimeout(() => this.renderGoogleButton());
+  }
+
+  private loadVippsMapping(): void {
+    if (this.vippsLoaded() || this.vippsLoading() || !this.canUseVipps()) return;
+    this.vippsLoading.set(true);
+    this.vippsError.set(null);
+
+    const userId = this.auth.currentUserId();
+    this.profileService.getVippsTestPersons().subscribe({
+      next: (persons) => {
+        this.vippsTestPersons.set(persons);
+        const mapping = persons.find(person => person.mappedByParticipantId === userId);
+        this.selectedVippsTestUserId.set(mapping?.id ?? null);
+        this.vippsLoaded.set(true);
+        this.vippsLoading.set(false);
+      },
+      error: () => {
+        this.vippsLoading.set(false);
+        this.vippsError.set('Vipps-testpersoner kunne ikke hentes.');
+      }
+    });
+  }
+
+  isVippsPersonDisabled(person: VippsTestPersonDto): boolean {
+    const userId = this.auth.currentUserId();
+    return person.mappedByParticipantId != null && person.mappedByParticipantId !== userId;
+  }
+
+  saveVippsMapping(): void {
+    const userId = this.auth.currentUserId();
+    if (!userId || !this.canUseVipps()) return;
+
+    this.vippsSaving.set(true);
+    this.vippsSaveSuccess.set(false);
+    this.vippsError.set(null);
+    this.profileService.setVippsTestUser(userId, this.selectedVippsTestUserId()).subscribe({
+      next: () => {
+        this.vippsSaving.set(false);
+        this.vippsSaveSuccess.set(true);
+        this.vippsLoaded.set(false);
+        this.loadVippsMapping();
+        setTimeout(() => this.vippsSaveSuccess.set(false), 3000);
+      },
+      error: () => {
+        this.vippsSaving.set(false);
+        this.vippsError.set('Mappingen kunne ikke gemmes.');
+      }
+    });
+  }
+
+  private loadDeveloperAccounts(): void {
+    if (this.isProduction || this.developerLoaded() || this.developerLoading()) return;
+    this.developerLoading.set(true);
+    this.directory.search('').subscribe({
+      next: (list) => {
+        this.persons.set(list.filter(entry => entry.type === 'Person'));
+        this.developerLoaded.set(true);
+        this.developerLoading.set(false);
+      },
+      error: () => {
+        this.persons.set([]);
+        this.developerLoaded.set(true);
+        this.developerLoading.set(false);
+        this.developerLoginError.set('Testkonti kunne ikke hentes.');
+      }
+    });
+  }
+
+  developerLogin(): void {
+    if (!this.selectedEmail || this.isProduction) return;
+
+    this.developerLoginLoading.set(true);
+    this.developerLoginError.set(null);
+    this.auth.login(this.selectedEmail, undefined).subscribe({
+      next: () => {
+        this.developerLoginLoading.set(false);
+        this.router.navigate(['/home']);
+      },
+      error: (error) => {
+        this.developerLoginLoading.set(false);
+        this.developerLoginError.set(
+          error.status === 404
+            ? 'Udviklerlogin findes kun, når backend kører i Development.'
+            : 'Testlogin fejlede.'
+        );
+      }
+    });
+  }
+
+  developerReset(): void {
+    if (this.isProduction) return;
+    if (!confirm('Dette sletter alle ordrer, betalinger og beskeder i udviklingsdatabasen. Fortsæt?')) return;
+
+    this.resetLoading.set(true);
+    this.resetMessage.set(null);
+    this.devService.resetData().subscribe({
+      next: () => {
+        this.resetLoading.set(false);
+        this.resetMessage.set('Udviklingsdata er nulstillet.');
+      },
+      error: (error) => {
+        this.resetLoading.set(false);
+        this.resetMessage.set(error.status === 404
+          ? 'Reset findes kun, når backend kører i Development.'
+          : 'Data kunne ikke nulstilles.');
       }
     });
   }
