@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ViewEncapsulation } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { BottomNavComponent } from './layout/bottom-nav/bottom-nav.component';
 
@@ -6,6 +6,7 @@ import { BottomNavComponent } from './layout/bottom-nav/bottom-nav.component';
   selector: 'app-root',
   standalone: true,
   imports: [RouterOutlet, BottomNavComponent],
+  encapsulation: ViewEncapsulation.None,
   template: `
     <div class="app-shell">
       <header class="app-header">
@@ -32,16 +33,21 @@ import { BottomNavComponent } from './layout/bottom-nav/bottom-nav.component';
       display: flex;
       align-items: center;
       justify-content: flex-start;
-      padding: 6px 20px 2px;
+      padding: 2px 20px 0;
       background: #070B14;
     }
 
     .app-header__logo {
       width: 100%;
-      max-width: 320px;
+      max-width: 250px;
       height: auto;
       object-fit: contain;
       display: block;
+    }
+
+    /* Bottom navigation provides the home action, so page-level Hjem links are redundant. */
+    .page-back {
+      display: none !important;
     }
 
     .app-shell__content {
