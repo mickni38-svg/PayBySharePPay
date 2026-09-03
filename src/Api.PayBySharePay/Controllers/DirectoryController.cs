@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Service.PayBySharePay.DTOs;
 using Service.PayBySharePay.Interfaces;
@@ -5,6 +6,7 @@ using Service.PayBySharePay.Interfaces;
 namespace Api.PayBySharePay.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class DirectoryController : ControllerBase
 {
