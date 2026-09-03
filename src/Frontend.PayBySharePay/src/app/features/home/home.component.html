@@ -104,126 +104,54 @@
     </section>
   }
 
-  <!-- Overblik – fuld-bredde nav-kort (alle temaer undtagen default) -->
-  @if (themeService.current() !== 'default') {
-    <section class="home__status">
-      <a class="status-card status-card--overblik" routerLink="/orders">
-        <div class="status-card__icon">
-          <div style="position:relative;display:inline-flex;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
-              <line x1="6" y1="20" x2="6" y2="14"/>
-            </svg>
-            @if (readyToPayCount() > 0) {
-              <span class="status-card__badge">{{ readyToPayCount() > 9 ? '9+' : readyToPayCount() }}</span>
-            }
-          </div>
-        </div>
-        <div class="status-card__text">
-          <span class="status-card__title">Overblik</span>
-          <span class="status-card__sub">Se igangværende gruppebetalinger</span>
-        </div>
-        <svg class="status-card__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <polyline points="9 18 15 12 9 6"/>
-        </svg>
-      </a>
-    </section>
-  }
-
-  <!-- Action cards (grid) – kun vist i standard-tema -->
-  @if (themeService.current() === 'default') {
-  <section class="home__cards home__cards--spaced">
-    @for (card of actionCards; track card.route) {
-      <a class="action-card"
-         [class.action-card--hidden]="false"
-         [class.action-card--dark]="themeService.current() === 'color'"
-         [routerLink]="card.route"
-         [style.--card-accent]="card.accent"
-         [style.box-shadow]="themeService.current() === 'color' ? ('0 0 18px ' + card.accent + '40') : 'none'">
-        <div class="action-card__top">
-          <div class="action-card__icon" [style.background]="card.iconBg">
-            @switch (card.icon) {
-              @case ('chart') {
-                <div style="position:relative;display:inline-flex;">
-                  <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="card.accent" stroke-width="2" stroke-linecap="round">
-                    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
-                    <line x1="6" y1="20" x2="6" y2="14"/>
-                  </svg>
-                  @if (readyToPayCount() > 0) {
-                    <span class="action-card__badge">{{ readyToPayCount() > 9 ? '9+' : readyToPayCount() }}</span>
-                  }
-                </div>
-              }
-              @case ('plus') {
-                <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="card.accent" stroke-width="2" stroke-linecap="round">
-                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-              }
-              @case ('activity') {
-                <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="card.accent" stroke-width="2" stroke-linecap="round">
-                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-                </svg>
-              }
-              @case ('users') {
-                <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="card.accent" stroke-width="2" stroke-linecap="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-              }
-              @case ('chat') {
-                <div style="position:relative;display:inline-flex;">
-                  <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="card.accent" stroke-width="2" stroke-linecap="round">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                  </svg>
-                  @if (messageService.unreadCount() > 0) {
-                    <span class="action-card__badge">{{ messageService.unreadCount() > 9 ? '9+' : messageService.unreadCount() }}</span>
-                  }
-                </div>
-              }
-            }
-          </div>
-          @if (card.icon === 'users' && friendCount() === 0) {
-            <span class="action-card__sub action-card__sub--warn">Tilføj venner inden du kan indgå i en gruppebetaling</span>
-          } @else {
-            <span class="action-card__sub">{{ card.subtitle }}</span>
+  <!-- Overblik – samme fuld-bredde nav-kort i alle temaer -->
+  <section class="home__status">
+    <a class="status-card status-card--overblik" routerLink="/orders">
+      <div class="status-card__icon">
+        <div style="position:relative;display:inline-flex;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6" y1="20" x2="6" y2="14"/>
+          </svg>
+          @if (readyToPayCount() > 0) {
+            <span class="status-card__badge">{{ readyToPayCount() > 9 ? '9+' : readyToPayCount() }}</span>
           }
         </div>
-        <span class="action-card__label">{{ card.label }}</span>
-      </a>
-    }
+      </div>
+      <div class="status-card__text">
+        <span class="status-card__title">Overblik</span>
+        <span class="status-card__sub">Se igangværende gruppebetalinger</span>
+      </div>
+      <svg class="status-card__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <polyline points="9 18 15 12 9 6"/>
+      </svg>
+    </a>
   </section>
-  }
 
-  <!-- Beskeder – fuld-bredde nav-kort (alle temaer undtagen default) -->
-  @if (themeService.current() !== 'default') {
-    <section class="home__status">
-      <a class="status-card status-card--messages" routerLink="/messages">
-        <div class="status-card__icon">
-          <div style="position:relative;display:inline-flex;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-              <circle cx="9" cy="10" r="1" fill="currentColor"/>
-              <circle cx="12" cy="10" r="1" fill="currentColor"/>
-              <circle cx="15" cy="10" r="1" fill="currentColor"/>
-            </svg>
-            @if (messageService.unreadCount() > 0) {
-              <span class="status-card__badge">{{ messageService.unreadCount() > 9 ? '9+' : messageService.unreadCount() }}</span>
-            }
-          </div>
+  <!-- Beskeder – samme fuld-bredde nav-kort i alle temaer -->
+  <section class="home__status">
+    <a class="status-card status-card--messages" routerLink="/messages">
+      <div class="status-card__icon">
+        <div style="position:relative;display:inline-flex;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            <circle cx="9" cy="10" r="1" fill="currentColor"/>
+            <circle cx="12" cy="10" r="1" fill="currentColor"/>
+            <circle cx="15" cy="10" r="1" fill="currentColor"/>
+          </svg>
+          @if (messageService.unreadCount() > 0) {
+            <span class="status-card__badge">{{ messageService.unreadCount() > 9 ? '9+' : messageService.unreadCount() }}</span>
+          }
         </div>
-        <div class="status-card__text">
-          <span class="status-card__title">Beskeder</span>
-          <span class="status-card__sub">Se dine anmodninger</span>
-        </div>
-        <svg class="status-card__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <polyline points="9 18 15 12 9 6"/>
-        </svg>
-      </a>
-    </section>
-  }
-
-
+      </div>
+      <div class="status-card__text">
+        <span class="status-card__title">Beskeder</span>
+        <span class="status-card__sub">Se dine anmodninger</span>
+      </div>
+      <svg class="status-card__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <polyline points="9 18 15 12 9 6"/>
+      </svg>
+    </a>
+  </section>
 
 </div>
