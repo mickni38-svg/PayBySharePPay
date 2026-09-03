@@ -13,7 +13,16 @@ public sealed class PayNSyncFinalGroupOrderDto
     public string Currency { get; init; } = "DKK";
     public decimal TotalAmount { get; init; }
     public DateTime PaidAtUtc { get; init; }
+    public PayNSyncDeliveryAddressDto? DeliveryAddress { get; set; }
     public List<PayNSyncFinalParticipantOrderDto> Participants { get; init; } = [];
+}
+
+public sealed class PayNSyncDeliveryAddressDto
+{
+    public string? Address { get; init; }
+    public string? PostalCode { get; init; }
+    public string? City { get; init; }
+    public string? Country { get; init; }
 }
 
 public sealed class PayNSyncFinalParticipantOrderDto
