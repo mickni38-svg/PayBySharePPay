@@ -20,10 +20,10 @@ declare const google: {
   };
 };
 
-type MainTab = 'account' | 'vipps' | 'developer';
+type MainTab = 'account' | 'settings' | 'vipps' | 'developer';
 type AccountMode = 'profile' | 'login' | 'register';
 type RegisterType = 'person' | 'merchant';
-type AccordionSection = 'profile' | 'settings';
+type AccordionSection = 'profile';
 
 const NOTIF_KEY = 'sbys_notifications_enabled';
 
@@ -52,6 +52,10 @@ export class ProfileComponent implements OnInit, AfterViewInit {
   name = signal('');
   email = signal('');
   phone = signal('');
+  address = signal('');
+  postalCode = signal('');
+  city = signal('');
+  country = signal('Danmark');
   notificationsEnabled = signal(true);
 
   loginEmail = '';
@@ -124,9 +128,7 @@ export class ProfileComponent implements OnInit, AfterViewInit {
       this.accountMode.set('login');
     }
 
-    if (isLoggedIn) {
-      this.loadProfile();
-    }
+    if (isLoggedIn) this.loadProfile();
   }
 
   ngAfterViewInit(): void {
@@ -146,6 +148,7 @@ export class ProfileComponent implements OnInit, AfterViewInit {
   }
 
   selectMainTab(tab: MainTab): void {
+    if (tab === 'settings' && !this.auth.isLoggedIn()) return;
     if (tab === 'vipps' && !this.canUseVipps()) return;
     if (tab === 'developer' && this.isProduction) return;
 
@@ -179,6 +182,7 @@ export class ProfileComponent implements OnInit, AfterViewInit {
 
   onTabKeydown(event: KeyboardEvent, current: MainTab): void {
     const tabs: MainTab[] = ['account'];
+    if (this.auth.isLoggedIn()) tabs.push('settings');
     if (this.canUseVipps()) tabs.push('vipps');
     if (!this.isProduction) tabs.push('developer');
 
@@ -205,6 +209,10 @@ export class ProfileComponent implements OnInit, AfterViewInit {
         this.name.set(profile.name);
         this.email.set(profile.email ?? '');
         this.phone.set(profile.phone ?? '');
+        this.address.set(profile.address ?? '');
+        this.postalCode.set(profile.postalCode ?? '');
+        this.city.set(profile.city ?? '');
+        this.country.set(profile.country ?? 'Danmark');
         this.companyName.set(profile.companyName ?? '');
         this.profileType.set(profile.type === 'Merchant' ? 'Merchant' : 'Person');
         this.isLoading.set(false);
@@ -366,7 +374,11 @@ export class ProfileComponent implements OnInit, AfterViewInit {
     const request: UpdateProfileRequest = {
       name: this.name().trim(),
       email: this.email().trim() || undefined,
-      phone: this.phone().trim() || undefined
+      phone: this.phone().trim() || undefined,
+      address: this.address().trim() || undefined,
+      postalCode: this.postalCode().trim() || undefined,
+      city: this.city().trim() || undefined,
+      country: this.country().trim() || undefined
     };
 
     this.profileService.updateProfile(userId, request).subscribe({
