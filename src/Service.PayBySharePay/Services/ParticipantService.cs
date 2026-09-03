@@ -129,8 +129,12 @@ public class ParticipantService : IParticipantService
             ?? throw new KeyNotFoundException($"Deltager med id {dto.Id} findes ikke.");
 
         participant.Name = dto.Name.Trim();
-        participant.Email = dto.Email;
-        participant.Phone = dto.Phone;
+        participant.Email = NullIfWhiteSpace(dto.Email);
+        participant.Phone = NullIfWhiteSpace(dto.Phone);
+        participant.Address = NullIfWhiteSpace(dto.Address);
+        participant.PostalCode = NullIfWhiteSpace(dto.PostalCode);
+        participant.City = NullIfWhiteSpace(dto.City);
+        participant.Country = NullIfWhiteSpace(dto.Country);
 
         await _participantRepository.UpdateAsync(participant);
         await _participantRepository.SaveChangesAsync();
@@ -150,8 +154,6 @@ public class ParticipantService : IParticipantService
     public async Task<IEnumerable<VippsTestPersonDto>> GetVippsTestPersonsAsync()
     {
         var allPersons = await _participantRepository.GetAllPersonsAsync();
-
-        // Byg et map: vippsTestUserId → hvem der har valgt den
         var mappedBy = allPersons
             .Where(p => p.VippsTestUserId.HasValue)
             .ToDictionary(p => p.VippsTestUserId!.Value, p => p.Id);
@@ -209,6 +211,9 @@ public class ParticipantService : IParticipantService
         await _participantRepository.SaveChangesAsync();
     }
 
+    private static string? NullIfWhiteSpace(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
     private static ParticipantDto MapToDto(Participant p) => new()
     {
         Id = p.Id,
@@ -216,6 +221,10 @@ public class ParticipantService : IParticipantService
         Name = p.Name,
         Email = p.Email,
         Phone = p.Phone,
+        Address = p.Address,
+        PostalCode = p.PostalCode,
+        City = p.City,
+        Country = p.Country,
         CompanyName = p.CompanyName,
         PasswordHash = p.PasswordHash
     };
