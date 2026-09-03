@@ -1,5 +1,6 @@
 import { inject } from '@angular/core';
 import { Router, Routes } from '@angular/router';
+import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -25,22 +26,27 @@ export const routes: Routes = [
   },
   {
     path: 'find-participants',
+    canActivate: [authGuard],
     loadComponent: () => import('./features/find-participants/find-participants.component').then(m => m.FindParticipantsComponent)
   },
   {
     path: 'orders',
+    canActivate: [authGuard],
     loadComponent: () => import('./features/orders/orders.component').then(m => m.OrdersComponent)
   },
   {
     path: 'orders/create',
+    canActivate: [authGuard],
     loadComponent: () => import('./features/create-order/create-order.component').then(m => m.CreateOrderComponent)
   },
   {
     path: 'orders/:id',
+    canActivate: [authGuard],
     loadComponent: () => import('./features/order-detail/order-detail.component').then(m => m.OrderDetailComponent)
   },
   {
     path: 'messages',
+    canActivate: [authGuard],
     loadComponent: () => import('./features/messages/messages.component').then(m => m.MessagesComponent)
   },
   {
@@ -49,6 +55,7 @@ export const routes: Routes = [
   },
   {
     path: 'pending-participants',
+    canActivate: [authGuard],
     loadComponent: () => import('./features/pending-participants/pending-participants.component').then(m => m.PendingParticipantsComponent)
   },
   {
