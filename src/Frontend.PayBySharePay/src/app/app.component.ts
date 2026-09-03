@@ -27,13 +27,24 @@ import { BottomNavComponent } from './layout/bottom-nav/bottom-nav.component';
       margin: 0 auto;
       background: #070B14;
       position: relative;
+      font-family: var(--font-family);
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    .app-shell button,
+    .app-shell input,
+    .app-shell select,
+    .app-shell textarea,
+    .app-shell a {
+      font-family: var(--font-family);
     }
 
     .app-header {
       display: flex;
       align-items: center;
-      justify-content: flex-start;
-      padding: 2px 20px 0;
+      justify-content: center;
+      padding: 2px 12px 0;
       background: #070B14;
     }
 
@@ -43,6 +54,46 @@ import { BottomNavComponent } from './layout/bottom-nav/bottom-nav.component';
       height: auto;
       object-fit: contain;
       display: block;
+    }
+
+    /* Forsiden bruger 15px/700 til primære korttitler og 12px til sekundær tekst.
+       Brug samme typografiske skala i kontocenteret, så siden matcher resten af appen. */
+    .account-center .accordion-title,
+    .account-center .card-heading h2,
+    .account-center .identity-card h2 {
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .account-center .accordion-meta,
+    .account-center .accordion-description,
+    .account-center .card-heading p,
+    .account-center .identity-card p,
+    .account-center .form-field small,
+    .account-center .setting-row span {
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .account-center .form-field label,
+    .account-center .theme-picker legend,
+    .account-center .form-section-title,
+    .account-center .main-tabs__tab,
+    .account-center .mode-tabs__tab,
+    .account-center .account-type-toggle__button {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .account-center .form-field input,
+    .account-center .form-field select,
+    .account-center .primary-btn,
+    .account-center .secondary-btn,
+    .account-center .danger-btn,
+    .account-center .danger-outline-btn {
+      font-family: var(--font-family);
+      font-size: 15px;
     }
 
     /* Bottom navigation provides the home action, so page-level Hjem links are redundant. */
