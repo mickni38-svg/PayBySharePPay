@@ -1,62 +1,49 @@
-# Implementation plan — UC-15
+# Implementation plan — UC-17
 
 ## Klassifikation og approval
 
 - Opgavetype: `NEW_USE_CASE`
-- Use case: `docs/usecases/UC-15-profil-og-kontocenter.md`
-- Modelprofil: GPT-5.6 Sol, Medium
-- Approval: Product Owner godkendte implementering direkte på `main`
-- Database/migration: ingen forventet
+- Use case: `docs/usecases/UC-17-offentlig-forside-for-ikke-indlogget-bruger.md`
+- Approval: Product Owner godkendte eksplicit beskyttelse af relevante Friends/Messages/Participants/Directory API-endpoints med JWT.
+- Database/migration: ingen
 - Dependencies: ingen nye
-- Deployment: ingen
-
-## Nuværende gaps
-
-- Profil, tema, mapping og development-værktøjer ligger i én lang formular.
-- Merchant-frontend sender ikke det påkrævede MSN.
-- Merchantregistrering gemmer ikke konto-email eller password-hash.
-- Login finder kun Person.
-- En tom password-request omgår den nuværende password-verifikation.
-- Development-panelet vises i production-frontend, selv om UC-09 har fjernet backend-ruterne.
-
-## Backend
-
-1. Udvid `RegisterMerchantRequest` og `CreateMerchantDto` med required konto-email og password.
-2. Gem merchant-email i `Participant.Email` og hash password med samme BCrypt-mønster som Person.
-3. Gør repository email-lookup typeuafhængigt.
-4. Gør login fælles for Person og Merchant.
-5. Kræv password ved normalt login.
-6. Tillad kun passwordløst login for passwordløse Person-seedkonti i ASP.NET Core Development.
-7. Udvid `LoginResponse` med `ParticipantType` og returnér typen fra login, registrering og Google-login.
-8. Bevar generiske 401-fejl og eksponér aldrig password-hash.
-9. Ingen entity- eller migrationsændring.
+- Deployment: ingen direkte ændring
 
 ## Frontend
 
-1. Udvid AuthService-sessionen med participant-type under de eksisterende localStorage-nøgler.
-2. Udvid merchant-requesten med email, password og Vipps MSN.
-3. Gør `/profile` til samlet kontocenter med hovedfanerne Konto, Vipps-test og Development-only Udvikler.
-4. Konto indeholder modes Min profil, Log ind og Opret konto; oprettelse skifter mellem Bruger og Merchant.
-5. Genbrug eksisterende profil-, theme-, auth-, directory-, Vipps- og dev-services.
-6. Hent directory/Vipps-data først, når den relevante fane åbnes.
-7. Skjul Vipps-test for ikke-Person/ikke-logget ind og Udvikler helt i production.
-8. Bevar gamle `/login` og `/register` links som redirects til query-parametre på `/profile`.
-9. Bevar mobil-first, temaer, touch targets, bottom-nav-frirum og tilgængelige tab-semantikker.
-10. Person går til home efter login/oprettelse; Merchant går til Min profil.
+1. Genbrug `AuthService.isLoggedIn()` som eneste auth-state på forsiden.
+2. Vis offentlig velkomstforside i `HomeComponent` når brugeren ikke er logget ind; behold eksisterende dashboard uændret for loggede brugere.
+3. Offentlig forside genbruger PayNSync-branding og eksisterende `/login`/`/register` redirects til profil/kontocenter.
+4. Undgå private data-kald i `HomeComponent` når session mangler.
+5. Tilføj en funktionel auth guard til private routes og behold `/home` samt `/profile` offentlige.
+6. Bevar bottom navigation; private links håndteres af guard, som sender udloggede brugere til login-mode i profil.
+7. Login/logout skal skifte korrekt UI via eksisterende signals uden reload.
+
+## Backend
+
+1. Tilføj `[Authorize]` til `FriendsController`, `MessagesController` og `DirectoryController`.
+2. Tilføj `[Authorize]` til `ParticipantsController`, men bevar merchant-logo GET anonymt med `[AllowAnonymous]`, da logoet er et offentligt asset.
+3. Genbrug eksisterende JWT middleware; ingen ny auth-mekanisme.
+4. Ingen ændring af betalingsendpoints, database eller DTO-kontrakter ud over at anonyme private kald nu returnerer 401.
+
+## Tests og verification
+
+1. Frontend: dæk offentlig vs. personlig home og guard-adfærd med mocked auth.
+2. Backend: eksisterende integration/auth-verifikation skal bekræfte 401 på private controllers.
+3. Kør Angular test/build og .NET build/test via GitHub Actions efter ændringen.
+4. Review scope, API-autorisation og ingen regression i login/profile.
 
 ## Forventede filer
 
-- API auth controller og auth DTO'er
-- participant DTO/service/repository
-- Angular AuthService, routes og profile component/template/styles/tests
-- eventuelt login/register komponenter kun hvis kompatibilitetsredirect kræver det
-- fokuserede backend auth-tests
-- berørte dokumenter efter grøn verification
+- `src/Frontend.PayBySharePay/src/app/features/home/home.component.html`
+- `src/Frontend.PayBySharePay/src/app/app.routes.ts`
+- `src/Frontend.PayBySharePay/src/app/core/guards/auth.guard.ts`
+- relevante frontend specs
+- `FriendsController`, `MessagesController`, `DirectoryController`, `ParticipantsController`
+- `docs/current-state.md`, `docs/architecture.md`, UC-17 status efter verification
 
 ## Risici
 
-- Eksisterende passwordløse production-data må ikke kunne logge ind uden password.
-- Email-lookup på tværs af typer kan afdække historiske dubletter; nye registreringer skal afvise dem deterministisk.
-- Gamle localStorage-sessioner mangler participant-type; UI skal kunne falde tilbage til indlæst profiltype.
-- UC-09 må ikke svækkes: dev-fanen er frontend-skjult, og backend forbliver route-fraværende uden for Development.
-- Merchant-dashboard og merchant-masterdataredigering er uden for scope.
+- Legacy kode, der kalder Friends/Messages/Directory/Participants uden JWT, vil nu få 401 og skal bruge det eksisterende interceptor-token.
+- Merchant-logo GET bevares anonymt for ikke at bryde offentlig asset-visning.
+- Login/profile forbliver offentlige; alle brugerdata-routes beskyttes client-side og server-side.
