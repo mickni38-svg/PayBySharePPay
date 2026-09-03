@@ -12,8 +12,12 @@
 
 .account-center__header {
   display: grid;
-  gap: 16px;
-  padding: 8px 0 18px;
+  gap: 0;
+  padding: 8px 0 8px;
+}
+
+.account-center__header > div {
+  display: none;
 }
 
 .account-center__header h1 {
