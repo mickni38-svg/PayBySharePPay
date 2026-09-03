@@ -8,6 +8,10 @@ export interface UpdateProfileRequest {
   name: string;
   email?: string;
   phone?: string;
+  address?: string;
+  postalCode?: string;
+  city?: string;
+  country?: string;
 }
 
 export interface VippsTestPersonDto {
