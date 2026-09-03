@@ -1,157 +1,169 @@
-<!-- Forside – ny dashboard -->
+<!-- Forside – offentlig velkomst eller personligt dashboard -->
 <div class="home">
 
-  <!-- Merchant carousel: Start en gruppebetaling -->
-  <section class="home__carousel-section">
-    <h2 class="home__carousel-title">Start en gruppebetaling</h2>
+  @if (!auth.isLoggedIn()) {
+    <section class="home__welcome" aria-labelledby="public-home-title">
+      <h1 id="public-home-title" class="home__greeting">Betal sammen – uden besværet</h1>
+      <p class="home__sub">Opret en gruppebetaling, inviter venner og betal hver jeres del.</p>
+    </section>
 
-    @if (allMerchants().length === 0) {
-      <!-- Tom tilstand -->
-      <div class="merchant-empty">
-        <p class="merchant-empty__text">Du har endnu ingen spisesteder på din venneliste</p>
-        <a class="merchant-empty__btn" routerLink="/find-participants">Find spisested</a>
-      </div>
-    } @else {
-      <!-- Søgefelt -->
-      <div class="carousel-search">
-        <input
-          class="carousel-search__input"
-          type="search"
-          placeholder="Søg spisested…"
-          [ngModel]="merchantSearch()"
-          (ngModelChange)="merchantSearch.set($event)"
-          aria-label="Søg spisested"
-        />
-      </div>
+    <section class="home__user-auth" aria-label="Kom i gang med PayNSync">
+      <a class="user-auth__btn user-auth__btn--primary" routerLink="/login">Log ind</a>
+      <a class="user-auth__link" routerLink="/register">Opret bruger</a>
+    </section>
+  } @else {
+    <!-- Merchant carousel: Start en gruppebetaling -->
+    <section class="home__carousel-section">
+      <h2 class="home__carousel-title">Start en gruppebetaling</h2>
 
-      @if (filteredMerchants().length === 0) {
-        <p class="merchant-empty__text">Ingen spisesteder fundet</p>
-      } @else {
-        <!-- Carousel -->
-        <div
-          #merchantCarousel
-          class="merchant-carousel"
-          role="list"
-          tabindex="0"
-          aria-label="Spisesteder. Brug venstre og højre piletast for at navigere."
-          (keydown)="onCarouselKeydown($event, merchantCarousel)"
-        >
-          @for (m of filteredMerchants(); track m.id) {
-            <button
-              class="merchant-card"
-              role="listitem"
-              (click)="selectMerchant(m)"
-              [attr.aria-label]="'Vælg ' + m.displayName"
-            >
-              <div class="merchant-card__logo">
-                @if (m.logoUrl) {
-                  <img
-                    [src]="m.logoUrl"
-                    [alt]="m.displayName"
-                    class="merchant-card__img"
-                    (error)="onMerchantLogoError(m.id)"
-                  />
-                } @else {
-                  <span class="merchant-card__initials">{{ m.initials }}</span>
-                }
-              </div>
-              <span class="merchant-card__name">{{ m.displayName }}</span>
-            </button>
-          }
+      @if (allMerchants().length === 0) {
+        <!-- Tom tilstand -->
+        <div class="merchant-empty">
+          <p class="merchant-empty__text">Du har endnu ingen spisesteder på din venneliste</p>
+          <a class="merchant-empty__btn" routerLink="/find-participants">Find spisested</a>
         </div>
-      }
-    }
-  </section>
+      } @else {
+        <!-- Søgefelt -->
+        <div class="carousel-search">
+          <input
+            class="carousel-search__input"
+            type="search"
+            placeholder="Søg spisested…"
+            [ngModel]="merchantSearch()"
+            (ngModelChange)="merchantSearch.set($event)"
+            aria-label="Søg spisested"
+          />
+        </div>
 
-  <!-- Statuskort -->
-  @if (statusCards().length > 0) {
-    <section class="home__status">
-      @for (card of statusCards(); track card.type + (card.orderId ?? '')) {
-        <button class="status-card status-card--{{ card.type }}" (click)="onStatusCardClick(card)">
-          <div class="status-card__icon">
-            @if (card.type === 'pending') {
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-              </svg>
-            } @else if (card.type === 'allPaid') {
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            } @else {
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
+        @if (filteredMerchants().length === 0) {
+          <p class="merchant-empty__text">Ingen spisesteder fundet</p>
+        } @else {
+          <!-- Carousel -->
+          <div
+            #merchantCarousel
+            class="merchant-carousel"
+            role="list"
+            tabindex="0"
+            aria-label="Spisesteder. Brug venstre og højre piletast for at navigere."
+            (keydown)="onCarouselKeydown($event, merchantCarousel)"
+          >
+            @for (m of filteredMerchants(); track m.id) {
+              <button
+                class="merchant-card"
+                role="listitem"
+                (click)="selectMerchant(m)"
+                [attr.aria-label]="'Vælg ' + m.displayName"
+              >
+                <div class="merchant-card__logo">
+                  @if (m.logoUrl) {
+                    <img
+                      [src]="m.logoUrl"
+                      [alt]="m.displayName"
+                      class="merchant-card__img"
+                      (error)="onMerchantLogoError(m.id)"
+                    />
+                  } @else {
+                    <span class="merchant-card__initials">{{ m.initials }}</span>
+                  }
+                </div>
+                <span class="merchant-card__name">{{ m.displayName }}</span>
+              </button>
             }
           </div>
-          <div class="status-card__text">
-            <span class="status-card__title">{{ card.title }}</span>
-            @if (card.subtitle) {
-              <span class="status-card__sub">{{ card.subtitle }}</span>
-            }
-          </div>
-          @if (card.type === 'allPaid') {
-            <span class="status-card__dismiss" (click)="dismissAllPaidCard($event, card)">Fjern</span>
-          } @else {
-            <svg class="status-card__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-          }
-        </button>
+        }
       }
     </section>
+
+    <!-- Statuskort -->
+    @if (statusCards().length > 0) {
+      <section class="home__status">
+        @for (card of statusCards(); track card.type + (card.orderId ?? '')) {
+          <button class="status-card status-card--{{ card.type }}" (click)="onStatusCardClick(card)">
+            <div class="status-card__icon">
+              @if (card.type === 'pending') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+              } @else if (card.type === 'allPaid') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              } @else {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              }
+            </div>
+            <div class="status-card__text">
+              <span class="status-card__title">{{ card.title }}</span>
+              @if (card.subtitle) {
+                <span class="status-card__sub">{{ card.subtitle }}</span>
+              }
+            </div>
+            @if (card.type === 'allPaid') {
+              <span class="status-card__dismiss" (click)="dismissAllPaidCard($event, card)">Fjern</span>
+            } @else {
+              <svg class="status-card__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            }
+          </button>
+        }
+      </section>
+    }
+
+    <!-- Overblik – samme fuld-bredde nav-kort i alle temaer -->
+    <section class="home__status">
+      <a class="status-card status-card--overblik" routerLink="/orders">
+        <div class="status-card__icon">
+          <div style="position:relative;display:inline-flex;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+              <line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+            @if (readyToPayCount() > 0) {
+              <span class="status-card__badge">{{ readyToPayCount() > 9 ? '9+' : readyToPayCount() }}</span>
+            }
+          </div>
+        </div>
+        <div class="status-card__text">
+          <span class="status-card__title">Overblik</span>
+          <span class="status-card__sub">Se igangværende gruppebetalinger</span>
+        </div>
+        <svg class="status-card__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </a>
+    </section>
+
+    <!-- Beskeder – samme fuld-bredde nav-kort i alle temaer -->
+    <section class="home__status">
+      <a class="status-card status-card--messages" routerLink="/messages">
+        <div class="status-card__icon">
+          <div style="position:relative;display:inline-flex;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              <circle cx="9" cy="10" r="1" fill="currentColor"/>
+              <circle cx="12" cy="10" r="1" fill="currentColor"/>
+              <circle cx="15" cy="10" r="1" fill="currentColor"/>
+            </svg>
+            @if (messageService.unreadCount() > 0) {
+              <span class="status-card__badge">{{ messageService.unreadCount() > 9 ? '9+' : messageService.unreadCount() }}</span>
+            }
+          </div>
+        </div>
+        <div class="status-card__text">
+          <span class="status-card__title">Beskeder</span>
+          <span class="status-card__sub">Se dine anmodninger</span>
+        </div>
+        <svg class="status-card__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </a>
+    </section>
   }
-
-  <!-- Overblik – samme fuld-bredde nav-kort i alle temaer -->
-  <section class="home__status">
-    <a class="status-card status-card--overblik" routerLink="/orders">
-      <div class="status-card__icon">
-        <div style="position:relative;display:inline-flex;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
-            <line x1="6" y1="20" x2="6" y2="14"/>
-          </svg>
-          @if (readyToPayCount() > 0) {
-            <span class="status-card__badge">{{ readyToPayCount() > 9 ? '9+' : readyToPayCount() }}</span>
-          }
-        </div>
-      </div>
-      <div class="status-card__text">
-        <span class="status-card__title">Overblik</span>
-        <span class="status-card__sub">Se igangværende gruppebetalinger</span>
-      </div>
-      <svg class="status-card__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <polyline points="9 18 15 12 9 6"/>
-      </svg>
-    </a>
-  </section>
-
-  <!-- Beskeder – samme fuld-bredde nav-kort i alle temaer -->
-  <section class="home__status">
-    <a class="status-card status-card--messages" routerLink="/messages">
-      <div class="status-card__icon">
-        <div style="position:relative;display:inline-flex;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-            <circle cx="9" cy="10" r="1" fill="currentColor"/>
-            <circle cx="12" cy="10" r="1" fill="currentColor"/>
-            <circle cx="15" cy="10" r="1" fill="currentColor"/>
-          </svg>
-          @if (messageService.unreadCount() > 0) {
-            <span class="status-card__badge">{{ messageService.unreadCount() > 9 ? '9+' : messageService.unreadCount() }}</span>
-          }
-        </div>
-      </div>
-      <div class="status-card__text">
-        <span class="status-card__title">Beskeder</span>
-        <span class="status-card__sub">Se dine anmodninger</span>
-      </div>
-      <svg class="status-card__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <polyline points="9 18 15 12 9 6"/>
-      </svg>
-    </a>
-  </section>
 
 </div>
