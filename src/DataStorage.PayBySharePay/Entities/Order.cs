@@ -12,6 +12,14 @@ public class Order
     public int? MerchantParticipantId { get; set; }
     public Participant? MerchantParticipant { get; set; }
     public string? JoinToken { get; set; }
+
+    // Snapshot af værtens leveringsadresse ved ordreoprettelse.
+    // Må ikke følge senere ændringer på Participant-profilen.
+    public string? DeliveryAddress { get; set; }
+    public string? DeliveryPostalCode { get; set; }
+    public string? DeliveryCity { get; set; }
+    public string? DeliveryCountry { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public ICollection<OrderParticipant> OrderParticipants { get; set; } = new List<OrderParticipant>();
