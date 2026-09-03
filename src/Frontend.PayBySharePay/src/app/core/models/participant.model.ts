@@ -3,6 +3,10 @@ export interface Participant {
   name: string;
   email: string;
   phone?: string;
+  address?: string;
+  postalCode?: string;
+  city?: string;
+  country?: string;
   participantType: ParticipantType;
   merchantInfo?: MerchantInfo;
 }
@@ -32,6 +36,10 @@ export interface ParticipantApiDto {
   name: string;
   email?: string;
   phone?: string;
+  address?: string;
+  postalCode?: string;
+  city?: string;
+  country?: string;
   companyName?: string;
 }
 
@@ -41,6 +49,10 @@ export function mapParticipant(dto: ParticipantApiDto): Participant {
     name: dto.name,
     email: dto.email ?? '',
     phone: dto.phone,
+    address: dto.address,
+    postalCode: dto.postalCode,
+    city: dto.city,
+    country: dto.country,
     participantType: dto.type === 'Merchant' ? ParticipantType.Merchant : ParticipantType.Person,
     merchantInfo: dto.companyName ? { companyName: dto.companyName } : undefined
   };
