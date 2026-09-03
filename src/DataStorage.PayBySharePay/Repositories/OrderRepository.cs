@@ -53,6 +53,20 @@ public class OrderRepository : IOrderRepository
 
     public async Task<Order> AddAsync(Order order)
     {
+        // UC-18: frys værtens leveringsadresse på selve ordren. En senere
+        // profilændring må ikke ændre afleveringsstedet for en eksisterende ordre.
+        var creator = await _context.Participants
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Id == order.CreatedByParticipantId);
+
+        if (creator is not null)
+        {
+            order.DeliveryAddress = creator.Address;
+            order.DeliveryPostalCode = creator.PostalCode;
+            order.DeliveryCity = creator.City;
+            order.DeliveryCountry = creator.Country;
+        }
+
         _context.Orders.Add(order);
         return order;
     }
