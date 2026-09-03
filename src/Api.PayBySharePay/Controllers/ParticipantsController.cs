@@ -1,4 +1,5 @@
 using Api.PayBySharePay.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Service.PayBySharePay.DTOs;
 using Service.PayBySharePay.Interfaces;
@@ -6,6 +7,7 @@ using Service.PayBySharePay.Interfaces;
 namespace Api.PayBySharePay.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class ParticipantsController : ControllerBase
 {
@@ -123,6 +125,7 @@ public class ParticipantsController : ControllerBase
         }
     }
 
+    [AllowAnonymous]
     [HttpGet("{id:int}/logo")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
