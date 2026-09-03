@@ -10,14 +10,12 @@
 }
 
 .find__header {
-  padding: 16px var(--space-page) 12px;
-  border-bottom: 1px solid var(--color-border);
+  padding: 8px var(--space-page) 0;
+  border-bottom: 0;
 }
 
 .find__title {
-  font-size: 22px;
-  font-weight: 700;
-  margin: 0;
+  display: none;
 }
 
 .page-back {
@@ -28,7 +26,7 @@
   text-decoration: none;
   font-size: 13px;
   font-weight: 500;
-  margin-bottom: 8px;
+  margin-bottom: 0;
 }
 
 .page-back svg {
