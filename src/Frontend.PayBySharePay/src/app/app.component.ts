@@ -8,6 +8,9 @@ import { BottomNavComponent } from './layout/bottom-nav/bottom-nav.component';
   imports: [RouterOutlet, BottomNavComponent],
   template: `
     <div class="app-shell">
+      <header class="app-header">
+        <img class="app-header__logo" src="images/logo.png" alt="PayNSync" />
+      </header>
       <main class="app-shell__content">
         <router-outlet></router-outlet>
       </main>
@@ -23,6 +26,22 @@ import { BottomNavComponent } from './layout/bottom-nav/bottom-nav.component';
       margin: 0 auto;
       background: #070B14;
       position: relative;
+    }
+
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 6px 20px 2px;
+      background: #070B14;
+    }
+
+    .app-header__logo {
+      width: 100%;
+      max-width: 320px;
+      height: auto;
+      object-fit: contain;
+      display: block;
     }
 
     .app-shell__content {
