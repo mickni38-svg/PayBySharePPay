@@ -88,7 +88,11 @@ public class ParticipantsController : ControllerBase
             Id = id,
             Name = request.Name,
             Email = request.Email,
-            Phone = request.Phone
+            Phone = request.Phone,
+            Address = request.Address,
+            PostalCode = request.PostalCode,
+            City = request.City,
+            Country = request.Country
         };
 
         var result = await _participantService.UpdateProfileAsync(dto);
