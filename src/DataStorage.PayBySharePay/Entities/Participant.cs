@@ -9,6 +9,12 @@ public class Participant
     public string? Phone { get; set; }
     public string? PasswordHash { get; set; }
 
+    // Default delivery address for person accounts. Copied to the order when delivery is implemented.
+    public string? Address { get; set; }
+    public string? PostalCode { get; set; }
+    public string? City { get; set; }
+    public string? Country { get; set; }
+
     // Merchant-specific fields
     public string? CompanyName { get; set; }
     public string? CvrNumber { get; set; }
