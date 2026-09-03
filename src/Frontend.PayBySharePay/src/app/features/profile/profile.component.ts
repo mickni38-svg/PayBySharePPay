@@ -111,16 +111,17 @@ export class ProfileComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {
     this.notificationsEnabled.set(localStorage.getItem(NOTIF_KEY) !== 'false');
 
+    const isLoggedIn = this.auth.isLoggedIn();
     const requestedMode = this.route.snapshot.queryParamMap.get('mode');
-    if (requestedMode === 'register') {
+    if (isLoggedIn) {
+      this.accountMode.set('profile');
+    } else if (requestedMode === 'register') {
       this.accountMode.set('register');
-    } else if (requestedMode === 'login') {
-      this.accountMode.set('login');
     } else {
-      this.accountMode.set(this.auth.isLoggedIn() ? 'profile' : 'login');
+      this.accountMode.set('login');
     }
 
-    if (this.auth.isLoggedIn()) {
+    if (isLoggedIn) {
       this.loadProfile();
     }
   }
@@ -147,7 +148,7 @@ export class ProfileComponent implements OnInit, AfterViewInit {
   }
 
   setAccountMode(mode: AccountMode): void {
-    if (mode === 'profile' && !this.auth.isLoggedIn()) return;
+    if (this.auth.isLoggedIn() ? mode !== 'profile' : mode === 'profile') return;
     this.accountMode.set(mode);
     this.loginError.set(null);
     this.registerError.set(null);

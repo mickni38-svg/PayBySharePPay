@@ -90,6 +90,20 @@ describe('ProfileComponent', () => {
     expect(component.accountMode()).toBe('register');
   });
 
+  it('keeps authenticated users on profile even when an old auth mode is requested', () => {
+    const { component } = createComponent({
+      mode: 'register',
+      loggedIn: true,
+      userId: 7,
+      userType: 'Person'
+    });
+
+    component.ngOnInit();
+    component.setAccountMode('login');
+
+    expect(component.accountMode()).toBe('profile');
+  });
+
   it('does not eagerly load Vipps or developer data', () => {
     const { component, profileService, directory } = createComponent({
       loggedIn: true,

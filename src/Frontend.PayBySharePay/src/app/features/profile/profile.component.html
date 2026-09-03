@@ -59,31 +59,24 @@
 
   @if (mainTab() === 'account') {
     <main id="profile-panel-account" class="tab-panel" role="tabpanel" aria-labelledby="profile-tab-account" tabindex="-1">
-      <nav class="mode-tabs" role="tablist" aria-label="Kontohandling">
-        @if (auth.isLoggedIn()) {
+      @if (!auth.isLoggedIn()) {
+        <nav class="mode-tabs" role="tablist" aria-label="Kontohandling">
           <button type="button" role="tab"
-            [class.mode-tabs__tab--active]="accountMode() === 'profile'"
-            [attr.aria-selected]="accountMode() === 'profile'"
+            [class.mode-tabs__tab--active]="accountMode() === 'login'"
+            [attr.aria-selected]="accountMode() === 'login'"
             class="mode-tabs__tab"
-            (click)="setAccountMode('profile')">
-            Min profil
+            (click)="setAccountMode('login')">
+            Log ind
           </button>
-        }
-        <button type="button" role="tab"
-          [class.mode-tabs__tab--active]="accountMode() === 'login'"
-          [attr.aria-selected]="accountMode() === 'login'"
-          class="mode-tabs__tab"
-          (click)="setAccountMode('login')">
-          Log ind
-        </button>
-        <button type="button" role="tab"
-          [class.mode-tabs__tab--active]="accountMode() === 'register'"
-          [attr.aria-selected]="accountMode() === 'register'"
-          class="mode-tabs__tab"
-          (click)="setAccountMode('register')">
-          Opret konto
-        </button>
-      </nav>
+          <button type="button" role="tab"
+            [class.mode-tabs__tab--active]="accountMode() === 'register'"
+            [attr.aria-selected]="accountMode() === 'register'"
+            class="mode-tabs__tab"
+            (click)="setAccountMode('register')">
+            Opret konto
+          </button>
+        </nav>
+      }
 
       @if (accountMode() === 'profile' && auth.isLoggedIn()) {
         <section class="account-card" aria-labelledby="profile-heading">
