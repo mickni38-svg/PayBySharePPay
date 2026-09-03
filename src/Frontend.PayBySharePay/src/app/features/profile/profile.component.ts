@@ -23,6 +23,7 @@ declare const google: {
 type MainTab = 'account' | 'vipps' | 'developer';
 type AccountMode = 'profile' | 'login' | 'register';
 type RegisterType = 'person' | 'merchant';
+type AccordionSection = 'profile' | 'settings';
 
 const NOTIF_KEY = 'sbys_notifications_enabled';
 
@@ -39,6 +40,7 @@ export class ProfileComponent implements OnInit, AfterViewInit {
   mainTab = signal<MainTab>('account');
   accountMode = signal<AccountMode>('login');
   registerType = signal<RegisterType>('person');
+  accordionSection = signal<AccordionSection | null>('profile');
 
   isLoading = signal(false);
   isSaving = signal(false);
@@ -115,6 +117,7 @@ export class ProfileComponent implements OnInit, AfterViewInit {
     const requestedMode = this.route.snapshot.queryParamMap.get('mode');
     if (isLoggedIn) {
       this.accountMode.set('profile');
+      this.accordionSection.set('profile');
     } else if (requestedMode === 'register') {
       this.accountMode.set('register');
     } else {
@@ -136,6 +139,10 @@ export class ProfileComponent implements OnInit, AfterViewInit {
 
   canUseVipps(): boolean {
     return this.auth.isLoggedIn() && this.effectiveParticipantType() === 'Person';
+  }
+
+  toggleAccordion(section: AccordionSection): void {
+    this.accordionSection.update(current => current === section ? null : section);
   }
 
   selectMainTab(tab: MainTab): void {
@@ -235,6 +242,7 @@ export class ProfileComponent implements OnInit, AfterViewInit {
       this.profileType.set('Merchant');
       this.mainTab.set('account');
       this.accountMode.set('profile');
+      this.accordionSection.set('profile');
       this.loadProfile();
       this.router.navigate(['/profile'], {
         queryParams: { mode: 'profile' },
@@ -386,6 +394,7 @@ export class ProfileComponent implements OnInit, AfterViewInit {
     this.profileType.set(null);
     this.mainTab.set('account');
     this.accountMode.set('login');
+    this.accordionSection.set('profile');
     this.router.navigate(['/profile'], {
       queryParams: { mode: 'login' },
       replaceUrl: true

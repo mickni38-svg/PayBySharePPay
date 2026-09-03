@@ -104,6 +104,56 @@ describe('ProfileComponent', () => {
     expect(component.accountMode()).toBe('profile');
   });
 
+  it('opens profile accordion by default for authenticated users', () => {
+    const { component } = createComponent({
+      loggedIn: true,
+      userId: 7,
+      userType: 'Person'
+    });
+
+    component.ngOnInit();
+
+    expect(component.accordionSection()).toBe('profile');
+  });
+
+  it('opens settings and closes profile', () => {
+    const { component } = createComponent({ loggedIn: true });
+
+    component.toggleAccordion('settings');
+
+    expect(component.accordionSection()).toBe('settings');
+  });
+
+  it('can close the active accordion so both sections are closed', () => {
+    const { component } = createComponent({ loggedIn: true });
+
+    component.toggleAccordion('profile');
+
+    expect(component.accordionSection()).toBeNull();
+  });
+
+  it('keeps unsaved profile state when switching accordions', () => {
+    const { component } = createComponent({ loggedIn: true });
+    component.name.set('Ikke gemt navn');
+
+    component.toggleAccordion('settings');
+    component.toggleAccordion('profile');
+
+    expect(component.name()).toBe('Ikke gemt navn');
+  });
+
+  it('does not make API calls when toggling accordions', () => {
+    const { component, profileService, directory } = createComponent({ loggedIn: true });
+
+    component.toggleAccordion('settings');
+    component.toggleAccordion('profile');
+
+    expect(profileService.getProfile).not.toHaveBeenCalled();
+    expect(profileService.updateProfile).not.toHaveBeenCalled();
+    expect(profileService.getVippsTestPersons).not.toHaveBeenCalled();
+    expect(directory.search).not.toHaveBeenCalled();
+  });
+
   it('does not eagerly load Vipps or developer data', () => {
     const { component, profileService, directory } = createComponent({
       loggedIn: true,

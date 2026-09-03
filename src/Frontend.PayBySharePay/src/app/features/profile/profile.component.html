@@ -79,93 +79,130 @@
       }
 
       @if (accountMode() === 'profile' && auth.isLoggedIn()) {
-        <section class="account-card" aria-labelledby="profile-heading">
-          @if (isLoading()) {
-            <p class="status-text" aria-live="polite">Henter profil…</p>
-          } @else {
-            <div class="identity-card">
-              <span class="identity-card__avatar">{{ name().charAt(0) || '?' }}</span>
-              <div>
-                <h2 id="profile-heading">{{ name() || auth.currentUserName() }}</h2>
-                <p>{{ effectiveParticipantType() === 'Merchant' ? 'Merchantkonto' : 'Personkonto' }}</p>
+        <section class="account-card accordion-card">
+          <button
+            id="profile-accordion-button"
+            type="button"
+            class="accordion-header"
+            [attr.aria-expanded]="accordionSection() === 'profile'"
+            aria-controls="profile-accordion-panel"
+            (click)="toggleAccordion('profile')">
+            <span class="identity-card__avatar">{{ name().charAt(0) || '?' }}</span>
+            <span class="accordion-header__content">
+              <span class="accordion-title">Profil</span>
+              <span class="accordion-summary">{{ name() || auth.currentUserName() || 'Din konto' }}</span>
+              <span class="accordion-meta">
+                {{ effectiveParticipantType() === 'Merchant' ? 'Merchantkonto' : 'Personkonto' }}
                 @if (effectiveParticipantType() === 'Merchant' && companyName()) {
-                  <p class="identity-card__company">{{ companyName() }}</p>
+                  · {{ companyName() }}
                 }
-              </div>
+              </span>
+            </span>
+            <svg class="accordion-chevron" [class.accordion-chevron--open]="accordionSection() === 'profile'"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+
+          @if (accordionSection() === 'profile') {
+            <div id="profile-accordion-panel" class="accordion-panel" role="region"
+              aria-labelledby="profile-accordion-button">
+              @if (isLoading()) {
+                <p class="status-text" aria-live="polite">Henter profil…</p>
+              } @else {
+                <form class="field-stack" (ngSubmit)="saveProfile()">
+                  <div class="form-field">
+                    <label for="profile-name">Navn</label>
+                    <input id="profile-name" type="text" name="profileName" autocomplete="name"
+                      [ngModel]="name()" (ngModelChange)="name.set($event)" required />
+                  </div>
+                  <div class="form-field">
+                    <label for="profile-email">Email</label>
+                    <input id="profile-email" type="email" name="profileEmail" autocomplete="email"
+                      [ngModel]="email()" (ngModelChange)="email.set($event)" />
+                  </div>
+                  <div class="form-field">
+                    <label for="profile-phone">Telefon <span>(valgfri)</span></label>
+                    <input id="profile-phone" type="tel" name="profilePhone" autocomplete="tel"
+                      [ngModel]="phone()" (ngModelChange)="phone.set($event)" />
+                  </div>
+
+                  @if (saveSuccess()) {
+                    <p class="feedback feedback--success" role="status">Profilen er gemt.</p>
+                  }
+                  @if (saveError()) {
+                    <p class="feedback feedback--error" role="alert">Profilen kunne ikke gemmes.</p>
+                  }
+
+                  <button class="primary-btn" type="submit" [disabled]="isSaving() || !name().trim()">
+                    {{ isSaving() ? 'Gemmer…' : 'Gem profil' }}
+                  </button>
+                </form>
+              }
             </div>
-
-            <form class="field-stack" (ngSubmit)="saveProfile()">
-              <div class="form-field">
-                <label for="profile-name">Navn</label>
-                <input id="profile-name" type="text" name="profileName" autocomplete="name"
-                  [ngModel]="name()" (ngModelChange)="name.set($event)" required />
-              </div>
-              <div class="form-field">
-                <label for="profile-email">Email</label>
-                <input id="profile-email" type="email" name="profileEmail" autocomplete="email"
-                  [ngModel]="email()" (ngModelChange)="email.set($event)" />
-              </div>
-              <div class="form-field">
-                <label for="profile-phone">Telefon <span>(valgfri)</span></label>
-                <input id="profile-phone" type="tel" name="profilePhone" autocomplete="tel"
-                  [ngModel]="phone()" (ngModelChange)="phone.set($event)" />
-              </div>
-
-              @if (saveSuccess()) {
-                <p class="feedback feedback--success" role="status">Profilen er gemt.</p>
-              }
-              @if (saveError()) {
-                <p class="feedback feedback--error" role="alert">Profilen kunne ikke gemmes.</p>
-              }
-
-              <button class="primary-btn" type="submit" [disabled]="isSaving() || !name().trim()">
-                {{ isSaving() ? 'Gemmer…' : 'Gem profil' }}
-              </button>
-            </form>
           }
         </section>
 
-        <section class="account-card" aria-labelledby="preferences-heading">
-          <div class="card-heading">
-            <h2 id="preferences-heading">Indstillinger</h2>
-            <p>Disse indstillinger gemmes med det samme på denne enhed.</p>
-          </div>
+        <section class="account-card accordion-card">
+          <button
+            id="settings-accordion-button"
+            type="button"
+            class="accordion-header accordion-header--simple"
+            [attr.aria-expanded]="accordionSection() === 'settings'"
+            aria-controls="settings-accordion-panel"
+            (click)="toggleAccordion('settings')">
+            <span class="accordion-header__content">
+              <span class="accordion-title">Indstillinger</span>
+              <span class="accordion-meta">Notifikationer og tema</span>
+            </span>
+            <svg class="accordion-chevron" [class.accordion-chevron--open]="accordionSection() === 'settings'"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
 
-          <div class="setting-row">
-            <div>
-              <strong>Notifikationer</strong>
-              <span>Modtag beskeder om dine betalinger</span>
-            </div>
-            <button type="button" class="switch"
-              [class.switch--on]="notificationsEnabled()"
-              [attr.aria-checked]="notificationsEnabled()"
-              (click)="toggleNotifications()"
-              role="switch">
-              <span></span>
-            </button>
-          </div>
+          @if (accordionSection() === 'settings') {
+            <div id="settings-accordion-panel" class="accordion-panel" role="region"
+              aria-labelledby="settings-accordion-button">
+              <p class="accordion-description">Disse indstillinger gemmes med det samme på denne enhed.</p>
 
-          <fieldset class="theme-picker">
-            <legend>Tema</legend>
-            <div class="theme-picker__grid">
-              <button type="button" [class.theme-option--active]="themeService.current() === 'default'"
-                class="theme-option" (click)="themeService.setTheme('default')">
-                <span class="theme-preview theme-preview--default"></span><span>Standard</span>
-              </button>
-              <button type="button" [class.theme-option--active]="themeService.current() === 'color'"
-                class="theme-option" (click)="themeService.setTheme('color')">
-                <span class="theme-preview theme-preview--color"></span><span>Color</span>
-              </button>
-              <button type="button" [class.theme-option--active]="themeService.current() === 'minimal'"
-                class="theme-option" (click)="themeService.setTheme('minimal')">
-                <span class="theme-preview theme-preview--minimal"></span><span>Minimal</span>
-              </button>
-              <button type="button" [class.theme-option--active]="themeService.current() === 'charcoal'"
-                class="theme-option" (click)="themeService.setTheme('charcoal')">
-                <span class="theme-preview theme-preview--charcoal"></span><span>Charcoal</span>
-              </button>
+              <div class="setting-row">
+                <div>
+                  <strong>Notifikationer</strong>
+                  <span>Modtag beskeder om dine betalinger</span>
+                </div>
+                <button type="button" class="switch"
+                  [class.switch--on]="notificationsEnabled()"
+                  [attr.aria-checked]="notificationsEnabled()"
+                  (click)="toggleNotifications()"
+                  role="switch">
+                  <span></span>
+                </button>
+              </div>
+
+              <fieldset class="theme-picker">
+                <legend>Tema</legend>
+                <div class="theme-picker__grid">
+                  <button type="button" [class.theme-option--active]="themeService.current() === 'default'"
+                    class="theme-option" (click)="themeService.setTheme('default')">
+                    <span class="theme-preview theme-preview--default"></span><span>Standard</span>
+                  </button>
+                  <button type="button" [class.theme-option--active]="themeService.current() === 'color'"
+                    class="theme-option" (click)="themeService.setTheme('color')">
+                    <span class="theme-preview theme-preview--color"></span><span>Color</span>
+                  </button>
+                  <button type="button" [class.theme-option--active]="themeService.current() === 'minimal'"
+                    class="theme-option" (click)="themeService.setTheme('minimal')">
+                    <span class="theme-preview theme-preview--minimal"></span><span>Minimal</span>
+                  </button>
+                  <button type="button" [class.theme-option--active]="themeService.current() === 'charcoal'"
+                    class="theme-option" (click)="themeService.setTheme('charcoal')">
+                    <span class="theme-preview theme-preview--charcoal"></span><span>Charcoal</span>
+                  </button>
+                </div>
+              </fieldset>
             </div>
-          </fieldset>
+          }
         </section>
 
         <button type="button" class="danger-outline-btn" (click)="logout()">Log ud</button>
