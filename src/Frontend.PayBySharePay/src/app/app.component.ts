@@ -59,9 +59,8 @@ import { AuthService } from './core/services/auth.service';
 
     /* BUG-04: offentlig forside skal være én viewport uden intern scroll. */
     .app-shell--public {
-      height: 100dvh;
       min-height: 100dvh;
-      overflow: hidden;
+      overflow: visible;
     }
 
     .app-shell--public .app-header {
@@ -76,8 +75,8 @@ import { AuthService } from './core/services/auth.service';
     .app-shell--public .app-shell__content {
       flex: 1 1 auto;
       min-height: 0;
-      overflow: hidden;
-      padding-bottom: 0;
+      overflow-y: auto;
+      padding-bottom: 16px;
     }
 
     /* Forsiden bruger 15px/700 til primære korttitler og 12px til sekundær tekst.
