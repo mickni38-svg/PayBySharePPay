@@ -34,7 +34,7 @@ jobs:
             --arg vipps_client_secret "${{ secrets.VIPPS_CLIENT_SECRET }}" \
             --arg vipps_sub_key "${{ secrets.VIPPS_SUBSCRIPTION_KEY }}" \
             --arg vipps_msn "${{ secrets.VIPPS_MERCHANT_SERIAL_NUMBER }}" \
-            '. + {"ConnectionStrings": {"PayBySharePayDb": $db}, "Jwt": {"Key": $jwt, "Issuer": "sbys-api", "Audience": "sbys-frontend", "ExpiresInMinutes": 43200}, "Payments": {"Provider": "MobilePay", "VippsMobilePay": {"BaseUrl": "https://apitest.vipps.no", "ClientId": $vipps_client_id, "ClientSecret": $vipps_client_secret, "SubscriptionKey": $vipps_sub_key, "MerchantSerialNumber": $vipps_msn, "CallbackBaseUrl": "https://api.paynsync.dk"}}}' \
+            '. + {"ConnectionStrings": {"PayBySharePayDb": $db}, "Jwt": {"Key": $jwt, "Issuer": "sbys-api", "Audience": "sbys-frontend", "ExpiresInMinutes": 43200}, "Payments": {"Provider": "MobilePay", "VippsMobilePay": {"BaseUrl": "https://apitest.vipps.no", "ClientId": $vipps_client_id, "ClientSecret": $vipps_client_secret, "SubscriptionKey": $vipps_sub_key, "MerchantSerialNumber": $vipps_msn, "CallbackBaseUrl": "https://api.paynsync.dk", "UseDefaultMerchantCredentialsOnRegistration": true}}}' \
             ./publish-api/appsettings.Simply.json \
             > ./publish-api/appsettings.Simply.tmp.json
           mv ./publish-api/appsettings.Simply.tmp.json ./publish-api/appsettings.Simply.json
