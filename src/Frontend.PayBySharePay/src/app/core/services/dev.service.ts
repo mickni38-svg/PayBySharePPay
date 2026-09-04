@@ -7,11 +7,11 @@ import { environment } from '../../../environments/environment';
   providedIn: 'root'
 })
 export class DevService {
-  private apiUrl = `${environment.apiUrl}/api/dev`;
+  private testDataUrl = `${environment.apiUrl}/api/test-data`;
 
   constructor(private http: HttpClient) {}
 
   resetData(): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/reset`);
+    return this.http.delete<void>(`${this.testDataUrl}/reset`);
   }
 }
