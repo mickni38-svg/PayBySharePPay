@@ -67,10 +67,10 @@
 .wizard__body {
   display: grid;
   gap: 16px;
-  padding: 18px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
 }
 
 .field-stack {
@@ -188,12 +188,14 @@ a:focus-visible {
 
 .choice-card__avatar--merchant {
   border-radius: 10px;
+  background: transparent;
 }
 
 .choice-card__avatar img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  background: transparent;
 }
 
 .choice-card__content {
@@ -337,7 +339,4 @@ a:focus-visible {
     padding-top: 6px;
   }
 
-  .wizard__body {
-    padding: 16px;
-  }
 }
