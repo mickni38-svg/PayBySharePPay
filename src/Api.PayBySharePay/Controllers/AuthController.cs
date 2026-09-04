@@ -74,14 +74,58 @@ public class AuthController : ControllerBase
         });
     }
 
+    [HttpGet("available-test-phone-numbers")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAvailableTestPhoneNumbers()
+    {
+        var configuredNumbers = GetConfiguredTestPhoneNumbers();
+        if (configuredNumbers.Length == 0)
+            return Ok(new { enabled = false, phoneNumbers = Array.Empty<string>() });
+
+        var persons = await _participantService.GetVippsTestPersonsAsync();
+        var usedNumbers = persons
+            .Select(person => NormalizePhone(person.Phone))
+            .Where(phone => phone.Length > 0)
+            .ToHashSet(StringComparer.Ordinal);
+
+        var availableNumbers = configuredNumbers
+            .Where(phone => !usedNumbers.Contains(NormalizePhone(phone)))
+            .ToArray();
+
+        return Ok(new { enabled = true, phoneNumbers = availableNumbers });
+    }
+
     [HttpPost("register")]
     [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Register([FromBody] RegisterPersonRequest request)
     {
         var existing = await _participantService.GetByEmailAsync(request.Email.Trim());
         if (existing is not null)
             return Conflict(new { error = "En konto med denne e-mail eksisterer allerede." });
+
+        var configuredNumbers = GetConfiguredTestPhoneNumbers();
+        if (configuredNumbers.Length > 0)
+        {
+            if (string.IsNullOrWhiteSpace(request.Phone))
+                return BadRequest(new { error = "Vælg et ledigt Vipps-testtelefonnummer." });
+
+            var requestedPhone = NormalizePhone(request.Phone);
+            var allowedNumbers = configuredNumbers
+                .Select(NormalizePhone)
+                .ToHashSet(StringComparer.Ordinal);
+
+            if (!allowedNumbers.Contains(requestedPhone))
+                return BadRequest(new { error = "Telefonnummeret er ikke et gyldigt Vipps-testnummer." });
+
+            var persons = await _participantService.GetVippsTestPersonsAsync();
+            var phoneAlreadyUsed = persons.Any(person =>
+                NormalizePhone(person.Phone) == requestedPhone);
+
+            if (phoneAlreadyUsed)
+                return Conflict(new { error = "Telefonnummeret er allerede i brug. Vælg et andet testnummer." });
+        }
 
         var person = await _participantService.CreatePersonAsync(new CreatePersonDto
         {
@@ -208,4 +252,17 @@ public class AuthController : ControllerBase
             return BadRequest(new { error = ex.Message });
         }
     }
+
+    private string[] GetConfiguredTestPhoneNumbers()
+        => _configuration
+            .GetSection("Payments:VippsMobilePay:TestPhoneNumbers")
+            .GetChildren()
+            .Select(child => child.Value)
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(value => value!.Trim())
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+    private static string NormalizePhone(string? phone)
+        => string.Concat((phone ?? string.Empty).Where(char.IsDigit));
 }
