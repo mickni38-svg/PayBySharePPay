@@ -1,6 +1,6 @@
 # BUG-04 — Forside har forkert skalering og unødvendig vertikal scrolling
 
-**Status:** Åben  
+**Status:** Implementeret  
 **Prioritet:** 🟠 Medium  
 **Opdaget:** 2026-09-04  
 **Komponent:** Angular frontend / offentlig forside / mobilvisning
@@ -84,3 +84,13 @@ Test minimum på:
 - lav mobilhøjde, fx ca. 667–750 px
 
 Der skal især kontrolleres, at der **ikke opstår scrolling på grund af få pixels ekstra højde nederst**.
+
+
+## Implementering
+
+Implementeret på `main` 2026-09-04.
+
+- Offentlig forside bruger nu en særskilt `home--public` layouttilstand uden den globale `padding-bottom: 90px`, som skabte unødvendig scrolling.
+- Hero-billedet går kant-til-kant i bredden på mobil og skaleres større, hvilket samtidig gør PayNSync-logoet i hero-grafikken større.
+- Layoutet bruger `100dvh` og højdebegrænsning på hero-billedet, så login- og opret-bruger-knapperne forbliver synlige på lave mobilskærme.
+- Der er tilføjet en ekstra tilpasning for skærmhøjder under 720 px.
