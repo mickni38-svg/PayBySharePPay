@@ -132,6 +132,25 @@ describe('CreateOrderComponent UC-03/UC-04/UC-05 wizard', () => {
     expect(router.navigate).not.toHaveBeenCalled();
   });
 
+  it('uses the static merchant logo first and the API logo as fallback', () => {
+    const catalogMerchant: DirectoryEntry = {
+      ...merchant,
+      displayName: 'Burgerhuset',
+      handle: 'burgerhuset'
+    };
+    setMerchantState(catalogMerchant);
+    const { component } = createComponent([host, catalogMerchant, anna]);
+
+    component.ngOnInit();
+
+    expect(component.selectedMerchant()?.logoUrl).toBe('/images/burgerhuset.png');
+    expect(component.selectedMerchant()?.fallbackLogoUrl).toContain('/api/participants/42/logo');
+
+    component.onMerchantLogoError();
+
+    expect(component.selectedMerchant()?.logoUrl).toContain('/api/participants/42/logo');
+  });
+
   it('filters out the host and all merchants and removes duplicate participants', () => {
     setMerchantState();
     const otherMerchant: DirectoryEntry = { id: 43, type: 'Merchant', displayName: 'Anden Merchant' };

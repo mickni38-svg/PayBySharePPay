@@ -47,7 +47,7 @@
         <section class="preselected-merchant" aria-label="Valgt spisested">
           <p class="preselected-merchant__label">VALGT SPISESTED</p>
           <div class="merchant-summary">
-            <div class="merchant-summary__logo" [style.background]="selectedMerchant()!.avatarColor">
+            <div class="merchant-summary__logo">
               @if (selectedMerchant()!.logoUrl) {
                 <img class="row__avatar-image" [src]="selectedMerchant()!.logoUrl" [alt]="selectedMerchant()!.displayName" (error)="onMerchantLogoError()" />
               } @else {
@@ -104,7 +104,7 @@
         <section class="preselected-merchant" aria-label="Opsummering af gruppebetaling">
           <p class="preselected-merchant__label">GRUPPEBETALING</p>
           <div class="merchant-summary">
-            <div class="merchant-summary__logo" [style.background]="selectedMerchant()!.avatarColor">
+            <div class="merchant-summary__logo">
               @if (selectedMerchant()!.logoUrl) {
                 <img class="row__avatar-image" [src]="selectedMerchant()!.logoUrl" [alt]="selectedMerchant()!.displayName" (error)="onMerchantLogoError()" />
               } @else {
@@ -139,7 +139,7 @@
         <section class="preselected-merchant" aria-label="Valgt spisested">
           <p class="preselected-merchant__label">SPISESTED</p>
           <div class="merchant-summary">
-            <div class="merchant-summary__logo" [style.background]="selectedMerchant()!.avatarColor">
+            <div class="merchant-summary__logo">
               @if (selectedMerchant()!.logoUrl) {
                 <img class="row__avatar-image" [src]="selectedMerchant()!.logoUrl" [alt]="selectedMerchant()!.displayName" (error)="onMerchantLogoError()" />
               } @else {

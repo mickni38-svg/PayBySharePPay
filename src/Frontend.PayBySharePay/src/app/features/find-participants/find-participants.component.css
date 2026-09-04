@@ -143,7 +143,9 @@
 
 .row__avatar--merchant {
   overflow: hidden;
-  background: #F59E0B;
+  background: #FFFFFF;
+  border: 1px solid #D1D5DB;
+  color: #111111;
 }
 
 .row__merchant-logo {

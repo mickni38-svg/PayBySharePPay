@@ -6,6 +6,7 @@ import { OrderService } from '../../core/services/order.service';
 import { DirectoryService } from '../../core/services/directory.service';
 import { AuthService } from '../../core/services/auth.service';
 import { DirectoryEntry } from '../../core/models/directory.model';
+import { getStaticMerchantLogoUrl } from '../../core/utils/merchant-logo';
 import { environment } from '../../../environments/environment';
 
 export interface ParticipantVM extends DirectoryEntry {
@@ -180,13 +181,14 @@ export class CreateOrderComponent implements OnInit {
         const apiLogoUrl = merchantEntry.logoUrl
           ? `${environment.apiUrl}${merchantEntry.logoUrl}`
           : undefined;
+        const staticLogoUrl = getStaticMerchantLogoUrl(merchantEntry) ?? undefined;
 
         this.selectedMerchant.set({
           ...merchantEntry,
           initials: toInitials(merchantEntry.displayName),
           avatarColor: avatarColor(merchantEntry.displayName),
-          logoUrl: apiLogoUrl,
-          fallbackLogoUrl: undefined
+          logoUrl: staticLogoUrl ?? apiLogoUrl,
+          fallbackLogoUrl: staticLogoUrl ? apiLogoUrl : undefined
         });
 
         const currentSelection = new Set(

@@ -523,8 +523,9 @@
   flex: 0 0 72px;
   overflow: hidden;
   border-radius: 12px;
-  background: transparent !important;
-  color: #fff;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  color: #111;
   font-size: 18px;
   font-weight: 700;
 }
@@ -559,4 +560,113 @@
   color: #7dd3fc;
   font-size: 12px;
   font-weight: 700;
+}
+
+// Minimal-temaet bruger rene sorte flader med hvide kanter.
+:host-context([data-theme="minimal"]) {
+  .wizard,
+  .merchant-summary,
+  .row,
+  .review-card,
+  .review-participants {
+    background: #000;
+  }
+
+  .merchant-summary,
+  .row-list,
+  .review-card,
+  .review-participants {
+    border-color: #fff;
+  }
+
+  .row {
+    border-bottom-color: #fff;
+
+    &:active,
+    &--selected {
+      background: #000;
+    }
+
+    &--selected {
+      border-color: #fff;
+    }
+  }
+
+  .wizard__step-circle {
+    background: #000;
+    border-color: #888;
+  }
+
+  .wizard__step-line {
+    background: #888;
+  }
+
+  .wizard__step--active .wizard__step-circle,
+  .wizard__step--done .wizard__step-circle {
+    border-color: #fff;
+    color: #fff;
+  }
+
+  .wizard__step--active .wizard__step-label,
+  .wizard__step--done .wizard__step-label,
+  .participants-section__count,
+  .wizard__hint-text strong,
+  .review-status__title {
+    color: #fff;
+  }
+
+  .wizard__step--done .wizard__step-circle,
+  .wizard__step-line--done,
+  .row__check--on {
+    background: #fff;
+  }
+
+  .wizard__step--done .wizard__step-circle svg {
+    stroke: #000;
+  }
+
+  .row__check--on {
+    border-color: #fff;
+
+    svg {
+      stroke: #000;
+    }
+  }
+
+  .review-status {
+    background: #000;
+    border-color: #fff;
+
+    svg {
+      stroke: #fff;
+    }
+  }
+
+  .field__input:focus,
+  .field__textarea:focus {
+    border-color: #fff;
+  }
+
+  .wizard__footer {
+    background: linear-gradient(to top, #000 70%, transparent);
+  }
+
+  .btn-back,
+  .btn-primary,
+  .btn-primary:disabled,
+  .btn-primary--green {
+    background: #000;
+    border: 1px solid #fff;
+  }
+
+  .btn-primary:disabled {
+    color: #888;
+    border-color: #555;
+  }
+
+  .btn-back:active,
+  .btn-primary:not(:disabled):active,
+  .btn-primary--green:not(:disabled):active {
+    background: #000;
+  }
 }

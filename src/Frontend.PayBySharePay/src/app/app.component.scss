@@ -4,7 +4,7 @@
   min-height: 100dvh;
   max-width: 390px;
   margin: 0 auto;
-  background: #0a0e1a;
+  background: var(--color-bg);
   position: relative;
 }
 
@@ -13,7 +13,7 @@
   align-items: center;
   justify-content: center;
   padding: 10px 16px;
-  background: #070B14;
+  background: var(--color-bg);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 
   &__logo {

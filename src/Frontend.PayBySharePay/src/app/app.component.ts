@@ -26,7 +26,7 @@ import { AuthService } from './core/services/auth.service';
       min-height: 100dvh;
       max-width: 390px;
       margin: 0 auto;
-      background: #070B14;
+      background: var(--color-bg);
       position: relative;
       font-family: var(--font-family);
       font-size: 16px;
@@ -46,7 +46,7 @@ import { AuthService } from './core/services/auth.service';
       align-items: center;
       justify-content: center;
       padding: 2px 12px 0;
-      background: #070B14;
+      background: var(--color-bg);
     }
 
     .app-header__logo {
