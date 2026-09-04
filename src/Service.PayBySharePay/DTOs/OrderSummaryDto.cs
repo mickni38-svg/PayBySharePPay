@@ -14,6 +14,7 @@ public class OrderSummaryDto
     public int CreatedByParticipantId { get; set; }
     public decimal TotalAmount { get; set; }
     public string? MerchantName { get; set; }
+    public string? MerchantLogoUrl { get; set; }
 
     /// <summary>Deltagere med navn og betalingsstatus</summary>
     public List<OrderParticipantDto> Participants { get; set; } = new();

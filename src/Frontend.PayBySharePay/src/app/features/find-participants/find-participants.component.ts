@@ -6,10 +6,13 @@ import { DirectoryEntry } from '../../core/models/directory.model';
 import { DirectoryService } from '../../core/services/directory.service';
 import { FriendService } from '../../core/services/friend.service';
 import { AuthService } from '../../core/services/auth.service';
+import { getStaticMerchantLogoUrl } from '../../core/utils/merchant-logo';
+import { environment } from '../../../environments/environment';
 
 interface DirectoryEntryVM extends DirectoryEntry {
   initials: string;
   avatarColor: string;
+  fallbackLogoUrl: string | null;
   selected: boolean;
 }
 
@@ -97,14 +100,7 @@ export class FindParticipantsComponent implements OnInit {
     this.isFriendsLoading.set(true);
     this.friendService.getFriends(currentUserId).subscribe({
       next: (list) => {
-        this.friendEntries.set(
-          list.map(e => ({
-            ...e,
-            initials: toInitials(e.displayName),
-            avatarColor: avatarColor(e.displayName),
-            selected: false
-          }))
-        );
+        this.friendEntries.set(list.map(e => this.toViewModel(e)));
         this.isFriendsLoading.set(false);
       },
       error: () => {
@@ -119,14 +115,7 @@ export class FindParticipantsComponent implements OnInit {
     const currentUserId = this.auth.currentUserId() ?? undefined;
     this.directoryService.search(query, currentUserId).subscribe({
       next: (list) => {
-        this.entries.set(
-          list.map(e => ({
-            ...e,
-            initials: toInitials(e.displayName),
-            avatarColor: avatarColor(e.displayName),
-            selected: false
-          }))
-        );
+        this.entries.set(list.map(e => this.toViewModel(e)));
         this.isLoading.set(false);
       },
       error: () => {
@@ -152,6 +141,17 @@ export class FindParticipantsComponent implements OnInit {
         list.map(item => item.id === e.id ? { ...item, selected: !item.selected } : item)
       );
     }
+  }
+
+  onMerchantLogoError(entryId: number): void {
+    const useFallback = (list: DirectoryEntryVM[]) => list.map(entry =>
+      entry.id === entryId
+        ? { ...entry, logoUrl: entry.fallbackLogoUrl ?? undefined, fallbackLogoUrl: null }
+        : entry
+    );
+
+    this.friendEntries.update(useFallback);
+    this.entries.update(useFallback);
   }
 
   addSelected(): void {
@@ -180,5 +180,19 @@ export class FindParticipantsComponent implements OnInit {
         }
       });
     });
+  }
+
+  private toViewModel(entry: DirectoryEntry): DirectoryEntryVM {
+    const staticLogoUrl = getStaticMerchantLogoUrl(entry);
+    const apiLogoUrl = entry.logoUrl ? `${environment.apiUrl}${entry.logoUrl}` : null;
+
+    return {
+      ...entry,
+      initials: toInitials(entry.displayName),
+      avatarColor: avatarColor(entry.displayName),
+      logoUrl: staticLogoUrl ?? apiLogoUrl ?? undefined,
+      fallbackLogoUrl: staticLogoUrl ? apiLogoUrl : null,
+      selected: false
+    };
   }
 }

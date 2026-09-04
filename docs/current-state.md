@@ -42,7 +42,7 @@ Statusoversigt over PayNSync pr. seneste kodegennemgang.
 | Generer merchant-link pr. deltager + send som besked | ✅ | `{merchant.GroupOrderUrl}?orderId=X&merchantId=Y&participantToken=Z` |
 | Generalbesked til deltagere uden merchant | ✅ | Sendes kun til inviterede, ikke host |
 | Hent alle ordrer / ordrer for én bruger | ✅ | `GET /api/orders?participantId=X` |
-| Hent ordre-overblik (deltagere, linjer, betalinger, beskeder) | ✅ | `GET /api/orders/{id}/overview` |
+| Hent ordre-overblik (merchant-logo, deltagere, linjer, betalinger, beskeder) | ✅ | `GET /api/orders/{id}/overview` |
 | Ordre-statusmaskine | ✅ | `Collecting → ReadyToPay → HostApproved → Capturing → Paid / PartiallyFailed / Cancelled` |
 | Auto-overgang til `ReadyToPay` når alle deltagerbetalinger er `Reserved` | ✅ | `CheckAndSetReadyToPayByReservedAsync()` — kaldes fra Vipps-webhook og FakeProvider |
 | `CheckAndSetReadyToPayAsync` (OrderSubmitted-baseret) | ⚠️ | Metoden eksisterer i `IOrderService` men kaldes ingen steder i produktionskode — `ReadyToPay` sættes via den Reserved-baserede metode |
@@ -158,7 +158,7 @@ Statusoversigt over PayNSync pr. seneste kodegennemgang.
 | Send påmindelser til afventende deltagere | ⚠️ | Knap og dialog eksisterer — `sendReminders()` logger kun til console, ingen API-kald |
 | Beskedindbakke | ✅ | |
 | Profil- og kontocenter (UC-15) | ✅ | `/profile` samler profil, login, person-/merchantoprettelse, rollebeskyttet Vipps-test og Development-only værktøjer i lazy-loadede faner; `/login` og `/register` redirecter hertil |
-| Merchant-logo i database/API og statisk demo-katalog (UC-01) | ✅ | Logo-data og metadata på merchant, logo-endpoint, validering/fallback samt statiske demo-logoer med API-logo og initialer som fallback. |
+| Merchant-logo i database/API og statisk demo-katalog (UC-01) | ✅ | Logo-data og metadata på merchant, logo-endpoint, validering/fallback samt visning i carousel, venneliste og ordreoverblik. |
 | Merchant-søgning og carousel på forsiden (UC-02) | ✅ | Dynamiske merchant-venner, maks. 8, søgning, logo-fallback, senest anvendt-sortering, tastaturnavigation og låst wizard-state |
 | Dark theme navigation (UC-07) | ✅ | Mørkt tema skjuler Deltagere+Profil-kort, giver neon-glow border på kort, forenkler bottom nav til Hjem/Deltagere/Mere |
 | PayNSync hero-logo på forsiden (dark mode) | ✅ | SVG-kreditkortsillustration + Pay/NSync branding øverst på HomeComponent |

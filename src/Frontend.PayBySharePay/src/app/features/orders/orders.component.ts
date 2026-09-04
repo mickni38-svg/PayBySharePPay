@@ -6,6 +6,8 @@ import { filter } from 'rxjs/operators';
 import { OrderService } from '../../core/services/order.service';
 import { AuthService } from '../../core/services/auth.service';
 import { OrderOverviewApiDto, OrderParticipantApiDto, OrderSummaryApiDto, ParticipantOrderLinesApiDto } from '../../core/models/order.model';
+import { getStaticMerchantLogoUrlByDisplayName } from '../../core/utils/merchant-logo';
+import { environment } from '../../../environments/environment';
 
 interface OrderCardVM {
   id: number;
@@ -17,9 +19,8 @@ interface OrderCardVM {
   isHost: boolean;
   totalAmount: number;
   merchantName?: string;
+  merchantLogoUrl: string | null;
   merchantAddress?: string;
-  participantCount: number;
-  paidParticipantCount: number;
   canPayTotalOrder: boolean;
   allPaid: boolean;
   canShowOrderLines: boolean;
@@ -122,7 +123,6 @@ export class OrdersComponent implements OnInit, OnDestroy {
 
     // Eksisterende domæneregel: OrderSubmitted eller Paid tæller som "har bestilt".
     const submittedStatuses = ['OrderSubmitted', 'Paid'];
-    const paidCount = nonMerchant.filter(p => submittedStatuses.includes(p.status)).length;
     const allPaid = o.status === 'ReadyToPay' || o.status === 'Completed' ||
       (nonMerchant.length > 0 && nonMerchant.every(p => submittedStatuses.includes(p.status)));
 
@@ -131,6 +131,11 @@ export class OrdersComponent implements OnInit, OnDestroy {
     const myLines = cached?.participantOrderLines.find(g => g.participantId === userId);
     const canShow = anyoneHasLines || (myLines?.lines?.length ?? 0) > 0;
     const visibleLines = cached?.participantOrderLines.filter(g => g.lines.length > 0) ?? [];
+    const merchantName = cached?.merchantName ?? o.merchantName;
+    const merchantLogoPath = cached?.merchantLogoUrl ?? o.merchantLogoUrl;
+    const apiMerchantLogoUrl = merchantLogoPath
+      ? `${environment.apiUrl}${merchantLogoPath}`
+      : null;
 
     const myOwnLines = cached?.participantOrderLines.find(g => g.participantId === userId);
     const myOwnAmount = (myOwnLines?.lines?.length ?? 0) > 0
@@ -153,10 +158,9 @@ export class OrdersComponent implements OnInit, OnDestroy {
       createdByParticipantId: o.createdByParticipantId,
       isHost,
       totalAmount: cached?.totalAmount ?? o.totalAmount,
-      merchantName: cached?.merchantName ?? o.merchantName,
+      merchantName,
+      merchantLogoUrl: getStaticMerchantLogoUrlByDisplayName(merchantName) ?? apiMerchantLogoUrl,
       merchantAddress: cached?.merchantAddress,
-      participantCount: nonMerchant.length,
-      paidParticipantCount: paidCount,
       canPayTotalOrder: isHost,
       allPaid,
       canShowOrderLines: canShow,
@@ -301,6 +305,11 @@ export class OrdersComponent implements OnInit, OnDestroy {
     return map[cat ?? ''] ?? '🍴';
   }
 
+  onMerchantLogoError(event: Event): void {
+    const image = event.target;
+    if (image instanceof HTMLImageElement) image.hidden = true;
+  }
+
   initials(name: string): string {
     return name.split(' ').slice(0, 2).map(p => p[0]).join('').toUpperCase();
   }
@@ -324,8 +333,4 @@ export class OrdersComponent implements OnInit, OnDestroy {
     return group?.lines.reduce((sum, line) => sum + line.lineTotal, 0) ?? 0;
   }
 
-  progressPercent(vm: OrderCardVM): number {
-    if (vm.participantCount <= 0) return 0;
-    return Math.min(100, Math.round((vm.paidParticipantCount / vm.participantCount) * 100));
-  }
 }

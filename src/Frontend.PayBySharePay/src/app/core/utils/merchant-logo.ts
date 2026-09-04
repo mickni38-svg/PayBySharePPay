@@ -28,3 +28,24 @@ export function getStaticMerchantLogoUrl(
 
   return `/images/${merchantName}.png`;
 }
+
+/** Resolves the demo logo catalog when only a merchant display name is available. */
+export function getStaticMerchantLogoUrlByDisplayName(
+  displayName: string | null | undefined
+): string | null {
+  const merchantName = displayName
+    ?.trim()
+    .toLocaleLowerCase('da')
+    .replace(/æ/g, 'ae')
+    .replace(/ø/g, 'oe')
+    .replace(/å/g, 'aa')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  if (!merchantName || !STATIC_MERCHANT_LOGO_NAMES.has(merchantName)) return null;
+
+  return `/images/${merchantName}.png`;
+}

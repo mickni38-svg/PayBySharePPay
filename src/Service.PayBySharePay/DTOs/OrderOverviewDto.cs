@@ -10,6 +10,7 @@ public class OrderOverviewDto
     public string Status { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public string? MerchantName { get; set; }
+    public string? MerchantLogoUrl { get; set; }
     public string? MerchantAddress { get; set; }
     public decimal TotalAmount { get; set; }
     public List<OrderParticipantDto> Participants { get; set; } = new();

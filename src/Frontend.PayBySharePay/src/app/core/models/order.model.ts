@@ -112,6 +112,7 @@ export interface OrderOverviewApiDto {
   createdAt: string;
   createdByParticipantId: number;
   merchantName?: string;
+  merchantLogoUrl?: string;
   merchantAddress?: string;
   totalAmount: number;
   participants: OrderParticipantApiDto[];
@@ -203,6 +204,7 @@ export interface OrderSummaryApiDto {
   createdByParticipantId: number;
   totalAmount: number;
   merchantName?: string;
+  merchantLogoUrl?: string;
   participants: OrderParticipantApiDto[];
 }
 

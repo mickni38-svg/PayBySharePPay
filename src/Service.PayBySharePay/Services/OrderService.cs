@@ -234,6 +234,7 @@ public class OrderService : IOrderService
             Status = order.Status,
             CreatedAt = order.CreatedAt,
             MerchantName = order.MerchantParticipant?.CompanyName ?? order.MerchantParticipant?.Name,
+            MerchantLogoUrl = GetMerchantLogoUrl(order.MerchantParticipant),
             MerchantAddress = order.MerchantParticipant?.CompanyAddress,
             TotalAmount = draft?.TotalAmount ?? 0m,
             Participants = order.OrderParticipants.Select(op => new OrderParticipantDto
@@ -316,6 +317,7 @@ public class OrderService : IOrderService
         CreatedByParticipantId = o.CreatedByParticipantId,
         TotalAmount = o.MerchantOrderDrafts.FirstOrDefault()?.TotalAmount ?? 0m,
         MerchantName = o.MerchantParticipant?.CompanyName ?? o.MerchantParticipant?.Name,
+        MerchantLogoUrl = GetMerchantLogoUrl(o.MerchantParticipant),
         Participants = o.OrderParticipants.Select(op => new OrderParticipantDto
         {
             ParticipantId = op.ParticipantId,
@@ -324,6 +326,11 @@ public class OrderService : IOrderService
             Status = op.Status
         }).ToList()
     };
+
+    private static string? GetMerchantLogoUrl(Participant? merchant)
+        => merchant?.LogoImageData is not null
+            ? $"/api/participants/{merchant.Id}/logo"
+            : null;
 
     public async Task<OrderDto> CompleteOrderAsync(int orderId, int requestingParticipantId)
     {

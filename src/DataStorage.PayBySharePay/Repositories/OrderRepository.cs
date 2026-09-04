@@ -29,6 +29,7 @@ public class OrderRepository : IOrderRepository
         return await _context.Orders
             .Include(o => o.OrderParticipants).ThenInclude(op => op.Participant)
             .Include(o => o.Payments)
+            .Include(o => o.MerchantParticipant)
             .OrderByDescending(o => o.CreatedAt)
             .ToListAsync();
     }

@@ -138,6 +138,7 @@
 }
 
 .order-card__icon {
+  position: relative;
   display: grid;
   width: 58px;
   height: 58px;
@@ -148,6 +149,19 @@
   border: 1px solid color-mix(in srgb, var(--color-primary) 45%, transparent);
   border-radius: 50%;
   font-size: 30px;
+}
+
+.order-card__icon--merchant {
+  overflow: hidden;
+  background: #FFFFFF;
+}
+
+.order-card__merchant-logo {
+  position: absolute;
+  inset: 5px;
+  width: calc(100% - 10px);
+  height: calc(100% - 10px);
+  object-fit: contain;
 }
 
 .order-card__main {
@@ -179,8 +193,16 @@
 .order-card__role-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
   min-height: 22px;
   margin-top: 3px;
+}
+
+.order-card__merchant-name {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .order-card__host-badge,
@@ -230,53 +252,10 @@
   transform: rotate(180deg);
 }
 
-.order-card__meta-row,
-.order-card__progress-copy {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  color: var(--color-text-secondary);
-  font-size: 13px;
-  font-weight: 400;
-}
-
-.order-card__meta-row {
-  margin-top: 9px;
-}
-
-.order-card__meta-icon {
-  display: inline-grid;
-  width: 18px;
-  place-items: center;
-  color: var(--color-text-muted);
-  font-size: 15px;
-}
-
-.order-card__progress-area {
-  margin-top: 6px;
-}
-
-.order-card__progress-track {
-  width: min(180px, 100%);
-  height: 6px;
-  margin: 7px 0 0 25px;
-  overflow: hidden;
-  background: color-mix(in srgb, var(--color-text-muted) 28%, transparent);
-  border-radius: 999px;
-}
-
-.order-card__progress-fill {
-  display: block;
-  height: 100%;
-  background: var(--color-primary);
-  border-radius: inherit;
-  transition: width .25s ease;
-}
-
-.order-card__payment-row {
+.order-card__accordion-payment {
   display: flex;
   justify-content: flex-end;
-  margin-top: 12px;
+  margin-top: 14px;
 }
 
 .btn {
@@ -553,7 +532,6 @@
   .order-card,
   .order-card__accordion,
   .order-card__chevron,
-  .order-card__progress-fill,
   .btn {
     transition: none;
   }
@@ -575,6 +553,10 @@
 :host-context([data-theme="minimal"]) .order-card__icon {
   background: var(--color-surface-elevated);
   border-color: var(--color-border);
+}
+
+:host-context([data-theme="minimal"]) .order-card__icon--merchant {
+  background: #FFFFFF;
 }
 
 :host-context([data-theme="minimal"]) .participant-card,

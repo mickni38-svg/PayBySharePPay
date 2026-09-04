@@ -56,13 +56,25 @@
               (keydown.enter)="toggleExpand(vm.id)"
               (keydown.space)="$event.preventDefault(); toggleExpand(vm.id)">
 
-              <div class="order-card__icon" aria-hidden="true">{{ categoryIcon(vm.category) }}</div>
+              <div class="order-card__icon" [class.order-card__icon--merchant]="vm.merchantLogoUrl">
+                <span aria-hidden="true">{{ categoryIcon(vm.category) }}</span>
+                @if (vm.merchantLogoUrl) {
+                  <img
+                    class="order-card__merchant-logo"
+                    [src]="vm.merchantLogoUrl"
+                    [alt]="vm.merchantName ? 'Logo for ' + vm.merchantName : 'Spisested'"
+                    (error)="onMerchantLogoError($event)" />
+                }
+              </div>
 
               <div class="order-card__main">
                 <div class="order-card__heading-row">
                   <div class="order-card__heading-copy">
                     <h2 class="order-card__title">{{ vm.title }}</h2>
                     <div class="order-card__role-row">
+                      @if (vm.merchantName) {
+                        <span class="order-card__merchant-name">{{ vm.merchantName }}</span>
+                      }
                       @if (vm.isHost) {
                         <span class="order-card__host-badge">👑 Vært</span>
                       } @else {
@@ -89,37 +101,6 @@
                   </div>
                 </div>
 
-                @if (vm.merchantName) {
-                  <div class="order-card__meta-row">
-                    <span class="order-card__meta-icon" aria-hidden="true">⌂</span>
-                    <span>{{ vm.merchantName }}</span>
-                  </div>
-                }
-
-                @if (vm.isHost) {
-                  <div class="order-card__progress-area">
-                    <div class="order-card__progress-copy">
-                      <span class="order-card__meta-icon" aria-hidden="true">♙</span>
-                      <span>{{ vm.paidParticipantCount }} af {{ vm.participantCount }} har bestilt</span>
-                    </div>
-                    <div class="order-card__progress-track" aria-hidden="true">
-                      <span class="order-card__progress-fill" [style.width.%]="progressPercent(vm)"></span>
-                    </div>
-                  </div>
-                }
-
-                @if (vm.canPayTotalOrder && !COMPLETED_STATUSES.includes(vm.status)) {
-                  <div class="order-card__payment-row">
-                    <button
-                      type="button"
-                      class="btn btn--primary"
-                      [disabled]="!vm.allPaid || !vm.detailsLoaded || payingOrderId() === vm.id"
-                      [class.btn--disabled]="!vm.allPaid || !vm.detailsLoaded || payingOrderId() === vm.id"
-                      (click)="$event.stopPropagation(); payOrder(vm)">
-                      {{ payingOrderId() === vm.id ? 'Betaler…' : 'Betal nu' }}
-                    </button>
-                  </div>
-                }
               </div>
             </div>
 
@@ -193,6 +174,18 @@
                     <p class="participants-section__state">Deltageroplysninger er ikke tilgængelige endnu.</p>
                   }
                 </section>
+                @if (vm.canPayTotalOrder && !COMPLETED_STATUSES.includes(vm.status)) {
+                  <div class="order-card__accordion-payment">
+                    <button
+                      type="button"
+                      class="btn btn--primary"
+                      [disabled]="!vm.allPaid || !vm.detailsLoaded || payingOrderId() === vm.id"
+                      [class.btn--disabled]="!vm.allPaid || !vm.detailsLoaded || payingOrderId() === vm.id"
+                      (click)="$event.stopPropagation(); payOrder(vm)">
+                      {{ payingOrderId() === vm.id ? 'Betaler…' : 'Betal nu' }}
+                    </button>
+                  </div>
+                }
               }
             </div>
 

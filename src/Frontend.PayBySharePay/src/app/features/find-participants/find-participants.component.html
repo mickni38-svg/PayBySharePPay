@@ -57,8 +57,12 @@
         <p class="find__section-heading">Spisesteder</p>
         @for (e of friendMerchants(); track e.id) {
           <div class="row" [class.row--selected]="e.selected" (click)="toggleSelect(e)">
-            <div class="row__avatar" [style.background]="e.avatarColor">
-              <span class="row__initials">{{ e.initials }}</span>
+            <div class="row__avatar row__avatar--merchant">
+              @if (e.logoUrl) {
+                <img class="row__merchant-logo" [src]="e.logoUrl" [alt]="e.displayName" (error)="onMerchantLogoError(e.id)" />
+              } @else {
+                <span class="row__initials">{{ e.initials }}</span>
+              }
             </div>
             <div class="row__info">
               <span class="row__name">{{ e.displayName }}</span>
@@ -87,8 +91,12 @@
         <p class="find__section-heading">Venner</p>
         @for (e of friendMerchants(); track e.id) {
           <div class="row" [class.row--selected]="e.selected" (click)="toggleSelect(e)">
-            <div class="row__avatar" [style.background]="e.avatarColor">
-              <span class="row__initials">{{ e.initials }}</span>
+            <div class="row__avatar row__avatar--merchant">
+              @if (e.logoUrl) {
+                <img class="row__merchant-logo" [src]="e.logoUrl" [alt]="e.displayName" (error)="onMerchantLogoError(e.id)" />
+              } @else {
+                <span class="row__initials">{{ e.initials }}</span>
+              }
             </div>
             <div class="row__info">
               <span class="row__name">{{ e.displayName }}</span>
@@ -109,8 +117,12 @@
         }
         @for (e of merchantTabEntries(); track e.id) {
           <div class="row" [class.row--selected]="e.selected" (click)="toggleSelect(e)">
-            <div class="row__avatar" [style.background]="e.avatarColor">
-              <span class="row__initials">{{ e.initials }}</span>
+            <div class="row__avatar row__avatar--merchant">
+              @if (e.logoUrl) {
+                <img class="row__merchant-logo" [src]="e.logoUrl" [alt]="e.displayName" (error)="onMerchantLogoError(e.id)" />
+              } @else {
+                <span class="row__initials">{{ e.initials }}</span>
+              }
             </div>
             <div class="row__info">
               <span class="row__name">{{ e.displayName }}</span>
