@@ -153,9 +153,45 @@ public class AuthControllerAccountTests
             Times.Once);
     }
 
+    [Fact]
+    public async Task RegisterMerchant_UsesConfiguredVippsCredentialsWhenEnabled()
+    {
+        var participantService = new Mock<IParticipantService>();
+        participantService
+            .Setup(service => service.GetByEmailAsync("merchant@paynsync.dk"))
+            .ReturnsAsync((ParticipantDto?)null);
+        participantService
+            .Setup(service => service.CreateMerchantAsync(It.IsAny<CreateMerchantDto>()))
+            .ReturnsAsync(Merchant(passwordHash: null));
+
+        var controller = CreateController(
+            participantService,
+            "Simply",
+            useDefaultVippsCredentials: true);
+
+        var result = await controller.RegisterMerchant(new RegisterMerchantRequest
+        {
+            Name = "Roma",
+            CompanyName = "Roma ApS",
+            Email = "merchant@paynsync.dk",
+            Password = "secret42"
+        });
+
+        result.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(201);
+
+        participantService.Verify(service => service.CreateMerchantAsync(
+            It.Is<CreateMerchantDto>(dto =>
+                dto.VippsMerchantSerialNumber == "TEST-MSN" &&
+                dto.VippsClientId == "test-client-id" &&
+                dto.VippsClientSecret == "test-client-secret" &&
+                dto.VippsSubscriptionKey == "test-subscription-key")),
+            Times.Once);
+    }
+
     private static AuthController CreateController(
         Mock<IParticipantService> participantService,
-        string environmentName)
+        string environmentName,
+        bool useDefaultVippsCredentials = false)
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -163,7 +199,12 @@ public class AuthControllerAccountTests
                 ["Jwt:Key"] = "uc-15-test-key-at-least-thirty-two-characters",
                 ["Jwt:Issuer"] = "tests",
                 ["Jwt:Audience"] = "tests",
-                ["Jwt:ExpiresInMinutes"] = "60"
+                ["Jwt:ExpiresInMinutes"] = "60",
+                ["Payments:VippsMobilePay:UseDefaultMerchantCredentialsOnRegistration"] = useDefaultVippsCredentials.ToString(),
+                ["Payments:VippsMobilePay:MerchantSerialNumber"] = "TEST-MSN",
+                ["Payments:VippsMobilePay:ClientId"] = "test-client-id",
+                ["Payments:VippsMobilePay:ClientSecret"] = "test-client-secret",
+                ["Payments:VippsMobilePay:SubscriptionKey"] = "test-subscription-key"
             })
             .Build();
 
@@ -174,7 +215,8 @@ public class AuthControllerAccountTests
             participantService.Object,
             new JwtTokenService(configuration),
             Mock.Of<IExternalAuthService>(),
-            environment.Object);
+            environment.Object,
+            configuration);
     }
 
     private static ParticipantDto Person(string? passwordHash) => new()
