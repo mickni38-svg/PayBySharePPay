@@ -6,12 +6,12 @@ const THEME_KEY = 'sbys_theme';
 
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
-  readonly current = signal<Theme>('color');
+  readonly current = signal<Theme>('minimal');
 
   constructor() {
     const stored = localStorage.getItem(THEME_KEY);
     const valid: Theme[] = ['default', 'color', 'minimal', 'charcoal'];
-    this.apply(valid.includes(stored as Theme) ? (stored as Theme) : 'color');
+    this.apply(valid.includes(stored as Theme) ? (stored as Theme) : 'minimal');
   }
 
   init(): void {}

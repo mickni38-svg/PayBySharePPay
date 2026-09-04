@@ -1,4 +1,5 @@
 import { HomeComponent } from './home.component';
+import { of } from 'rxjs';
 
 describe('HomeComponent UC-02', () => {
   let router: { navigate: jasmine.Spy };
@@ -48,6 +49,35 @@ describe('HomeComponent UC-02', () => {
       }
     });
     expect(localStorage.getItem('paynsync_recent_merchants:7')).toBe('[42]');
+  });
+
+  it('prefers a matching static merchant logo and keeps the API logo as fallback', () => {
+    const friendService = {
+      getFriends: jasmine.createSpy('getFriends').and.returnValue(of([{
+        id: 42,
+        type: 'Merchant',
+        displayName: 'Bella Napoli',
+        handle: 'bella-napoli',
+        logoUrl: '/api/participants/42/logo'
+      }]))
+    };
+    const logoComponent = new HomeComponent(
+      {
+        currentUserId: () => 7,
+        isLoggedIn: () => true
+      } as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      friendService as any,
+      router as any
+    );
+
+    (logoComponent as any).loadMerchants(7);
+
+    expect(logoComponent.allMerchants()[0].logoUrl).toBe('/images/bella-napoli.png');
+    expect(logoComponent.allMerchants()[0].fallbackLogoUrl)
+      .toMatch(/\/api\/participants\/42\/logo$/);
   });
 
   it('scrolls the carousel with the keyboard and prevents page scrolling', () => {
