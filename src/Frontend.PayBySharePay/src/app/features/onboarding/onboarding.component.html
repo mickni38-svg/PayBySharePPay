@@ -1,0 +1,204 @@
+<div class="onboarding">
+  <section class="wizard" aria-labelledby="onboarding-title">
+    <header class="wizard__header">
+      <div class="wizard__progress" aria-label="Oprettelse trin {{ step() }} af 4">
+        <span>Trin {{ step() }} af 4</span>
+        <div class="wizard__dots" aria-hidden="true">
+          @for (n of [1, 2, 3, 4]; track n) {
+            <span [class.wizard__dot--active]="n <= step()"></span>
+          }
+        </div>
+      </div>
+
+      @if (step() === 1) {
+        <h1 id="onboarding-title">Opret profil</h1>
+        <p>Start med dine personlige oplysninger.</p>
+      } @else if (step() === 2) {
+        <h1 id="onboarding-title">Vælg venner</h1>
+        <p>Tilføj personer du ofte deler betalinger med. Du kan springe dette trin over.</p>
+      } @else if (step() === 3) {
+        <h1 id="onboarding-title">Vælg spisesteder</h1>
+        <p>Vælg de spisesteder du gerne vil have klar på forsiden. Du kan springe dette trin over.</p>
+      } @else {
+        <h1 id="onboarding-title">Bekræft profil</h1>
+        <p>Gennemgå dine valg, før onboarding afsluttes.</p>
+      }
+    </header>
+
+    @if (errorMessage()) {
+      <p class="feedback feedback--error" role="alert">{{ errorMessage() }}</p>
+    }
+
+    @if (step() === 1) {
+      <form class="wizard__body field-stack" (ngSubmit)="next()">
+        @if (accountCreated()) {
+          <p class="feedback feedback--success" role="status">Kontoen er oprettet. Dine oplysninger bevares, mens du færdiggør opsætningen.</p>
+        }
+
+        <div class="form-field">
+          <label for="onboarding-name">Fulde navn</label>
+          <input id="onboarding-name" name="name" type="text" autocomplete="name"
+            [(ngModel)]="personName" [readonly]="accountCreated()" required />
+        </div>
+
+        <div class="form-field">
+          <label for="onboarding-email">Email</label>
+          <input id="onboarding-email" name="email" type="email" autocomplete="email"
+            [(ngModel)]="personEmail" [readonly]="accountCreated()" required />
+        </div>
+
+        <div class="form-field">
+          <label for="onboarding-phone">Telefon <span>(valgfri)</span></label>
+          <input id="onboarding-phone" name="phone" type="tel" autocomplete="tel"
+            [(ngModel)]="personPhone" [readonly]="accountCreated()" />
+        </div>
+
+        @if (!accountCreated()) {
+          <div class="form-field">
+            <label for="onboarding-password">Adgangskode</label>
+            <input id="onboarding-password" name="password" type="password" autocomplete="new-password"
+              minlength="6" [(ngModel)]="personPassword" required />
+            <small>Mindst 6 tegn</small>
+          </div>
+
+          <div class="form-field">
+            <label for="onboarding-password-confirm">Gentag adgangskode</label>
+            <input id="onboarding-password-confirm" name="passwordConfirm" type="password"
+              autocomplete="new-password" [(ngModel)]="personPasswordConfirm" required
+              [attr.aria-invalid]="personPasswordConfirm && personPassword !== personPasswordConfirm" />
+            @if (personPasswordConfirm && personPassword !== personPasswordConfirm) {
+              <small class="field-error">Adgangskoderne er ikke ens.</small>
+            }
+          </div>
+        }
+
+        <div class="wizard__actions wizard__actions--single">
+          <button class="primary-btn" type="submit" [disabled]="isLoading() || !canContinueProfile()">
+            {{ isLoading() ? 'Opretter…' : 'Næste' }}
+          </button>
+        </div>
+      </form>
+    }
+
+    @if (step() === 2) {
+      <div class="wizard__body">
+        <div class="search-field">
+          <input type="search" aria-label="Søg efter venner" placeholder="Søg navn eller email…"
+            [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" />
+        </div>
+
+        @if (isLoading()) {
+          <p class="status-text">Henter personer…</p>
+        } @else if (friendCandidates().length === 0) {
+          <p class="empty-state">Ingen personer fundet.</p>
+        } @else {
+          <div class="choice-list" role="group" aria-label="Vælg venner">
+            @for (person of friendCandidates(); track person.id) {
+              <button type="button" class="choice-card" [class.choice-card--selected]="isFriendSelected(person.id)"
+                (click)="toggleFriend(person.id)" [attr.aria-pressed]="isFriendSelected(person.id)">
+                <span class="choice-card__avatar">{{ person.displayName.charAt(0).toUpperCase() }}</span>
+                <span class="choice-card__content">
+                  <strong>{{ person.displayName }}</strong>
+                  @if (person.handle) { <small>{{ person.handle }}</small> }
+                </span>
+                <span class="choice-card__check">{{ isFriendSelected(person.id) ? '✓' : '' }}</span>
+              </button>
+            }
+          </div>
+        }
+
+        <div class="wizard__actions">
+          <button type="button" class="secondary-btn" (click)="back()">Tilbage</button>
+          <button type="button" class="primary-btn" (click)="next()">Næste</button>
+        </div>
+      </div>
+    }
+
+    @if (step() === 3) {
+      <div class="wizard__body">
+        <div class="search-field">
+          <input type="search" aria-label="Søg efter spisesteder" placeholder="Søg spisested…"
+            [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" />
+        </div>
+
+        @if (isLoading()) {
+          <p class="status-text">Henter spisesteder…</p>
+        } @else if (merchantCandidates().length === 0) {
+          <p class="empty-state">Ingen spisesteder fundet.</p>
+        } @else {
+          <div class="choice-list" role="group" aria-label="Vælg spisesteder">
+            @for (merchant of merchantCandidates(); track merchant.id) {
+              <button type="button" class="choice-card" [class.choice-card--selected]="isMerchantSelected(merchant.id)"
+                (click)="toggleMerchant(merchant.id)" [attr.aria-pressed]="isMerchantSelected(merchant.id)">
+                <span class="choice-card__avatar choice-card__avatar--merchant">
+                  @if (merchant.logoUrl) {
+                    <img [src]="merchant.logoUrl" [alt]="merchant.displayName" />
+                  } @else {
+                    {{ merchant.displayName.charAt(0).toUpperCase() }}
+                  }
+                </span>
+                <span class="choice-card__content">
+                  <strong>{{ merchant.displayName }}</strong>
+                  @if (merchant.subtitle) { <small>{{ merchant.subtitle }}</small> }
+                </span>
+                <span class="choice-card__check">{{ isMerchantSelected(merchant.id) ? '✓' : '' }}</span>
+              </button>
+            }
+          </div>
+        }
+
+        <div class="wizard__actions">
+          <button type="button" class="secondary-btn" (click)="back()">Tilbage</button>
+          <button type="button" class="primary-btn" (click)="next()">Næste</button>
+        </div>
+      </div>
+    }
+
+    @if (step() === 4) {
+      <div class="wizard__body summary">
+        <section class="summary__section">
+          <h2>Profil</h2>
+          <dl>
+            <div><dt>Navn</dt><dd>{{ personName }}</dd></div>
+            <div><dt>Email</dt><dd>{{ personEmail }}</dd></div>
+            @if (personPhone) { <div><dt>Telefon</dt><dd>{{ personPhone }}</dd></div> }
+          </dl>
+        </section>
+
+        <section class="summary__section">
+          <h2>Venner</h2>
+          @if (selectedFriends().length === 0) {
+            <p>Ingen valgt</p>
+          } @else {
+            <ul>
+              @for (friend of selectedFriends(); track friend.id) { <li>{{ friend.displayName }}</li> }
+            </ul>
+          }
+        </section>
+
+        <section class="summary__section">
+          <h2>Spisesteder</h2>
+          @if (selectedMerchants().length === 0) {
+            <p>Ingen valgt</p>
+          } @else {
+            <ul>
+              @for (merchant of selectedMerchants(); track merchant.id) { <li>{{ merchant.displayName }}</li> }
+            </ul>
+          }
+        </section>
+
+        <div class="wizard__actions">
+          <button type="button" class="secondary-btn" (click)="back()" [disabled]="isLoading()">Tilbage</button>
+          <button type="button" class="primary-btn" (click)="complete()" [disabled]="isLoading()">
+            {{ isLoading() ? 'Gemmer…' : 'Gem profil' }}
+          </button>
+        </div>
+      </div>
+    }
+
+    <footer class="wizard__footer">
+      <a routerLink="/login">Har du allerede en konto? Log ind</a>
+      <a routerLink="/profile" [queryParams]="{ mode: 'register' }">Opret merchantkonto</a>
+    </footer>
+  </section>
+</div>
