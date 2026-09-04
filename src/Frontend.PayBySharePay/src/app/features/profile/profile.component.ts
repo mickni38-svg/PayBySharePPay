@@ -323,7 +323,7 @@ export class ProfileComponent implements OnInit, AfterViewInit {
       password: this.personPassword
     }).subscribe({
       next: (response) => this.finishAuthentication(response),
-      error: (error) => {
+      error: () => {
         this.registerLoading.set(false);
         this.registerError.set(error.status === 409
           ? 'Der findes allerede en konto med denne email.'
@@ -503,21 +503,18 @@ export class ProfileComponent implements OnInit, AfterViewInit {
   }
 
   developerReset(): void {
-    if (this.isProduction) return;
-    if (!confirm('Dette sletter alle ordrer, betalinger og beskeder i udviklingsdatabasen. Fortsæt?')) return;
+    if (!confirm('Dette sletter alle ordrer, betalinger og beskeder. Brugere, merchants, venner og Vipps-testmappinger bevares. Fortsæt?')) return;
 
     this.resetLoading.set(true);
     this.resetMessage.set(null);
     this.devService.resetData().subscribe({
       next: () => {
         this.resetLoading.set(false);
-        this.resetMessage.set('Udviklingsdata er nulstillet.');
+        this.resetMessage.set('Testdata er nulstillet. Du kan starte et nyt testforløb.');
       },
-      error: (error) => {
+      error: () => {
         this.resetLoading.set(false);
-        this.resetMessage.set(error.status === 404
-          ? 'Reset findes kun, når backend kører i Development.'
-          : 'Data kunne ikke nulstilles.');
+        this.resetMessage.set('Data kunne ikke nulstilles.');
       }
     });
   }
