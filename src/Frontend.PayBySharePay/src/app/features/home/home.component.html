@@ -2,14 +2,30 @@
 <div class="home">
 
   @if (!auth.isLoggedIn()) {
-    <section class="home__welcome" aria-labelledby="public-home-title">
-      <h1 id="public-home-title" class="home__greeting" style="font-weight:600">Betal sammen – uden besværet</h1>
-      <p class="home__sub">Opret en gruppebetaling, inviter venner og betal hver jeres del.</p>
-    </section>
+    <section
+      class="public-home"
+      aria-label="Kom i gang med PayNSync"
+      style="padding:0 20px 18px; display:flex; flex-direction:column; gap:12px;"
+    >
+      <img
+        src="images/public-home-hero.png"
+        alt="PayNSync – del regningen på den nemme måde"
+        style="display:block; width:100%; height:auto; border-radius:18px;"
+      />
 
-    <section class="home__user-auth" aria-label="Kom i gang med PayNSync">
-      <a class="user-auth__btn user-auth__btn--primary" routerLink="/login">Log ind</a>
-      <a class="user-auth__link" routerLink="/register">Opret bruger</a>
+      <a
+        routerLink="/login"
+        style="display:flex; align-items:center; justify-content:center; width:100%; min-height:50px; border-radius:10px; background:#fff; color:#000; text-decoration:none; font-size:15px; font-weight:600;"
+      >
+        Log ind
+      </a>
+
+      <a
+        routerLink="/register"
+        style="display:flex; align-items:center; justify-content:center; width:100%; min-height:48px; border-radius:10px; border:1px solid #888; background:transparent; color:#fff; text-decoration:none; font-size:15px; font-weight:500;"
+      >
+        Opret bruger
+      </a>
     </section>
   } @else {
     <!-- Merchant carousel: Start en gruppebetaling -->
