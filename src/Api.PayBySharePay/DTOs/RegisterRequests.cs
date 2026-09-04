@@ -31,11 +31,10 @@ public class RegisterMerchantRequest
     public string Password { get; set; } = string.Empty;
 
     /// <summary>
-    /// Vipps MobilePay Merchant Serial Number (MSN).
-    /// Afgør hvilken konto betalingerne goes til.
+    /// Vipps MobilePay Merchant Serial Number (MSN). Valgfri når testmiljøet
+    /// automatisk tildeler standard Vipps-credentials fra konfigurationen.
     /// </summary>
-    [Required]
-    public string VippsMerchantSerialNumber { get; set; } = string.Empty;
+    public string? VippsMerchantSerialNumber { get; set; }
 
     public string? CvrNumber { get; set; }
     public string? ContactPerson { get; set; }
