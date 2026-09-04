@@ -48,9 +48,31 @@
         </div>
 
         <div class="form-field">
-          <label for="onboarding-phone">Telefon <span>(valgfri)</span></label>
-          <input id="onboarding-phone" name="phone" type="tel" autocomplete="tel"
-            [(ngModel)]="personPhone" [readonly]="accountCreated()" />
+          <label for="onboarding-phone">Telefon</label>
+          @if (phoneOptionsEnabled()) {
+            <select id="onboarding-phone" name="phone" [(ngModel)]="personPhone"
+              [disabled]="accountCreated() || phoneOptionsLoading()" required>
+              <option value="" disabled>Vælg et ledigt Vipps-testnummer…</option>
+              @for (phone of availablePhoneNumbers(); track phone) {
+                <option [value]="phone">{{ phone }}</option>
+              }
+            </select>
+            @if (!phoneOptionsLoading() && availablePhoneNumbers().length === 0) {
+              <small class="field-error">Alle Vipps-testnumre er allerede i brug.</small>
+            } @else {
+              <small>Kun ledige Vipps-testnumre vises.</small>
+            }
+          } @else {
+            <input id="onboarding-phone" name="phone" type="tel" autocomplete="tel"
+              [(ngModel)]="personPhone" [readonly]="accountCreated()" />
+            @if (phoneOptionsLoading()) {
+              <small>Henter testtelefonnumre…</small>
+            } @else if (phoneOptionsError()) {
+              <small class="field-error">{{ phoneOptionsError() }}</small>
+            } @else {
+              <small>Valgfri</small>
+            }
+          }
         </div>
 
         @if (!accountCreated()) {
