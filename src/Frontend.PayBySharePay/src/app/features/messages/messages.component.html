@@ -1,15 +1,5 @@
 <div class="notif">
-
-  <!-- Header -->
-  <div class="notif__header">
-    <a class="page-back" routerLink="/home">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-      Hjem
-    </a>
-  </div>
-
-  <!-- Filter chips -->
-  <div class="notif__filters">
+  <div class="notif__filters" aria-label="Filtrer beskeder">
     <button class="notif__chip" [class.notif__chip--active]="activeFilter() === 'alle'" (click)="setFilter('alle')">
       Alle
     </button>
@@ -21,7 +11,6 @@
     </button>
   </div>
 
-  <!-- Liste -->
   <div class="notif__body">
     @if (isLoading()) {
       <div class="notif__loading">Henter beskeder…</div>
@@ -34,53 +23,60 @@
     } @else {
       <ul class="notif__list">
         @for (msg of filteredMessages(); track msg.id) {
-          @let url = extractUrl(msg.content);
-          @let path = url ? internalPath(url) : null;
+          @let merchantUrl = merchantOrderUrl(msg);
+          @let logoUrl = merchantLogoUrl(msg);
+          @let title = messageTitle(msg);
+          @let merchant = merchantName(msg);
 
-          @if (path) {
-            <a [routerLink]="path"
-               class="notif__item"
-               [class.notif__item--unread]="!msg.isRead"
-               (click)="onCardClick(msg)">
-              <div class="notif__content">
-                <p class="notif__text" [class.notif__text--unread]="!msg.isRead">
-                  {{ textWithoutUrl(msg.content) }}
-                </p>
-              </div>
-              <div class="notif__action-col">
-                <span class="notif__time">{{ msg.createdAt | date:'d. MMM HH:mm' }}</span>
-              </div>
-            </a>
-          } @else if (url) {
-            <a [href]="url" target="_blank" rel="noopener"
-               class="notif__item"
-               [class.notif__item--unread]="!msg.isRead"
-               (click)="onCardClick(msg)">
-              <div class="notif__content">
-                <p class="notif__text" [class.notif__text--unread]="!msg.isRead">
-                  {{ textWithoutUrl(msg.content) }}
-                </p>
-              </div>
-              <div class="notif__action-col">
-                <span class="notif__time">{{ msg.createdAt | date:'d. MMM HH:mm' }}</span>
-              </div>
-            </a>
-          } @else {
-            <li class="notif__item" [class.notif__item--unread]="!msg.isRead"
-                (click)="onCardClick(msg)">
-              <div class="notif__content">
-                <p class="notif__text" [class.notif__text--unread]="!msg.isRead">
-                  {{ textWithoutUrl(msg.content) }}
-                </p>
-              </div>
-              <div class="notif__action-col">
-                <span class="notif__time">{{ msg.createdAt | date:'d. MMM HH:mm' }}</span>
-              </div>
-            </li>
-          }
+          <li
+            class="notif__item"
+            [class.notif__item--unread]="!msg.isRead"
+            (click)="onCardClick(msg)"
+          >
+            <div class="notif__visual" aria-hidden="true">
+              @if (logoUrl) {
+                <img class="notif__merchant-logo" [src]="logoUrl" [alt]="merchant || 'Merchant logo'" />
+              } @else {
+                <span class="notif__fallback-icon">{{ getCategory(msg.content) === 'bestilling' ? '🍽️' : '💬' }}</span>
+              }
+              @if (!msg.isRead) {
+                <span class="notif__unread-dot"></span>
+              }
+            </div>
+
+            <div class="notif__content">
+              @if (title) {
+                <p class="notif__title" [class.notif__title--unread]="!msg.isRead">{{ title }}</p>
+              }
+              <p class="notif__text" [class.notif__text--unread]="!msg.isRead">
+                {{ textWithoutUrl(msg.content) }}
+              </p>
+
+              @if (merchantUrl) {
+                <a
+                  class="notif__order-link"
+                  [href]="merchantUrl"
+                  target="_blank"
+                  rel="noopener"
+                  (click)="onCardClick(msg)"
+                >
+                  Bestil her
+                  <span aria-hidden="true">→</span>
+                </a>
+              }
+            </div>
+
+            <div class="notif__meta">
+              <span class="notif__time">{{ msg.createdAt | date:'d. MMM HH:mm' }}</span>
+              @if (msg.isRead) {
+                <span class="notif__read-label">Læst</span>
+              } @else {
+                <span class="notif__read-label notif__read-label--unread">Ny</span>
+              }
+            </div>
+          </li>
         }
       </ul>
     }
   </div>
 </div>
-
