@@ -72,7 +72,39 @@ public class MerchantOrderService : IMerchantOrderService
         if (orderParticipant.Participant.Type == ParticipantType.Merchant)
             throw new InvalidOperationException("En merchant kan ikke indsende en deltagerbestilling.");
 
-        // Slet eventuel eksisterende draft for samme deltager (re-submit)
+        // Start reservation hos betalingsudbyderen for denne deltager.
+        // ReadyToPay sættes IKKE her — det sker via webhook når betalingen er Reserved.
+        var amountMinorUnits = (long)(dto.TotalAmount * 100);
+        var returnUrl = $"{_apiBaseUrl}/payment-return";
+        var callbackBaseUrl = $"{_apiBaseUrl}/api/payments/vipps/callbacks";
+
+        var reserveResult = await _orchestration.ReserveParticipantPaymentAsync(
+            orderId: dto.OrderId,
+            participantId: orderParticipant.ParticipantId,
+            merchantId: merchant.Id.ToString(),
+            amountMinorUnits: amountMinorUnits,
+            currency: dto.Currency,
+            returnUrl: returnUrl,
+            callbackUrl: callbackBaseUrl,
+            testPhoneNumber: dto.TestPhoneNumber);
+
+        if (!reserveResult.Success)
+        {
+            return new InitMerchantOrderResultDto
+            {
+                Status = "Failed",
+                OrderId = dto.OrderId,
+                ParticipantPaymentId = reserveResult.ParticipantPaymentId,
+                ProviderPaymentId = reserveResult.ProviderPaymentId,
+                PaymentRedirectUrl = null,
+                Message = reserveResult.ErrorCode == "ALREADY_CAPTURED"
+                    ? reserveResult.ErrorMessage
+                    : $"Reservation mislykkedes: {reserveResult.ErrorMessage}"
+            };
+        }
+
+        // Reservationen blev oprettet uden fejl. Gem først herefter deltagerens ordre-draft,
+        // så vi undgår at persistere ordredata når reservationen fejler.
         var existing = await _db.MerchantOrderDrafts
             .Where(d => d.OrderId == dto.OrderId && d.ParticipantId == orderParticipant.ParticipantId)
             .FirstOrDefaultAsync();
@@ -115,37 +147,6 @@ public class MerchantOrderService : IMerchantOrderService
 
         // Tjek om alle deltagere nu er OrderSubmitted og sæt ordre til ReadyToPay hvis ja.
         await _orderService.CheckAndSetReadyToPayAsync(dto.OrderId);
-
-        // Start reservation hos betalingsudbyderen for denne deltager.
-        // ReadyToPay sættes IKKE her — det sker via webhook når betalingen er Reserved.
-        var amountMinorUnits = (long)(draft.TotalAmount * 100);
-        var returnUrl = $"{_apiBaseUrl}/payment-return";
-        var callbackBaseUrl = $"{_apiBaseUrl}/api/payments/vipps/callbacks";
-
-        var reserveResult = await _orchestration.ReserveParticipantPaymentAsync(
-            orderId: dto.OrderId,
-            participantId: orderParticipant.ParticipantId,
-            merchantId: merchant.Id.ToString(),
-            amountMinorUnits: amountMinorUnits,
-            currency: draft.Currency,
-            returnUrl: returnUrl,
-            callbackUrl: callbackBaseUrl,
-            testPhoneNumber: dto.TestPhoneNumber);
-
-        if (!reserveResult.Success)
-        {
-            return new InitMerchantOrderResultDto
-            {
-                Status = "Failed",
-                OrderId = dto.OrderId,
-                ParticipantPaymentId = reserveResult.ParticipantPaymentId,
-                ProviderPaymentId = reserveResult.ProviderPaymentId,
-                PaymentRedirectUrl = null,
-                Message = reserveResult.ErrorCode == "ALREADY_CAPTURED"
-                    ? reserveResult.ErrorMessage
-                    : $"Reservation mislykkedes: {reserveResult.ErrorMessage}"
-            };
-        }
 
         // Synkron reservation (FakePaymentProvider): RedirectUrl er null — betalingen er allerede Reserved.
         // Tjek om alle deltagere nu er Reserved og sæt ordre til ReadyToPay hvis ja.

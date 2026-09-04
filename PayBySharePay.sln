@@ -56,6 +56,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Usecases", "Usecases", "{83
 		docs\usecases\UC-12-send-paamindelser.md = docs\usecases\UC-12-send-paamindelser.md
 		docs\usecases\UC-13-join-gruppeordre-med-token.md = docs\usecases\UC-13-join-gruppeordre-med-token.md
 		docs\usecases\UC-14-refunder-captured-betaling.md = docs\usecases\UC-14-refunder-captured-betaling.md
+		docs\usecases\UC-15-profil-og-kontocenter.md = docs\usecases\UC-15-profil-og-kontocenter.md
+		docs\usecases\UC-16-accordion-paa-profilside.md = docs\usecases\UC-16-accordion-paa-profilside.md
+		docs\usecases\UC-17-leveringsadresse-og-indstillinger-fane.md = docs\usecases\UC-17-leveringsadresse-og-indstillinger-fane.md
+		docs\usecases\UC-17-offentlig-forside-for-ikke-indlogget-bruger.md = docs\usecases\UC-17-offentlig-forside-for-ikke-indlogget-bruger.md
+		docs\usecases\UC-18-leveringsadresse-paa-gruppeordre.md = docs\usecases\UC-18-leveringsadresse-paa-gruppeordre.md
 	EndProjectSection
 EndProject
 Global
