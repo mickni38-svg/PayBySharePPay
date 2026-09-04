@@ -15,17 +15,20 @@ public class AuthController : ControllerBase
     private readonly JwtTokenService _tokenService;
     private readonly IExternalAuthService _externalAuthService;
     private readonly IWebHostEnvironment _environment;
+    private readonly IConfiguration _configuration;
 
     public AuthController(
         IParticipantService participantService,
         JwtTokenService tokenService,
         IExternalAuthService externalAuthService,
-        IWebHostEnvironment environment)
+        IWebHostEnvironment environment,
+        IConfiguration configuration)
     {
         _participantService = participantService;
         _tokenService = tokenService;
         _externalAuthService = externalAuthService;
         _environment = environment;
+        _configuration = configuration;
     }
 
     /// <summary>
@@ -107,8 +110,36 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> RegisterMerchant([FromBody] RegisterMerchantRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.VippsMerchantSerialNumber))
-            return BadRequest(new { error = "MSN-nummer (Vipps Merchant Serial Number) er påkrævet." });
+        var useConfiguredCredentials = _configuration.GetValue<bool>(
+            "Payments:VippsMobilePay:UseDefaultMerchantCredentialsOnRegistration");
+
+        var merchantSerialNumber = useConfiguredCredentials
+            ? _configuration["Payments:VippsMobilePay:MerchantSerialNumber"]
+            : request.VippsMerchantSerialNumber;
+
+        var vippsClientId = useConfiguredCredentials
+            ? _configuration["Payments:VippsMobilePay:ClientId"]
+            : null;
+        var vippsClientSecret = useConfiguredCredentials
+            ? _configuration["Payments:VippsMobilePay:ClientSecret"]
+            : null;
+        var vippsSubscriptionKey = useConfiguredCredentials
+            ? _configuration["Payments:VippsMobilePay:SubscriptionKey"]
+            : null;
+
+        if (string.IsNullOrWhiteSpace(merchantSerialNumber))
+            return BadRequest(new { error = "MSN-nummer (Vipps Merchant Serial Number) mangler i PayNSync-konfigurationen." });
+
+        if (useConfiguredCredentials &&
+            (string.IsNullOrWhiteSpace(vippsClientId) ||
+             string.IsNullOrWhiteSpace(vippsClientSecret) ||
+             string.IsNullOrWhiteSpace(vippsSubscriptionKey)))
+        {
+            return Problem(
+                statusCode: StatusCodes.Status500InternalServerError,
+                title: "Vipps testkonfiguration mangler",
+                detail: "PayNSync mangler en eller flere Vipps test-credentials i serverkonfigurationen.");
+        }
 
         var existing = await _participantService.GetByEmailAsync(request.Email.Trim());
         if (existing is not null)
@@ -120,7 +151,10 @@ public class AuthController : ControllerBase
             CompanyName = request.CompanyName,
             Email = request.Email,
             Password = request.Password,
-            VippsMerchantSerialNumber = request.VippsMerchantSerialNumber,
+            VippsMerchantSerialNumber = merchantSerialNumber,
+            VippsClientId = vippsClientId,
+            VippsClientSecret = vippsClientSecret,
+            VippsSubscriptionKey = vippsSubscriptionKey,
             CvrNumber = request.CvrNumber,
             ContactPerson = request.ContactPerson,
             ContactEmail = request.ContactEmail,
