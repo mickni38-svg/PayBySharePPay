@@ -107,7 +107,7 @@
   color: var(--color-text-muted);
   padding: 14px 0 6px;
   margin: 0;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 0;
 }
 
 .row {
@@ -115,12 +115,18 @@
   align-items: center;
   gap: 14px;
   padding: 14px 0;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 0;
   cursor: pointer;
   transition: background 0.1s;
 }
 
 .row:last-child { border-bottom: none; }
+
+.row + .find__section-heading {
+  margin-top: 8px;
+  border-top: 1px solid var(--color-border);
+}
+
 .row:active { opacity: 0.7; }
 
 .row__avatar {
