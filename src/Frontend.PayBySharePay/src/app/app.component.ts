@@ -1,7 +1,8 @@
-import { Component, ViewEncapsulation } from '@angular/core';
+import { Component, ViewEncapsulation, effect } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { BottomNavComponent } from './layout/bottom-nav/bottom-nav.component';
 import { AuthService } from './core/services/auth.service';
+import { MessageService } from './core/services/message.service';
 
 @Component({
   selector: 'app-root',
@@ -134,5 +135,14 @@ import { AuthService } from './core/services/auth.service';
 export class AppComponent {
   title = 'PayBySharePay';
 
-  constructor(readonly auth: AuthService) {}
+  constructor(readonly auth: AuthService, private readonly messages: MessageService) {
+    effect(() => {
+      const participantId = this.auth.currentUserId();
+      if (participantId == null) {
+        this.messages.stopMonitoring();
+        return;
+      }
+      this.messages.startMonitoring(participantId);
+    });
+  }
 }
