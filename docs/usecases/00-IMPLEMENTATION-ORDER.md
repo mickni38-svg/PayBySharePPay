@@ -48,11 +48,11 @@ UC-15 er implementeret uafhængigt af UC-10–UC-14 efter særskilt approval af 
 Problem og produktretning er beskrevet i `docs/problemformulering-merchant-ordreplatform.md`.
 
 1. `UC-19-samlet-merchant-ordrekontrakt.md`
-2. `UC-20-realistisk-merchant-takeaway-demo.md`
-3. `UC-21-merchant-adapter-og-ordre-api.md`
-4. `UC-22-merchant-order-hub.md`
+2. `UC-22-merchant-order-hub.md`
+3. `UC-24-driftssikker-merchant-ordrelevering.md`
+4. `UC-20-realistisk-merchant-takeaway-demo.md`
 5. `UC-23-merchant-leveringskanaler.md`
-6. `UC-24-driftssikker-merchant-ordrelevering.md`
+6. `UC-21-merchant-adapter-og-ordre-api.md`
 
 Use casene beskriver målretningen overordnet. Tekniske kontrakter, UI-detaljer og endelige forretningsbeslutninger tilføjes, når den enkelte use case startes.
 

@@ -6,7 +6,7 @@ Planlagt.
 
 ## Formål
 
-Erstatte den enkle Merchant Demo med en mere realistisk takeaway-side til end-to-end-test.
+Erstatte den enkle Merchant Demo med en mere realistisk takeaway-side til salg, demonstration og end-to-end-test efter den første Order Hub-version.
 
 ## Brugerhistorie
 
@@ -30,4 +30,4 @@ Som deltager vil jeg kunne vælge mad på en realistisk takeaway-side og bruge P
 
 - Komplet CMS eller produktionsklart menusystem.
 - Almindelig kortbetaling uden PayNSync.
-
+- Funktionalitet, som er nødvendig for at lancere den første Order Hub-version.

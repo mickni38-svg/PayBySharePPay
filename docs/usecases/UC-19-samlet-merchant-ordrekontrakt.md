@@ -19,6 +19,7 @@ Som merchant vil jeg modtage én samlet og betalt ordre, så køkkenet ikke skal
 - Medtag totalbeløb, valuta, betalingsstatus og PayNSync-ordrenummer.
 - Udelad deltagernes identitet og betalingsreferencer.
 - Bevar separate ordrelinjer, når tilvalg eller bemærkninger er forskellige.
+- Gør standardordren anvendelig direkte i PayNSync Order Hub.
 
 ## Acceptkriterier
 
@@ -26,9 +27,9 @@ Som merchant vil jeg modtage én samlet og betalt ordre, så køkkenet ikke skal
 - Ordren oprettes først efter succesfuld capture.
 - Hostens kontakt- og leveringsoplysninger følger ordren som snapshot.
 - Summen af ordrelinjerne stemmer med den gennemførte betaling.
+- En gennemført gruppebetaling opretter kun én merchant-ordre.
 
 ## Ikke i scope
 
 - Merchant-specifik JSON-mapping.
 - Visning af ordren hos merchant.
-

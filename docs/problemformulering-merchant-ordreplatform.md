@@ -23,6 +23,12 @@ PayNSync skal kunne tilbyde flere enkle måder at modtage en færdig gruppeordre
 
 Merchant skal opleve den færdige gruppeordre som én normal, allerede betalt takeaway-ordre.
 
+## Første produkt
+
+Første salgsklare produkt er **PayNSync Order Hub** til en vejledende pris på 599 kr. pr. måned ekskl. moms. Produktet er målrettet mindre takeaway-steder, som vil modtage færdigbetalte gruppeordrer på en iPad uden integration til et eksisterende POS-system.
+
+PayNSync tager ikke kommission af ordren. Abonnementet faktureres manuelt, og adgang til Order Hub aktiveres manuelt på merchantkontoen. Automatisk abonnementsbetaling er ikke en del af første version.
+
 ## Centrale forretningsregler
 
 - PayNSync orkestrerer betalingerne, men modtager ikke kundernes penge.
@@ -34,6 +40,8 @@ Merchant skal opleve den færdige gruppeordre som én normal, allerede betalt ta
 - PayNSync ejer mappingen til merchantens eksisterende JSON-format.
 - En mislykket ordrelevering må ikke forsvinde eller medføre en dobbeltordre.
 
+Order Hub er første prioritet. En forbedret takeaway-demo, e-maillevering og integration til eksterne POS-systemer er efterfølgende produktudvidelser.
+
 ## Afgrænsning
 
 Første løsning er et realistisk testmiljø og ikke et fuldt kasse- eller regnskabssystem. Den skal bevise hele flowet fra merchantens menu, over gruppebetalingen, til én betalt ordre i merchantens ordrekø.
@@ -43,4 +51,3 @@ Den første eksterne mapping kan baseres på et offentligt dokumenteret POS-form
 ## Succeskriterium
 
 Løsningen er succesfuld, når flere deltagere kan bestille hver for sig, hosten kan gennemføre betalingen, og merchant derefter modtager præcis én samlet og betalt ordre via den valgte leveringskanal.
-

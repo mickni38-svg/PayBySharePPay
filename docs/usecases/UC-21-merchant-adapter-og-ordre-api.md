@@ -6,7 +6,7 @@ Planlagt.
 
 ## Formål
 
-Bevise at PayNSync kan mappe sin standardordre til et eksisterende merchant-format.
+Bevise at PayNSync som en senere PayNSync Pro-udvidelse kan mappe sin standardordre til et eksisterende merchant-format.
 
 ## Brugerhistorie
 
@@ -17,6 +17,7 @@ Som merchant vil jeg modtage PayNSync-ordren i det format, mit ordresystem aller
 - Opret et simuleret merchant ordre-API.
 - Definér et realistisk, Square-inspireret JSON-format.
 - Implementér en isoleret PayNSync-adapter til formatet.
+- Lad PayNSync eje mappingen, så merchant ikke skal implementere PayNSyncs standardpayload.
 - Gem merchantens svar og eksterne ordrenummer.
 - Adskil merchantens menu-URL fra adressen til ordrelevering.
 
@@ -30,4 +31,4 @@ Som merchant vil jeg modtage PayNSync-ordren i det format, mit ordresystem aller
 
 - Produktionsintegration til Square eller en anden konkret POS-leverandør.
 - Flere adapters i samme use case.
-
+- Den første Order Hub-pakke.
