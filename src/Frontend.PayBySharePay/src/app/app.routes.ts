@@ -49,6 +49,12 @@ export const routes: Routes = [
   },
   {
     path: 'profile',
+    canActivate: [
+      (route) => route.queryParamMap.get('mode') === 'register'
+        ? inject(Router).createUrlTree(['/register'])
+        : true
+    ],
+    runGuardsAndResolvers: 'paramsOrQueryParamsChange',
     loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent)
   },
   {
