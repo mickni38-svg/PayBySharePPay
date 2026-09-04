@@ -558,3 +558,28 @@
     transition: none;
   }
 }
+
+
+/* Minimal theme: keep overview surfaces strictly black/neutral instead of tinted mixes. */
+:host-context([data-theme="minimal"]) .order-card {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  box-shadow: none;
+}
+
+:host-context([data-theme="minimal"]) .order-card--expanded {
+  border-color: var(--color-primary);
+  box-shadow: none;
+}
+
+:host-context([data-theme="minimal"]) .order-card__icon {
+  background: var(--color-surface-elevated);
+  border-color: var(--color-border);
+}
+
+:host-context([data-theme="minimal"]) .participant-card,
+:host-context([data-theme="minimal"]) .participant-card--ordered,
+:host-context([data-theme="minimal"]) .participant-card--waiting {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
