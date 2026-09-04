@@ -1,9 +1,5 @@
 <div class="orders">
 
-  <section class="orders__intro">
-    <h1 class="orders__title">Overblik</h1>
-  </section>
-
   @if (isLoading()) {
     <p class="orders__state">Henter ordrer…</p>
   } @else if (errorMessage()) {

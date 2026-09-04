@@ -3,7 +3,7 @@
 
   @if (!auth.isLoggedIn()) {
     <section class="home__welcome" aria-labelledby="public-home-title">
-      <h1 id="public-home-title" class="home__greeting">Betal sammen – uden besværet</h1>
+      <h1 id="public-home-title" class="home__greeting" style="font-weight:600">Betal sammen – uden besværet</h1>
       <p class="home__sub">Opret en gruppebetaling, inviter venner og betal hver jeres del.</p>
     </section>
 
@@ -14,7 +14,7 @@
   } @else {
     <!-- Merchant carousel: Start en gruppebetaling -->
     <section class="home__carousel-section">
-      <h2 class="home__carousel-title">Start en gruppebetaling</h2>
+      <h2 class="home__carousel-title" style="font-weight:600">Start en gruppebetaling</h2>
 
       @if (allMerchants().length === 0) {
         <!-- Tom tilstand -->
@@ -98,7 +98,7 @@
               }
             </div>
             <div class="status-card__text">
-              <span class="status-card__title">{{ card.title }}</span>
+              <span class="status-card__title" style="font-weight:600">{{ card.title }}</span>
               @if (card.subtitle) {
                 <span class="status-card__sub">{{ card.subtitle }}</span>
               }
@@ -130,7 +130,7 @@
           </div>
         </div>
         <div class="status-card__text">
-          <span class="status-card__title">Overblik</span>
+          <span class="status-card__title" style="font-weight:600">Overblik</span>
           <span class="status-card__sub">Se igangværende gruppebetalinger</span>
         </div>
         <svg class="status-card__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -156,7 +156,7 @@
           </div>
         </div>
         <div class="status-card__text">
-          <span class="status-card__title">Beskeder</span>
+          <span class="status-card__title" style="font-weight:600">Beskeder</span>
           <span class="status-card__sub">Se dine anmodninger</span>
         </div>
         <svg class="status-card__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">

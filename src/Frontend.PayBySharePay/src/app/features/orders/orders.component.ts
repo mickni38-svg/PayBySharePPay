@@ -96,8 +96,9 @@ export class OrdersComponent implements OnInit, OnDestroy {
       next: (list) => {
         this.allOrders.set(list);
 
-        // UC-18: Alle ordre-accordions starter lukkede på load/navigation/refresh.
-        this._expandedIds.set(new Set());
+        // UC-20: Første igangværende ordre er åben som standard.
+        const firstActive = list.find(o => !['Completed', 'Cancelled'].includes(o.status));
+        this._expandedIds.set(firstActive ? new Set([firstActive.id]) : new Set());
 
         // Detaljer preloades fortsat, så eksisterende betalingsbeløb og statuslogik bevares.
         list.forEach(o => {
