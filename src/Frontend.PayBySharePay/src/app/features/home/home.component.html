@@ -1,16 +1,15 @@
 <!-- Forside – offentlig velkomst eller personligt dashboard -->
-<div class="home">
+<div class="home" [class.home--public]="!auth.isLoggedIn()">
 
   @if (!auth.isLoggedIn()) {
     <section
       class="public-home"
       aria-label="Kom i gang med PayNSync"
-      style="padding:0 20px 18px; display:flex; flex-direction:column; gap:12px;"
     >
       <img
+        class="public-home__hero"
         src="images/public-home-hero.png"
         alt="PayNSync – del regningen på den nemme måde"
-        style="display:block; width:100%; height:auto; border-radius:18px;"
       />
 
       <a
