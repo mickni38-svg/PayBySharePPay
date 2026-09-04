@@ -43,6 +43,19 @@ UC-07 om dark-theme-navigation er allerede implementeret og registreret i `docs/
 
 UC-15 er implementeret uafhængigt af UC-10–UC-14 efter særskilt approval af ændringerne til merchant-login og auth-kontrakten.
 
+## Merchant-ordreplatform – anbefalet rækkefølge
+
+Problem og produktretning er beskrevet i `docs/problemformulering-merchant-ordreplatform.md`.
+
+1. `UC-19-samlet-merchant-ordrekontrakt.md`
+2. `UC-20-realistisk-merchant-takeaway-demo.md`
+3. `UC-21-merchant-adapter-og-ordre-api.md`
+4. `UC-22-merchant-order-hub.md`
+5. `UC-23-merchant-leveringskanaler.md`
+6. `UC-24-driftssikker-merchant-ordrelevering.md`
+
+Use casene beskriver målretningen overordnet. Tekniske kontrakter, UI-detaljer og endelige forretningsbeslutninger tilføjes, når den enkelte use case startes.
+
 ## Fælles arbejdsgang
 
 1. Læs den valgte use case og klassificér opgaven.
