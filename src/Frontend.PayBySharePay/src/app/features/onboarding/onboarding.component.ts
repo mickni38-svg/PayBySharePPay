@@ -29,6 +29,11 @@ export class OnboardingComponent {
   personPassword = '';
   personPasswordConfirm = '';
 
+  phoneOptionsEnabled = signal(false);
+  availablePhoneNumbers = signal<string[]>([]);
+  phoneOptionsLoading = signal(false);
+  phoneOptionsError = signal<string | null>(null);
+
   searchTerm = signal('');
   directoryEntries = signal<DirectoryEntry[]>([]);
   selectedFriendIds = signal<number[]>([]);
@@ -68,12 +73,19 @@ export class OnboardingComponent {
   ) {
     if (this.auth.isLoggedIn()) {
       this.router.navigate(['/home']);
+    } else {
+      this.loadPhoneOptions();
     }
   }
 
   canContinueProfile(): boolean {
+    const phoneIsValid = !this.phoneOptionsEnabled() ||
+      (!!this.personPhone && this.availablePhoneNumbers().includes(this.personPhone));
+
     return !!this.personName.trim() &&
       !!this.personEmail.trim() &&
+      phoneIsValid &&
+      !this.phoneOptionsLoading() &&
       this.personPassword.length >= 6 &&
       this.personPassword === this.personPasswordConfirm;
   }
@@ -172,9 +184,35 @@ export class OnboardingComponent {
       },
       error: (error) => {
         this.isLoading.set(false);
+        const apiMessage = error?.error?.error;
         this.errorMessage.set(error.status === 409
-          ? 'Der findes allerede en konto med denne email.'
-          : 'Kontoen kunne ikke oprettes. Prøv igen.');
+          ? (apiMessage ?? 'Email eller telefonnummer er allerede i brug.')
+          : (apiMessage ?? 'Kontoen kunne ikke oprettes. Prøv igen.'));
+
+        if (this.phoneOptionsEnabled()) {
+          this.personPhone = '';
+          this.loadPhoneOptions();
+        }
+      }
+    });
+  }
+
+  private loadPhoneOptions(): void {
+    this.phoneOptionsLoading.set(true);
+    this.phoneOptionsError.set(null);
+
+    this.auth.getRegistrationPhoneOptions().subscribe({
+      next: options => {
+        this.phoneOptionsEnabled.set(options.enabled);
+        this.availablePhoneNumbers.set(options.phoneNumbers);
+        if (options.enabled && !options.phoneNumbers.includes(this.personPhone)) {
+          this.personPhone = '';
+        }
+        this.phoneOptionsLoading.set(false);
+      },
+      error: () => {
+        this.phoneOptionsLoading.set(false);
+        this.phoneOptionsError.set('Testtelefonnumre kunne ikke hentes. Prøv at genindlæse siden.');
       }
     });
   }
