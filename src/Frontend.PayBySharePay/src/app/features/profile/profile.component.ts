@@ -323,7 +323,7 @@ export class ProfileComponent implements OnInit, AfterViewInit {
       password: this.personPassword
     }).subscribe({
       next: (response) => this.finishAuthentication(response),
-      error: () => {
+      error: (error) => {
         this.registerLoading.set(false);
         this.registerError.set(error.status === 409
           ? 'Der findes allerede en konto med denne email.'
