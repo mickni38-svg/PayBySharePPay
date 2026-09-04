@@ -47,14 +47,16 @@
           <article class="order-card" [class.order-card--expanded]="isExpanded(vm.id)">
 
             <div
-              class="order-card__summary"
-              role="button"
-              tabindex="0"
-              [attr.aria-expanded]="isExpanded(vm.id)"
-              [attr.aria-controls]="'order-details-' + vm.id"
-              (click)="toggleExpand(vm.id)"
-              (keydown.enter)="toggleExpand(vm.id)"
-              (keydown.space)="$event.preventDefault(); toggleExpand(vm.id)">
+              class="order-card__summary">
+
+              <button
+                type="button"
+                class="order-card__summary-toggle"
+                [attr.aria-label]="(isExpanded(vm.id) ? 'Skjul detaljer for ' : 'Vis detaljer for ') + vm.title"
+                [attr.aria-expanded]="isExpanded(vm.id)"
+                [attr.aria-controls]="'order-details-' + vm.id"
+                (click)="toggleExpand(vm.id)">
+              </button>
 
               <div class="order-card__icon" [class.order-card__icon--merchant]="vm.merchantLogoUrl">
                 <span aria-hidden="true">{{ categoryIcon(vm.category) }}</span>
@@ -84,20 +86,32 @@
                   </div>
 
                   <div class="order-card__amount-wrap">
-                    <span class="order-card__amount">
-                      @if (vm.isHost) {
-                        {{ (vm.totalOrderedAmount > 0 ? vm.totalOrderedAmount : vm.totalAmount) | number:'1.2-2' }} kr
-                      } @else if (vm.myOwnAmount !== null) {
-                        {{ vm.myOwnAmount | number:'1.2-2' }} kr
-                      } @else {
-                        – kr
-                      }
-                    </span>
-                    <span class="order-card__chevron" [class.order-card__chevron--open]="isExpanded(vm.id)" aria-hidden="true">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="6 9 12 15 18 9" />
-                      </svg>
-                    </span>
+                    <div class="order-card__amount-line">
+                      <span class="order-card__amount">
+                        @if (vm.isHost) {
+                          {{ (vm.totalOrderedAmount > 0 ? vm.totalOrderedAmount : vm.totalAmount) | number:'1.2-2' }} kr
+                        } @else if (vm.myOwnAmount !== null) {
+                          {{ vm.myOwnAmount | number:'1.2-2' }} kr
+                        } @else {
+                          – kr
+                        }
+                      </span>
+                      <span class="order-card__chevron" [class.order-card__chevron--open]="isExpanded(vm.id)" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="6 9 12 15 18 9" />
+                        </svg>
+                      </span>
+                    </div>
+                    @if (vm.canPayTotalOrder && !COMPLETED_STATUSES.includes(vm.status)) {
+                      <button
+                        type="button"
+                        class="btn btn--primary btn--summary-payment"
+                        [disabled]="!vm.allPaid || !vm.detailsLoaded || payingOrderId() === vm.id"
+                        [class.btn--disabled]="!vm.allPaid || !vm.detailsLoaded || payingOrderId() === vm.id"
+                        (click)="$event.stopPropagation(); payOrder(vm)">
+                        {{ payingOrderId() === vm.id ? 'Betaler…' : 'Betal nu' }}
+                      </button>
+                    }
                   </div>
                 </div>
 
@@ -174,18 +188,6 @@
                     <p class="participants-section__state">Deltageroplysninger er ikke tilgængelige endnu.</p>
                   }
                 </section>
-                @if (vm.canPayTotalOrder && !COMPLETED_STATUSES.includes(vm.status)) {
-                  <div class="order-card__accordion-payment">
-                    <button
-                      type="button"
-                      class="btn btn--primary"
-                      [disabled]="!vm.allPaid || !vm.detailsLoaded || payingOrderId() === vm.id"
-                      [class.btn--disabled]="!vm.allPaid || !vm.detailsLoaded || payingOrderId() === vm.id"
-                      (click)="$event.stopPropagation(); payOrder(vm)">
-                      {{ payingOrderId() === vm.id ? 'Betaler…' : 'Betal nu' }}
-                    </button>
-                  </div>
-                }
               }
             </div>
 
