@@ -51,7 +51,7 @@ import { AuthService } from './core/services/auth.service';
 
     .app-header__logo {
       width: 100%;
-      max-width: 250px;
+      max-width: 290px;
       height: auto;
       object-fit: contain;
       display: block;
@@ -69,7 +69,7 @@ import { AuthService } from './core/services/auth.service';
     }
 
     .app-shell--public .app-header__logo {
-      max-width: 290px;
+      max-width: 330px;
     }
 
     .app-shell--public .app-shell__content {
