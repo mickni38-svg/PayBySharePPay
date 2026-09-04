@@ -10,7 +10,6 @@ import { MessageService } from '../../core/services/message.service';
 import { FriendService } from '../../core/services/friend.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { computePendingSummary } from '../../core/models/order.model';
-import { getStaticMerchantLogoUrl } from '../../core/utils/merchant-logo';
 import {
   filterAndLimitMerchants,
   getCarouselScrollTarget,
@@ -129,7 +128,6 @@ export class HomeComponent implements OnInit, OnDestroy {
         const merchants: MerchantCard[] = list
           .filter(e => e.type === 'Merchant')
           .map(e => {
-            const staticLogoUrl = getStaticMerchantLogoUrl(e);
             const apiLogoUrl = e.logoUrl ? `${environment.apiUrl}${e.logoUrl}` : null;
 
             return {
@@ -137,8 +135,8 @@ export class HomeComponent implements OnInit, OnDestroy {
               displayName: e.displayName,
               handle: e.handle,
               initials: toInitials(e.displayName),
-              logoUrl: staticLogoUrl ?? apiLogoUrl,
-              fallbackLogoUrl: staticLogoUrl ? apiLogoUrl : null
+              logoUrl: apiLogoUrl,
+              fallbackLogoUrl: null
             };
           });
 
