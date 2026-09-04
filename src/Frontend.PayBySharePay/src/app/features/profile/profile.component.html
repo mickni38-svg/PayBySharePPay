@@ -463,6 +463,21 @@
           </button>
         }
       </section>
+
+      <section class="account-card danger-card">
+        <div class="card-heading">
+          <span class="environment-badge environment-badge--warning">Testværktøj</span>
+          <h2>Start testforløb forfra</h2>
+          <p>Sletter alle ordrer, ordrelinjer, betalinger og beskeder. Brugere, merchants, venner og Vipps-testmappinger bevares.</p>
+        </div>
+        <button type="button" class="danger-btn" (click)="developerReset()"
+          [disabled]="resetLoading()">
+          {{ resetLoading() ? 'Sletter…' : 'Slet alle ordre og beskeder' }}
+        </button>
+        @if (resetMessage()) {
+          <p class="feedback" role="status">{{ resetMessage() }}</p>
+        }
+      </section>
     </main>
   }
 
@@ -495,20 +510,6 @@
             [disabled]="!selectedEmail || developerLoginLoading()">
             {{ developerLoginLoading() ? 'Logger ind…' : 'Log ind som testbruger' }}
           </button>
-        }
-      </section>
-
-      <section class="account-card danger-card">
-        <div class="card-heading">
-          <h2>Nulstil udviklingsdata</h2>
-          <p>Sletter alle ordrer, betalinger og beskeder i udviklingsdatabasen.</p>
-        </div>
-        <button type="button" class="danger-btn" (click)="developerReset()"
-          [disabled]="resetLoading()">
-          {{ resetLoading() ? 'Nulstiller…' : 'Nulstil udviklingsdata' }}
-        </button>
-        @if (resetMessage()) {
-          <p class="feedback" role="status">{{ resetMessage() }}</p>
         }
       </section>
     </main>
