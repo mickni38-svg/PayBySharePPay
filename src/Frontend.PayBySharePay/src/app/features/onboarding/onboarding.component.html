@@ -1,7 +1,7 @@
 <div class="onboarding">
   <section class="wizard" aria-labelledby="onboarding-title">
     <header class="wizard__header">
-      <div class="wizard__progress" aria-label="Oprettelse trin {{ step() }} af 4">
+      <div class="wizard__progress" [attr.aria-label]="'Oprettelse trin ' + step() + ' af 4'">
         <span>Trin {{ step() }} af 4</span>
         <div class="wizard__dots" aria-hidden="true">
           @for (n of [1, 2, 3, 4]; track n) {
