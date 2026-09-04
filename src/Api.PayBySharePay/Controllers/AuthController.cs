@@ -255,7 +255,7 @@ public class AuthController : ControllerBase
 
     private string[] GetConfiguredTestPhoneNumbers()
         => _configuration
-            .GetSection("Payments:VippsMobilePay:TestPhoneNumbers")
+            .GetSection("TestEnvironment:VippsPhoneNumbers")
             .GetChildren()
             .Select(child => child.Value)
             .Where(value => !string.IsNullOrWhiteSpace(value))
