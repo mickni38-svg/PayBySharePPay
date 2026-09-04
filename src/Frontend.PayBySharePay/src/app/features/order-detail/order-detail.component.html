@@ -1,14 +1,5 @@
 <div class="od">
 
-  <!-- Header -->
-  <header class="od__header">
-    <button class="od__back" (click)="goBack()">&#8249;</button>
-    <h1 class="od__title">
-      @if (order()) { {{ order()!.title }} } @else { Ordre }
-    </h1>
-    <div class="od__header-end"></div>
-  </header>
-
   @if (isLoading()) {
     <p class="od__state">Henter ordre...</p>
   } @else if (errorMessage()) {
