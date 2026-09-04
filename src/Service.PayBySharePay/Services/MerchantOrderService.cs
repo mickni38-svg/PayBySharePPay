@@ -51,6 +51,16 @@ public class MerchantOrderService : IMerchantOrderService
         if (merchant.Type != ParticipantType.Merchant)
             throw new InvalidOperationException($"Deltager {merchantId} er ikke en merchant.");
 
+        // Merchant-demoen må godt sende MerchantParticipantId eksplicit. Sørg for at
+        // selve ordren peger på præcis samme merchant før reservationsflowet starter.
+        // Orkestreringen genindlæser merchant via order.MerchantParticipant og ellers
+        // kan korrekte Vipps-credentials på requestens merchant blive overset.
+        if (order.MerchantParticipantId != merchantId)
+        {
+            order.MerchantParticipantId = merchantId;
+            await _orderRepository.SaveChangesAsync();
+        }
+
         // Valider participantToken og find OrderParticipant
         var orderParticipant = await _db.OrderParticipants
             .Include(op => op.Participant)
