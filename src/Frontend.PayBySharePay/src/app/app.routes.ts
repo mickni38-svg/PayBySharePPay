@@ -19,6 +19,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/onboarding/onboarding.component').then(m => m.OnboardingComponent)
   },
   {
+    path: 'payment-return',
+    loadComponent: () => import('./features/payment-return/payment-return.component').then(m => m.PaymentReturnComponent)
+  },
+  {
     path: 'home',
     loadComponent: () => import('./features/home/home.component').then(m => m.HomeComponent)
   },
