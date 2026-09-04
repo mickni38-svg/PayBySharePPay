@@ -1,12 +1,8 @@
 <div class="orders">
 
-  <!-- Header -->
-  <header class="orders__header">
-    <a class="page-back" routerLink="/home">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-      Hjem
-    </a>
-  </header>
+  <section class="orders__intro">
+    <h1 class="orders__title">Overblik</h1>
+  </section>
 
   @if (isLoading()) {
     <p class="orders__state">Henter ordrer…</p>
@@ -14,7 +10,6 @@
     <p class="orders__state orders__state--error">{{ errorMessage() }}</p>
   } @else {
 
-    <!-- Filter-banner -->
     @if (filterPending()) {
       <div class="filter-banner">
         <span>Viser kun ordre med afventende betalinger</span>
@@ -22,12 +17,21 @@
       </div>
     }
 
-    <!-- Faner -->
-    <div class="orders__tabs">
-      <button class="tab-btn" [class.tab-btn--active]="activeTab() === 'active'" (click)="setTab('active')">
-        Igangværende ordre
+    <div class="orders__tabs" role="tablist" aria-label="Ordrestatus">
+      <button
+        class="tab-btn"
+        role="tab"
+        [attr.aria-selected]="activeTab() === 'active'"
+        [class.tab-btn--active]="activeTab() === 'active'"
+        (click)="setTab('active')">
+        Igangværende
       </button>
-      <button class="tab-btn" [class.tab-btn--active]="activeTab() === 'completed'" (click)="setTab('completed')">
+      <button
+        class="tab-btn"
+        role="tab"
+        [attr.aria-selected]="activeTab() === 'completed'"
+        [class.tab-btn--active]="activeTab() === 'completed'"
+        (click)="setTab('completed')">
         Afsluttede
       </button>
     </div>
@@ -36,9 +40,6 @@
       <div class="orders__pay-error">⚠️ {{ payError() }}</div>
     }
 
-
-
-    <!-- Ordeliste -->
     @if (activeOrders().length === 0) {
       <div class="orders__empty">
         <span class="orders__empty-icon">📋</span>
@@ -47,176 +48,162 @@
     } @else {
       <div class="orders__list">
         @for (vm of activeOrders(); track vm.id) {
+          <article class="order-card" [class.order-card--expanded]="isExpanded(vm.id)">
 
-          <!-- Ordrekort -->
-          <div class="order-card" [class.order-card--expanded]="isExpanded(vm.id)">
+            <div
+              class="order-card__summary"
+              role="button"
+              tabindex="0"
+              [attr.aria-expanded]="isExpanded(vm.id)"
+              [attr.aria-controls]="'order-details-' + vm.id"
+              (click)="toggleExpand(vm.id)"
+              (keydown.enter)="toggleExpand(vm.id)"
+              (keydown.space)="$event.preventDefault(); toggleExpand(vm.id)">
 
-            <!-- Klikbar header: ikon | info+vært | avatarer | badge | pil -->
-            <div class="order-card__header" (click)="toggleExpand(vm.id)">
-              <div class="order-card__icon">{{ categoryIcon(vm.category) }}</div>
-              <div class="order-card__info">
-                <span class="order-card__title">{{ vm.title }}</span>
-                <span class="order-card__host-row">
-                  @if (vm.isHost) { <span class="order-card__host-badge">👑 Vært</span> }
-                  @else { <span class="order-card__host-badge">👤 Deltager</span> }
-                </span>
-              </div>
-              <!-- Deltagerikoner i header -->
-              <div class="order-card__avatars order-card__avatars--inline">
-                @for (p of visibleAvatars(vm.participants); track p.participantId) {
-                  <div class="avatar avatar--sm" [style.background]="avatarColor(p.name)" [title]="p.name">
-                    {{ initials(p.name) }}
-                  </div>
-                }
-                @if (extraAvatarCount(vm.participants) > 0) {
-                  <div class="avatar avatar--sm avatar--extra">+{{ extraAvatarCount(vm.participants) }}</div>
-                }
-              </div>
-              <div class="order-card__right">
-                <span class="order-card__arrow" [class.order-card__arrow--open]="isExpanded(vm.id)">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="9 18 15 12 9 6"/>
-                  </svg>
-                </span>
-              </div>
-            </div>
+              <div class="order-card__icon" aria-hidden="true">{{ categoryIcon(vm.category) }}</div>
 
-            <!-- Beløb + progress + knap på samme række -->
-            <div class="order-card__footer">
-              <div class="order-card__footer-left">
-                <span class="order-card__amount">
-                  @if (vm.isHost) {
-                    {{ vm.totalOrderedAmount | number:'1.2-2' }} kr
-                  } @else if (vm.myOwnAmount !== null) {
-                    {{ vm.myOwnAmount | number:'1.2-2' }} kr
-                  } @else {
-                    – kr
-                  }
-                </span>
-                @if (vm.isHost) {
-                  <span class="order-card__progress">{{ vm.paidParticipantCount }} af {{ vm.participantCount }} har bestilt</span>
-                }
-                </div>
-              <div class="order-card__footer-action">
-                @if (vm.canPayTotalOrder && !COMPLETED_STATUSES.includes(vm.status)) {
-                  <button class="btn btn--primary btn--sm"
-                    [disabled]="!vm.allPaid || payingOrderId() === vm.id"
-                    [class.btn--disabled]="!vm.allPaid || payingOrderId() === vm.id"
-                    (click)="payOrder(vm)">{{ payingOrderId() === vm.id ? 'Betaler…' : 'Betal nu' }}</button>
-                }
-              </div>
-            </div>
-
-            <!-- Accordion: ordredetaljer -->
-            <div class="order-card__accordion" [class.order-card__accordion--open]="isExpanded(vm.id)">
-
-              @if (isLoadingDetails(vm.id)) {
-                <p class="accordion-loading">Henter detaljer…</p>
-              } @else {
-
-                <!-- Ordredetaljer accordion -->
-                <div class="order-detail-accordion" [class.order-detail-accordion--open]="isDetailsOpen(vm.id)">
-                  <button class="order-detail-accordion__hdr" (click)="toggleDetails(vm.id)">
-                    <span class="order-detail-accordion__title">Ordredetaljer</span>
-                    <span class="order-detail-accordion__chevron" [class.order-detail-accordion__chevron--open]="isDetailsOpen(vm.id)">&#8250;</span>
-                  </button>
-                  <div class="order-detail-accordion__body">
-                    <div class="order-detail">
-                      <div class="order-detail__row">
-                        <span class="order-detail__label">Ordrenr.</span>
-                        <span class="order-detail__value">#{{ vm.id }}</span>
-                      </div>
-                      <div class="order-detail__row">
-                        <span class="order-detail__label">Oprettet</span>
-                        <span class="order-detail__value">{{ formatDate(vm.createdAt) }}</span>
-                      </div>
-                      @if (vm.merchantName) {
-                        <div class="order-detail__row">
-                          <span class="order-detail__label">Sted</span>
-                          <span class="order-detail__value">{{ vm.merchantName }}</span>
-                        </div>
-                      }
-                      @if (vm.merchantAddress) {
-                        <div class="order-detail__row">
-                          <span class="order-detail__label">Adresse</span>
-                          <span class="order-detail__value">{{ vm.merchantAddress }}</span>
-                        </div>
-                      }
+              <div class="order-card__main">
+                <div class="order-card__heading-row">
+                  <div class="order-card__heading-copy">
+                    <h2 class="order-card__title">{{ vm.title }}</h2>
+                    <div class="order-card__role-row">
                       @if (vm.isHost) {
-                        <div class="order-detail__row">
-                          <span class="order-detail__label">Samlet bestilt</span>
-                          <span class="order-detail__value order-detail__value--amount">{{ vm.totalOrderedAmount | number:'1.2-2' }} kr</span>
-                        </div>
-                        @if (vm.paidAmount > 0) {
-                          <div class="order-detail__row">
-                            <span class="order-detail__label">Heraf betalt</span>
-                            <span class="order-detail__value order-detail__value--amount">{{ vm.paidAmount | number:'1.2-2' }} kr</span>
-                          </div>
-                        }
-                      }
-                      @if (!vm.isHost && vm.myOwnAmount !== null) {
-                        <div class="order-detail__row">
-                          <span class="order-detail__label">Dit beløb</span>
-                          <span class="order-detail__value order-detail__value--amount">{{ vm.myOwnAmount | number:'1.2-2' }} kr</span>
-                        </div>
+                        <span class="order-card__host-badge">👑 Vært</span>
+                      } @else {
+                        <span class="order-card__participant-badge">👤 Deltager</span>
                       }
                     </div>
                   </div>
+
+                  <div class="order-card__amount-wrap">
+                    <span class="order-card__amount">
+                      @if (vm.isHost) {
+                        {{ (vm.totalOrderedAmount > 0 ? vm.totalOrderedAmount : vm.totalAmount) | number:'1.2-2' }} kr
+                      } @else if (vm.myOwnAmount !== null) {
+                        {{ vm.myOwnAmount | number:'1.2-2' }} kr
+                      } @else {
+                        – kr
+                      }
+                    </span>
+                    <span class="order-card__chevron" [class.order-card__chevron--open]="isExpanded(vm.id)" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </span>
+                  </div>
                 </div>
 
-                <!-- Bestillinger -->
-                <div class="order-lines-section">
-                  <p class="order-lines-section__heading">Bestillinger</p>
+                @if (vm.merchantName) {
+                  <div class="order-card__meta-row">
+                    <span class="order-card__meta-icon" aria-hidden="true">⌂</span>
+                    <span>{{ vm.merchantName }}</span>
+                  </div>
+                }
+
+                @if (vm.isHost) {
+                  <div class="order-card__progress-area">
+                    <div class="order-card__progress-copy">
+                      <span class="order-card__meta-icon" aria-hidden="true">♙</span>
+                      <span>{{ vm.paidParticipantCount }} af {{ vm.participantCount }} har bestilt</span>
+                    </div>
+                    <div class="order-card__progress-track" aria-hidden="true">
+                      <span class="order-card__progress-fill" [style.width.%]="progressPercent(vm)"></span>
+                    </div>
+                  </div>
+                }
+
+                @if (vm.canPayTotalOrder && !COMPLETED_STATUSES.includes(vm.status)) {
+                  <div class="order-card__payment-row">
+                    <button
+                      type="button"
+                      class="btn btn--primary"
+                      [disabled]="!vm.allPaid || !vm.detailsLoaded || payingOrderId() === vm.id"
+                      [class.btn--disabled]="!vm.allPaid || !vm.detailsLoaded || payingOrderId() === vm.id"
+                      (click)="$event.stopPropagation(); payOrder(vm)">
+                      {{ payingOrderId() === vm.id ? 'Betaler…' : 'Betal nu' }}
+                    </button>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <div
+              class="order-card__accordion"
+              [id]="'order-details-' + vm.id"
+              [class.order-card__accordion--open]="isExpanded(vm.id)">
+
+              @if (isLoadingDetails(vm.id)) {
+                <p class="accordion-loading">Henter deltagere…</p>
+              } @else {
+                <section class="participants-section" aria-label="Deltagere">
+                  <div class="participants-section__heading-row">
+                    <span class="participants-section__icon" aria-hidden="true">♙</span>
+                    <h3 class="participants-section__heading">Deltagere</h3>
+                  </div>
+
                   @if (vm.detailsLoaded) {
-                    @for (p of vm.participants; track p.participantId) {
-                      @let group = getParticipantLines(vm, p.participantId);
-                      <div class="participant-lines">
-                        <div class="participant-lines__header">
-                          <div class="participant-lines__avatar" [style.background]="avatarColor(p.name)">
-                            {{ initials(p.name) }}
-                          </div>
-                          <span class="participant-lines__name">
-                            {{ p.name }}
-                            @if (isCurrentUser(p.participantId)) { <span class="participant-lines__you">(dig)</span> }
-                          </span>
-                          <span class="badge participant-lines__paid-badge"
-                                [class.badge--paid]="p.status === 'Paid'"
-                                [class.badge--ready]="p.status === 'OrderSubmitted'"
-                                [class.badge--pending]="p.status === 'Invited'">
-                            {{ p.status === 'Paid' ? 'Betalt' : p.status === 'Invited' ? 'Afventer' : p.status === 'OrderSubmitted' ? 'Har bestilt' : p.status }}
-                          </span>
-                        </div>
-                        @if (group && group.lines.length > 0) {
-                          @for (line of group.lines; track line.lineId) {
-                            <div class="order-line">
-                              <span class="order-line__bullet">•</span>
-                              <span class="order-line__name">{{ line.name }}</span>
-                              <span class="order-line__qty">x{{ line.quantity }}</span>
-                              <span class="order-line__price">{{ line.lineTotal | number:'1.2-2' }} kr</span>
-                            </div>
-                          }
-                        } @else {
-                          <p class="order-lines-section__pending">Har ikke bestilt endnu.</p>
-                        }
-                      </div>
-                    }
-                  } @else {
-                    <p class="order-lines-section__pending">
-                      Bestillinger vises først når ordren er betalt.
-                    </p>
-                  }
-                </div>
+                    <div class="participants-list">
+                      @for (p of vm.participants; track p.participantId) {
+                        @let group = getParticipantLines(vm, p.participantId);
+                        <article
+                          class="participant-card"
+                          [class.participant-card--ordered]="p.status === 'OrderSubmitted' || p.status === 'Paid'"
+                          [class.participant-card--waiting]="p.status === 'Invited'">
 
+                          <div class="participant-card__header">
+                            <div class="participant-card__identity">
+                              <div class="participant-card__avatar" [style.background]="avatarColor(p.name)">
+                                {{ initials(p.name) }}
+                              </div>
+                              <div class="participant-card__name-wrap">
+                                <span class="participant-card__name">{{ p.name }}</span>
+                                @if (isCurrentUser(p.participantId)) {
+                                  <span class="participant-card__you">(dig)</span>
+                                }
+                              </div>
+                            </div>
+
+                            <span
+                              class="badge participant-card__badge"
+                              [class.badge--paid]="p.status === 'Paid'"
+                              [class.badge--ready]="p.status === 'OrderSubmitted'"
+                              [class.badge--pending]="p.status === 'Invited'">
+                              {{ p.status === 'Paid' ? 'Betalt' : p.status === 'OrderSubmitted' ? 'Har bestilt' : p.status === 'Invited' ? 'Afventer' : p.status }}
+                            </span>
+                          </div>
+
+                          @if (group && group.lines.length > 0) {
+                            <div class="participant-card__lines">
+                              @for (line of group.lines; track line.lineId) {
+                                <div class="order-line">
+                                  <span class="order-line__bullet">•</span>
+                                  <span class="order-line__name">{{ line.name }}</span>
+                                  <span class="order-line__qty">x{{ line.quantity }}</span>
+                                  <span class="order-line__price">{{ line.lineTotal | number:'1.2-2' }} kr</span>
+                                </div>
+                              }
+                            </div>
+                            <div class="participant-card__subtotal">
+                              <span>Subtotal</span>
+                              <strong>{{ participantSubtotal(vm, p.participantId) | number:'1.2-2' }} kr</strong>
+                            </div>
+                          } @else {
+                            <p class="participant-card__pending">Har ikke bestilt endnu.</p>
+                          }
+                        </article>
+                      }
+                    </div>
+                  } @else {
+                    <p class="participants-section__state">Deltageroplysninger er ikke tilgængelige endnu.</p>
+                  }
+                </section>
               }
             </div>
 
-          </div>
+          </article>
         }
       </div>
     }
-
-
   }
 
 </div>
-
