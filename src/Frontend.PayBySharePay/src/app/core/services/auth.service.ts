@@ -31,12 +31,17 @@ export interface RegisterMerchantRequest {
   companyName: string;
   email: string;
   password: string;
-  vippsMerchantSerialNumber: string;
+  vippsMerchantSerialNumber?: string;
   cvrNumber?: string;
   contactPerson?: string;
   contactEmail?: string;
   contactPhone?: string;
   companyAddress?: string;
+}
+
+export interface RegistrationPhoneOptions {
+  enabled: boolean;
+  phoneNumbers: string[];
 }
 
 export interface ExternalLoginRequest {
@@ -65,6 +70,10 @@ export class AuthService {
     return this.http
       .post<LoginResponse>(`${environment.apiUrl}/api/auth/login`, body)
       .pipe(tap(res => this._storeSession(res)));
+  }
+
+  getRegistrationPhoneOptions(): Observable<RegistrationPhoneOptions> {
+    return this.http.get<RegistrationPhoneOptions>(`${environment.apiUrl}/api/auth/available-test-phone-numbers`);
   }
 
   register(req: RegisterPersonRequest): Observable<LoginResponse> {
