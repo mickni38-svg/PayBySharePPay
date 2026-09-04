@@ -1,5 +1,5 @@
 import { inject } from '@angular/core';
-import { Router, Routes } from '@angular/router';
+import { ActivatedRouteSnapshot, Router, Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
@@ -50,7 +50,7 @@ export const routes: Routes = [
   {
     path: 'profile',
     canActivate: [
-      (route) => route.queryParamMap.get('mode') === 'register'
+      (route: ActivatedRouteSnapshot) => route.queryParamMap.get('mode') === 'register'
         ? inject(Router).createUrlTree(['/register'])
         : true
     ],
