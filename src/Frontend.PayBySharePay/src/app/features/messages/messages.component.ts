@@ -89,17 +89,23 @@ export class MessagesComponent implements OnInit, OnDestroy {
   }
 
   onCardClick(msg: Message): void {
-    if (msg.isRead) return;
+    if (!msg.isRead) {
+      this.messageService.markRead(msg.id).subscribe({
+        next: () => {
+          this.messages.update(list =>
+            list.map(m => m.id === msg.id ? { ...m, isRead: true } : m)
+          );
+          const current = this.messageService.unreadCount();
+          if (current > 0) this.messageService.unreadCount.set(current - 1);
+        }
+      });
+    }
 
-    this.messageService.markRead(msg.id).subscribe({
-      next: () => {
-        this.messages.update(list =>
-          list.map(m => m.id === msg.id ? { ...m, isRead: true } : m)
-        );
-        const current = this.messageService.unreadCount();
-        if (current > 0) this.messageService.unreadCount.set(current - 1);
-      }
-    });
+    const url = this.extractUrl(msg.content);
+    const path = url ? this.internalPath(url) : null;
+    if (path) {
+      void this.router.navigateByUrl(path);
+    }
   }
 
   extractUrl(content: string): string | null {
