@@ -1,6 +1,7 @@
 import { Component, ViewEncapsulation } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { BottomNavComponent } from './layout/bottom-nav/bottom-nav.component';
+import { AuthService } from './core/services/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -8,7 +9,7 @@ import { BottomNavComponent } from './layout/bottom-nav/bottom-nav.component';
   imports: [RouterOutlet, BottomNavComponent],
   encapsulation: ViewEncapsulation.None,
   template: `
-    <div class="app-shell">
+    <div class="app-shell" [class.app-shell--public]="!auth.isLoggedIn()">
       <header class="app-header">
         <img class="app-header__logo" src="images/logo.png" alt="PayNSync" />
       </header>
@@ -54,6 +55,29 @@ import { BottomNavComponent } from './layout/bottom-nav/bottom-nav.component';
       height: auto;
       object-fit: contain;
       display: block;
+    }
+
+    /* BUG-04: offentlig forside skal være én viewport uden intern scroll. */
+    .app-shell--public {
+      height: 100dvh;
+      min-height: 100dvh;
+      overflow: hidden;
+    }
+
+    .app-shell--public .app-header {
+      flex: 0 0 auto;
+      padding-top: 0;
+    }
+
+    .app-shell--public .app-header__logo {
+      max-width: 290px;
+    }
+
+    .app-shell--public .app-shell__content {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: hidden;
+      padding-bottom: 0;
     }
 
     /* Forsiden bruger 15px/700 til primære korttitler og 12px til sekundær tekst.
@@ -110,4 +134,6 @@ import { BottomNavComponent } from './layout/bottom-nav/bottom-nav.component';
 })
 export class AppComponent {
   title = 'PayBySharePay';
+
+  constructor(readonly auth: AuthService) {}
 }
