@@ -494,58 +494,58 @@
 
 /* Alle kort: sort baggrund, tynd grå ramme, ingen farvet venstre-streg */
 :host-context([data-theme="minimal"]) .cta-card {
-  background: #0a0a0a;
-  border: 1px solid #888888;
-  border-left: 1px solid #888888;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 1px solid var(--color-border);
   border-radius: 14px;
 }
 
 :host-context([data-theme="minimal"]) .status-card {
-  background: #0a0a0a;
-  border: 1px solid #888888;
-  border-left: 1px solid #888888;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 1px solid var(--color-border);
   border-radius: 14px;
 }
 
 /* Ikonboks: mørkegrå, hvidt ikon */
 :host-context([data-theme="minimal"]) .cta-card__icon {
-  background: #1c1c1c;
-  color: #FFFFFF;
+  background: var(--color-surface-elevated);
+  color: var(--color-text-primary);
   border-radius: 10px;
 }
 
 :host-context([data-theme="minimal"]) .status-card__icon {
-  background: #1c1c1c;
-  color: #FFFFFF;
+  background: var(--color-surface-elevated);
+  color: var(--color-text-primary);
 }
 
 /* Tekst */
 :host-context([data-theme="minimal"]) .cta-card__title,
 :host-context([data-theme="minimal"]) .status-card__title {
-  color: #FFFFFF;
+  color: var(--color-text-primary);
 }
 
 :host-context([data-theme="minimal"]) .cta-card__sub,
 :host-context([data-theme="minimal"]) .status-card__sub {
-  color: #888888;
+  color: var(--color-text-secondary);
 }
 
 :host-context([data-theme="minimal"]) .status-card__chevron,
 :host-context([data-theme="minimal"]) .cta-card__chevron {
-  color: #555555;
+  color: var(--color-text-muted);
 }
 
 /* Bruger-auth sektion */
 :host-context([data-theme="minimal"]) .user-auth__logged {
-  background: #0a0a0a;
-  border: 1px solid #888888;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 14px;
 }
 
 :host-context([data-theme="minimal"]) .user-auth__btn--out {
   background: transparent;
-  border: 1px solid #888888;
-  color: #FFFFFF;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
   border-radius: 8px;
 }
 

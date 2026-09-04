@@ -66,7 +66,7 @@
 .od__arrow--open { transform: rotate(90deg); }
 
 // Order lines accordion
-.od__order-lines { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; background: #070B14; padding: 0 14px 0 58px; }
+.od__order-lines { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; background: var(--color-surface-elevated); padding: 0 14px 0 58px; }
 .od__order-lines--open { max-height: 500px; padding: 8px 14px 12px 58px; }
 .od__lines-empty { font-size: 11px; color: var(--color-text-muted); margin: 0; }
 .od__line { display: grid; grid-template-columns: 22px 1fr auto; gap: 8px; padding: 4px 0; font-size: 13px; color: var(--color-text-secondary); border-bottom: 1px solid rgba(255,255,255,0.04); }

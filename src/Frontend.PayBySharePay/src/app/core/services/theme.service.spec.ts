@@ -21,4 +21,14 @@ describe('ThemeService', () => {
     expect(service.current()).toBe('charcoal');
     expect(document.documentElement.getAttribute('data-theme')).toBe('charcoal');
   });
+
+  it('applies and persists the theme selected in profile settings', () => {
+    const service = new ThemeService();
+
+    service.setTheme('color');
+
+    expect(service.current()).toBe('color');
+    expect(document.documentElement.getAttribute('data-theme')).toBe('color');
+    expect(localStorage.getItem('sbys_theme')).toBe('color');
+  });
 });
