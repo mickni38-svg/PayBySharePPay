@@ -8,6 +8,10 @@ describe('OnboardingComponent', () => {
     const auth = {
       isLoggedIn: jasmine.createSpy('isLoggedIn').and.callFake(() => loggedIn),
       currentUserId: jasmine.createSpy('currentUserId').and.callFake(() => userId),
+      getRegistrationPhoneOptions: jasmine.createSpy('getRegistrationPhoneOptions').and.returnValue(of({
+        enabled: true,
+        phoneNumbers: ['231 27 779', '635 50 321']
+      })),
       register: jasmine.createSpy('register').and.callFake(() => {
         loggedIn = true;
         userId = 7;
@@ -34,7 +38,7 @@ describe('OnboardingComponent', () => {
     const component = new OnboardingComponent(auth as any, directory as any, friends as any, router as any);
     component.personName = 'Michael Nielsen';
     component.personEmail = 'michael@example.com';
-    component.personPhone = '12345678';
+    component.personPhone = '231 27 779';
     component.personPassword = 'hemmelig';
     component.personPasswordConfirm = 'hemmelig';
 
@@ -49,10 +53,19 @@ describe('OnboardingComponent', () => {
     expect(component.canContinueProfile()).toBeFalse();
   });
 
+  it('requires a phone number from the available Vipps test pool', () => {
+    const { component } = createComponent();
+    expect(component.availablePhoneNumbers()).toEqual(['231 27 779', '635 50 321']);
+    component.personPhone = '99999999';
+    expect(component.canContinueProfile()).toBeFalse();
+    component.personPhone = '635 50 321';
+    expect(component.canContinueProfile()).toBeTrue();
+  });
+
   it('creates and authenticates the account before loading protected directory data', () => {
     const { component, auth, directory } = createComponent();
     component.next();
-    expect(auth.register).toHaveBeenCalled();
+    expect(auth.register).toHaveBeenCalledWith(jasmine.objectContaining({ phone: '231 27 779' }));
     expect(component.accountCreated()).toBeTrue();
     expect(component.step()).toBe(2);
     expect(directory.search).toHaveBeenCalledWith('', 7);
