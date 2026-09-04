@@ -16,9 +16,7 @@ export const routes: Routes = [
   },
   {
     path: 'register',
-    redirectTo: () => inject(Router).createUrlTree(['/profile'], {
-      queryParams: { mode: 'register' }
-    })
+    loadComponent: () => import('./features/onboarding/onboarding.component').then(m => m.OnboardingComponent)
   },
   {
     path: 'home',
