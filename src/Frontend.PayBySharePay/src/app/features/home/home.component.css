@@ -14,16 +14,18 @@
 /* ─── Offentlig forside (BUG-04) ─────────────────────────────────────────── */
 
 .home--public {
-  min-height: 0;
-  height: 100%;
+  min-height: 100dvh;
+  height: auto;
   padding-bottom: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
 }
 
 .public-home {
-  height: 100%;
+  min-height: 100dvh;
+  height: auto;
   box-sizing: border-box;
-  padding: 0 12px 12px;
+  padding: 0 12px 32px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -39,7 +41,7 @@
   object-fit: contain;
   object-position: top center;
   border-radius: 0 0 18px 18px;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
 }
 
 .public-home > a {
