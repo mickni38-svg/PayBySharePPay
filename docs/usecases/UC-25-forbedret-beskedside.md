@@ -2,7 +2,7 @@
 
 ## Status
 
-Planlagt.
+✅ Implementeret og verificeret på `main`.
 
 ## Formål
 
