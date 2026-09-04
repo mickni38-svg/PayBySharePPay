@@ -7,6 +7,9 @@ public class CreateMerchantDto
     public string Email { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
     public string VippsMerchantSerialNumber { get; set; } = string.Empty;
+    public string? VippsClientId { get; set; }
+    public string? VippsClientSecret { get; set; }
+    public string? VippsSubscriptionKey { get; set; }
     public string? CvrNumber { get; set; }
     public string? VatNumber { get; set; }
     public string? ContactPerson { get; set; }
