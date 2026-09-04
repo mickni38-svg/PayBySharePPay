@@ -224,9 +224,10 @@
 </div>
 
 <script>
-  // Læs query params: ?orderId=1&participantToken=abc123&testPhoneNumber=63550321
+  // Læs query params: ?orderId=1&merchantId=7&participantToken=abc123&testPhoneNumber=63550321
   const params = new URLSearchParams(window.location.search);
   const orderId = parseInt(params.get('orderId')) || null;
+  const merchantId = parseInt(params.get('merchantId')) || null;
   const participantToken = params.get('participantToken') || null;
 
   // API base URL – vælg automatisk baseret på hostname
@@ -237,7 +238,7 @@
     : 'https://api.paynsync.dk';
 
   document.getElementById('groupLabel').textContent =
-    orderId ? `Ordre #${orderId}` : 'Mangler orderId i URL (brug ?orderId=X&participantToken=Y)';
+    orderId ? `Ordre #${orderId}` : 'Mangler orderId i URL (brug ?orderId=X&merchantId=Y&participantToken=Z)';
 
   function toggle(row) {
     const cb = row.querySelector('input[type=checkbox]');
@@ -276,6 +277,7 @@
 
     const body = {
       orderId: orderId,
+      merchantParticipantId: merchantId,
       participantToken: participantToken || '',
       merchantDraftReference: 'ROMA-' + Date.now(),
       subtotalAmount: total,
