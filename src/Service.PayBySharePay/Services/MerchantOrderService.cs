@@ -17,6 +17,7 @@ public class MerchantOrderService : IMerchantOrderService
     private readonly IGroupPaymentOrchestrationService _orchestration;
     private readonly PayBySharePayDbContext _db;
     private readonly string _apiBaseUrl;
+    private readonly string _frontendUrl;
 
     public MerchantOrderService(
         IMerchantOrderDraftRepository draftRepository,
@@ -34,6 +35,7 @@ public class MerchantOrderService : IMerchantOrderService
         _orchestration = orchestration;
         _db = db;
         _apiBaseUrl = configuration["AppSettings:ApiBaseUrl"] ?? "http://localhost:5071";
+        _frontendUrl = configuration["AppSettings:FrontendUrl"] ?? "http://localhost:4200";
     }
 
     public async Task<InitMerchantOrderResultDto> InitOrderAsync(InitMerchantOrderDto dto)
@@ -75,7 +77,7 @@ public class MerchantOrderService : IMerchantOrderService
         // Start reservation hos betalingsudbyderen for denne deltager.
         // ReadyToPay sættes IKKE her — det sker via webhook når betalingen er Reserved.
         var amountMinorUnits = (long)(dto.TotalAmount * 100);
-        var returnUrl = $"{_apiBaseUrl}/payment-return";
+        var returnUrl = $"{_frontendUrl.TrimEnd('/')}/payment-return";
         var callbackBaseUrl = $"{_apiBaseUrl}/api/payments/vipps/callbacks";
 
         var reserveResult = await _orchestration.ReserveParticipantPaymentAsync(
