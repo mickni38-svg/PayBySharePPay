@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, ActivatedRoute, NavigationEnd, RouterLink } from '@angular/router';
+import { Router, ActivatedRoute, NavigationEnd } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { OrderService } from '../../core/services/order.service';
@@ -28,7 +28,7 @@ interface OrderCardVM {
   detailsLoaded: boolean;
   /** Deltagerens eget beløb (null = ingen bestilling endnu) */
   myOwnAmount: number | null;
-  /** Sum af betalte deltageres ordrelinjer (til host-visning) */
+  /** Sum af betalte deltageres ordrelinjer */
   paidAmount: number;
   /** Sum af alle ordrelinjer uanset betalingsstatus */
   totalOrderedAmount: number;
@@ -37,7 +37,7 @@ interface OrderCardVM {
 @Component({
   selector: 'app-orders',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule],
   templateUrl: './orders.component.html',
   styleUrl: './orders.component.scss'
 })
@@ -51,11 +51,9 @@ export class OrdersComponent implements OnInit, OnDestroy {
   payingOrderId = signal<number | null>(null);
   payError = signal<string | null>(null);
 
-  // Cache af ordredetaljer hentet fra API
   private _detailsCache = signal<Map<number, OrderOverviewApiDto>>(new Map());
   private _expandedIds = signal<Set<number>>(new Set());
   private _loadingIds = signal<Set<number>>(new Set());
-  private _detailsOpenIds = signal<Set<number>>(new Set());
 
   private readonly AVATAR_COLORS = [
     '#7c5cbf','#2e7d32','#1565c0','#ad1457',
@@ -93,14 +91,15 @@ export class OrdersComponent implements OnInit, OnDestroy {
     if (filter === 'pending-payments') {
       this.filterPending.set(true);
     }
+
     this.orderService.getOrdersByParticipant(this.auth.currentUserId() ?? 0).subscribe({
       next: (list) => {
         this.allOrders.set(list);
-        // Kun åbn igangværende ordre som default (ikke afsluttede)
-        const activeIds = list
-          .filter(o => !this.COMPLETED_STATUSES.includes(o.status))
-          .map(o => o.id);
-        this._expandedIds.set(new Set(activeIds));
+
+        // UC-18: Alle ordre-accordions starter lukkede på load/navigation/refresh.
+        this._expandedIds.set(new Set());
+
+        // Detaljer preloades fortsat, så eksisterende betalingsbeløb og statuslogik bevares.
         list.forEach(o => {
           if (!this._detailsCache().has(o.id)) {
             this.loadDetails(o.id);
@@ -108,7 +107,10 @@ export class OrdersComponent implements OnInit, OnDestroy {
         });
         this.isLoading.set(false);
       },
-      error: () => { this.errorMessage.set('Kunne ikke hente ordrer.'); this.isLoading.set(false); }
+      error: () => {
+        this.errorMessage.set('Kunne ikke hente ordrer.');
+        this.isLoading.set(false);
+      }
     });
   }
 
@@ -116,37 +118,28 @@ export class OrdersComponent implements OnInit, OnDestroy {
     const userId = this.auth.currentUserId() ?? 0;
     const isHost = o.createdByParticipantId === userId;
     const nonMerchant = o.participants.filter(p => p.type !== 'Merchant');
-    // Tæl deltagere der har bestilt (OrderSubmitted) eller betalt (Paid)
+
+    // Eksisterende domæneregel: OrderSubmitted eller Paid tæller som "har bestilt".
     const submittedStatuses = ['OrderSubmitted', 'Paid'];
     const paidCount = nonMerchant.filter(p => submittedStatuses.includes(p.status)).length;
-    // Alle har bestilt når ordre er ReadyToPay eller Completed
     const allPaid = o.status === 'ReadyToPay' || o.status === 'Completed' ||
       (nonMerchant.length > 0 && nonMerchant.every(p => submittedStatuses.includes(p.status)));
-    const myPart = o.participants.find(p => p.participantId === userId);
 
-    // Hent detaljer fra cache hvis tilgængeligt
     const cached = this._detailsCache().get(o.id);
-
-    // canShowOrderLines: vis linjer så snart de er tilgængelige (bestilling indsendt)
     const anyoneHasLines = cached?.participantOrderLines.some(g => g.lines.length > 0) ?? false;
     const myLines = cached?.participantOrderLines.find(g => g.participantId === userId);
     const canShow = anyoneHasLines || (myLines?.lines?.length ?? 0) > 0;
-
-    // Alle deltagere ser alles ordrelinjer (kun dem med linjer)
     const visibleLines = cached?.participantOrderLines.filter(g => g.lines.length > 0) ?? [];
 
-    // Deltagerens eget beløb baseret på egne ordrelinjer
     const myOwnLines = cached?.participantOrderLines.find(g => g.participantId === userId);
     const myOwnAmount = (myOwnLines?.lines?.length ?? 0) > 0
       ? myOwnLines!.lines.reduce((sum, l) => sum + l.lineTotal, 0)
       : null;
 
-    // Beløb der er betalt: sum af ordrelinjer for deltagere med hasPaid = true
     const paidAmount = cached?.participantOrderLines
       .filter(g => g.hasPaid)
       .reduce((sum, g) => sum + g.lines.reduce((s, l) => s + l.lineTotal, 0), 0) ?? 0;
 
-    // Samlet bestilt beløb: sum af alle ordrelinjer uanset betalingsstatus
     const totalOrderedAmount = cached?.participantOrderLines
       .reduce((sum, g) => sum + g.lines.reduce((s, l) => s + l.lineTotal, 0), 0) ?? 0;
 
@@ -176,7 +169,6 @@ export class OrdersComponent implements OnInit, OnDestroy {
   }
 
   hostOrders = computed(() => {
-    // Touch cache signal for reaktivitet
     this._detailsCache();
     const userId = this.auth.currentUserId() ?? 0;
     let list = this.allOrders()
@@ -230,17 +222,16 @@ export class OrdersComponent implements OnInit, OnDestroy {
 
   toggleExpand(id: number): void {
     const current = this._expandedIds();
-    if (current.has(id)) {
-      const next = new Set(current);
+    const next = new Set(current);
+    if (next.has(id)) {
       next.delete(id);
-      this._expandedIds.set(next);
     } else {
-      this._expandedIds.set(new Set([...current, id]));
-      // Hent detaljer hvis ikke cachet
+      next.add(id);
       if (!this._detailsCache().has(id)) {
         this.loadDetails(id);
       }
     }
+    this._expandedIds.set(next);
   }
 
   private loadDetails(id: number): void {
@@ -274,31 +265,16 @@ export class OrdersComponent implements OnInit, OnDestroy {
     return this._loadingIds().has(id);
   }
 
-  isDetailsOpen(id: number): boolean {
-    return this._detailsOpenIds().has(id);
-  }
-
-  toggleDetails(id: number): void {
-    const current = this._detailsOpenIds();
-    const next = new Set(current);
-    if (next.has(id)) {
-      next.delete(id);
-    } else {
-      next.add(id);
-    }
-    this._detailsOpenIds.set(next);
-  }
-
   payOrder(vm: { id: number; totalOrderedAmount: number }): void {
     const userId = this.auth.currentUserId();
     if (!userId) return;
+
     this.payingOrderId.set(vm.id);
     this.payError.set(null);
 
     this.orderService.payOrder(vm.id, userId, vm.totalOrderedAmount).subscribe({
-      next: (result) => {
+      next: () => {
         this.payingOrderId.set(null);
-        // Flyt til Afsluttede fane og genindlæs
         this.activeTab.set('completed');
         this.load();
       },
@@ -315,28 +291,6 @@ export class OrdersComponent implements OnInit, OnDestroy {
 
   goCreate(): void { this.router.navigate(['/orders/create']); }
 
-  statusLabel(s: string): string {
-    const map: Record<string, string> = {
-      Collecting: 'Samler',
-      WaitingForPayment: 'Afventer betaling',
-      Ready: 'Klar',
-      Completed: 'Betalt',
-      Cancelled: 'Annulleret'
-    };
-    return map[s] ?? s;
-  }
-
-  statusClass(s: string): string {
-    const map: Record<string, string> = {
-      Collecting: 'badge--pending',
-      WaitingForPayment: 'badge--pending',
-      Ready: 'badge--ready',
-      Completed: 'badge--paid',
-      Cancelled: 'badge--declined'
-    };
-    return map[s] ?? '';
-  }
-
   categoryIcon(cat?: string): string {
     const map: Record<string, string> = {
       sushi: '🍣', pizza: '🍕', burger: '🍔', drinks: '🍺',
@@ -344,15 +298,6 @@ export class OrdersComponent implements OnInit, OnDestroy {
       salad: '🥗', dessert: '🍰', coffee: '☕', other: '📦'
     };
     return map[cat ?? ''] ?? '🍴';
-  }
-
-  formatDate(dateStr: string): string {
-    try {
-      const d = new Date(dateStr);
-      return d.toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric' });
-    } catch {
-      return dateStr;
-    }
   }
 
   initials(name: string): string {
@@ -365,20 +310,21 @@ export class OrdersComponent implements OnInit, OnDestroy {
     return this.AVATAR_COLORS[Math.abs(hash) % this.AVATAR_COLORS.length];
   }
 
-  visibleAvatars(participants: OrderParticipantApiDto[]): OrderParticipantApiDto[] {
-    return participants.slice(0, 4);
-  }
-
-  extraAvatarCount(participants: OrderParticipantApiDto[]): number {
-    return Math.max(0, participants.length - 4);
-  }
-
   isCurrentUser(participantId: number): boolean {
     return participantId === (this.auth.currentUserId() ?? -1);
   }
 
-  getParticipantLines(vm: OrderCardVM, participantId: number) {
+  getParticipantLines(vm: OrderCardVM, participantId: number): ParticipantOrderLinesApiDto | null {
     return vm.participantOrderLines.find(g => g.participantId === participantId) ?? null;
   }
-}
 
+  participantSubtotal(vm: OrderCardVM, participantId: number): number {
+    const group = this.getParticipantLines(vm, participantId);
+    return group?.lines.reduce((sum, line) => sum + line.lineTotal, 0) ?? 0;
+  }
+
+  progressPercent(vm: OrderCardVM): number {
+    if (vm.participantCount <= 0) return 0;
+    return Math.min(100, Math.round((vm.paidParticipantCount / vm.participantCount) * 100));
+  }
+}
