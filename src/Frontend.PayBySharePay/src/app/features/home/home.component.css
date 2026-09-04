@@ -10,6 +10,56 @@
   flex-direction: column;
 }
 
+
+/* ─── Offentlig forside (BUG-04) ─────────────────────────────────────────── */
+
+.home--public {
+  min-height: 100dvh;
+  height: 100dvh;
+  padding-bottom: 0;
+}
+
+.public-home {
+  height: 100%;
+  box-sizing: border-box;
+  padding: 0 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.public-home__hero {
+  display: block;
+  width: calc(100% + 24px);
+  max-width: none;
+  height: auto;
+  max-height: calc(100dvh - 136px);
+  margin-left: -12px;
+  object-fit: contain;
+  object-position: top center;
+  border-radius: 0 0 18px 18px;
+  flex: 0 1 auto;
+}
+
+.public-home > a {
+  flex: 0 0 auto;
+}
+
+@media (max-height: 720px) {
+  .public-home {
+    gap: 8px;
+    padding-bottom: 8px;
+  }
+
+  .public-home__hero {
+    max-height: calc(100dvh - 124px);
+  }
+
+  .public-home > a {
+    min-height: 44px !important;
+  }
+}
+
 /* Velkomst */
 .home__welcome {
   padding: 12px var(--space-page) 20px;
