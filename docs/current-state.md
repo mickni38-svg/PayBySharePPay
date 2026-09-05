@@ -64,7 +64,7 @@ Statusoversigt over PayNSync pr. seneste kodegennemgang.
 | Hent draft for en ordre | ✅ | `GET /api/merchant-orders/by-order/{orderId}` |
 | Separat menu- og ordreleverings-URL | ✅ | `GroupOrderUrl` bruges til kundens bestillingsside; `MerchantOrderUrl` bruges til final merchant order |
 | Square-inspireret merchant-adapter | ✅ | `SquareInspiredMerchantOrderAdapter` mapper final PayNSync-ordre til merchant-format |
-| Simuleret merchant ordre-API | ✅ | `POST /api/simulated-merchant/orders` i Development; idempotent via `IdempotencyKey` |
+| Simuleret merchant ordre-API | ✅ | `POST /api/dev/simulated-merchant/orders` i Development; idempotent via `IdempotencyKey` |
 | Merchant modtager final ordre ved `Paid` | ✅ | `MerchantCallbackService` sender adapter-mappet ordre til `MerchantOrderUrl` efter full capture |
 | Eksternt ordrenummer og svar gemmes | ✅ | `MerchantOrder.ExternalOrderNumber` + `ExternalResponseJson` |
 | `FinalGroupOrderDtos` (PayNSyncFinalGroupOrderDto m.fl.) | ✅ | Privacy-safe final merchant order; strukturerede modifiers bevares |
