@@ -571,7 +571,7 @@ URL-ansvar er adskilt:
 
 Adapteren mapper produkter, priser, strukturerede tilvalg, host-contact snapshot og levering. Beløb sendes som minor units. Participant-identitet og betalingsprovider-referencer må ikke sendes til merchantens ordresystem.
 
-Den simulerede endpoint `POST /api/simulated-merchant/orders` findes kun i Development og returnerer deterministisk samme eksterne ordre for samme idempotency key. Det er et test-/proof-of-integration endpoint, ikke en produktionsintegration til Square.
+Den simulerede endpoint `POST /api/dev/simulated-merchant/orders` findes kun i Development og returnerer deterministisk samme eksterne ordre for samme idempotency key. Det er et test-/proof-of-integration endpoint, ikke en produktionsintegration til Square.
 
 Eksisterende `MerchantOrder.SourceOrderId` er unik, og et allerede gemt `ExternalOrderNumber` overskrives ikke. Samme PayNSync-ordre må derfor ikke skabe flere eksterne merchant-ordrer via normal retry.
 
