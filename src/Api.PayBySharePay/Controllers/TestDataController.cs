@@ -21,6 +21,7 @@ public sealed class TestDataController(PayBySharePayDbContext context) : Control
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Reset()
     {
+        context.MerchantOrders.RemoveRange(context.MerchantOrders);
         context.MerchantOrderLines.RemoveRange(context.MerchantOrderLines);
         context.MerchantOrderDrafts.RemoveRange(context.MerchantOrderDrafts);
         context.ParticipantPayments.RemoveRange(context.ParticipantPayments);

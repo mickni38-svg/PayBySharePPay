@@ -1,40 +1,57 @@
-# Test plan — UC-17
+# Test plan — UC-19
 
-## Frontendtests
+## Scope
 
-Mock alle services og HTTP-grænser.
+- Use case: `docs/usecases/UC-19-samlet-merchant-ordrekontrakt.md`
+- Changed behaviour: Efter fuld capture opretter PayNSync én permanent, samlet merchant-ordre og callback uden deltageridentitet eller betalingsreferencer.
 
-- Udlogget `/home` viser PayNSync velkomst, Log ind og Opret bruger.
-- Udlogget `/home` viser ikke merchant-carousel, Overblik, Beskeder eller andre private dashboarddata.
-- Logget bruger ser eksisterende dashboard uændret.
-- `HomeComponent` laver ingen private data-kald uden session.
-- Auth guard tillader private routes for logget bruger.
-- Auth guard sender udlogget bruger til `/profile?mode=login`.
-- `/home` og `/profile` forbliver offentlige.
-- Login/logout reagerer på eksisterende `AuthService` signals uden browser reload.
+## Automated tests
 
-## Backendtests
+| Scenario | Level | Expected result |
+|---|---|---|
+| Alle ordrepersoner har captured betaling | Unit/service | Én permanent merchant-ordre oprettes |
+| En ordreperson mangler captured betaling | Unit/service | Ingen merchant-ordre oprettes |
+| Finalisering kaldes flere gange | Unit/service | Samme merchant-ordre returneres; ingen dublet |
+| Hostdata og leveringsadresse | Unit/service | Navn, telefon og ordre-adresse kopieres som snapshot |
+| Flere deltager-drafts | Unit/service | Alle linjer kopieres fladt uden participant-data |
+| Ens produkter som separate linjer | Unit/service | Linjerne bevares separat |
+| Linjesum svarer til captured beløb | Unit/service | Total og items gemmes korrekt |
+| Linjesum afviger fra captured beløb | Unit/service | Finalisering afvises |
+| Forskellige captured valutaer | Unit/service | Finalisering afvises |
+| Draft tilhører en anden merchant | Unit/service | Validering afvises før capture |
+| Draft-valuta afviger fra betalingsvaluta | Unit/service | Validering afvises før capture |
+| Partial capture failure | Orchestration unit | Ingen finalisering og ingen callback |
+| Successful capture | Orchestration unit | Finalisering sker før callback |
+| Allerede `Paid` ordre | Orchestration unit | Merchant-ordren sikres idempotent uden nyt provider-capture |
+| Callback-payload | Unit | Indeholder samlet ordre, host, levering og flade linjer; ingen participant/payment-referencefelter |
 
-Brug eksisterende auth-/controller-testmønstre. Ingen database, EF InMemory eller live eksterne kald.
+## Manual verification
 
-- Friends kræver autentificeret JWT.
-- Messages kræver autentificeret JWT.
-- Directory kræver autentificeret JWT.
-- Private Participants-operationer kræver autentificeret JWT.
-- `GET /api/participants/{id}/logo` forbliver anonymt tilgængeligt som public asset.
-- Auth/register endpoints påvirkes ikke.
+| Step | Expected result |
+|---|---|
+| Gennemgå migration | Nye tabeller, relationer, decimal precision og unique source-order index er korrekte |
+| Gennemgå entity/DTO | Ingen participant-id, participant-navn, token eller provider-reference på final merchant-ordre |
+| Gennemgå orchestration | Finalisering nås kun efter alle captures er lykkedes |
+| Gennemgå diff | Ingen Angular-, provider-, auth-, secret- eller deploymentændringer |
 
-## Verification
+## Regression areas
 
-- `dotnet build PayBySharePay.sln --configuration Release`
-- `dotnet test PayBySharePay.sln --configuration Release --no-build --verbosity normal`
-- Angular tests
-- Angular Simply-build
-- review af routebeskyttelse, login/profile-flow og API-anonymitet
+- Reserve og capture state machine.
+- Retry efter `PartiallyFailed`.
+- Merchant callback og dev callback-store.
+- UC-18 delivery-address snapshot.
+- Fake-provider end-to-end flow.
 
-## Exit
+## Environment/configuration
 
-- Alle nye og eksisterende relevante tests grønne.
-- Ingen migration eller dependency.
-- Ingen live Google/Vipps/MobilePay-kald.
-- UC-17 markeres først implementeret efter grøn verification.
+- Brug eksisterende xUnit-fakes; ingen EF InMemory og ingen nye dependencies.
+- Ingen live Vipps/MobilePay eller HTTP-callbacks i tests.
+- Kør `dotnet build PayBySharePay.sln --configuration Release`.
+- Kør `dotnet test PayBySharePay.sln --configuration Release --no-build --verbosity normal`.
+
+## Not tested
+
+- Order Hub UI/PWA.
+- Produktionsdatabase-deploy.
+- Automatisk retry/outbox efter databasefejl (UC-24).
+- Merchant-specifik API-mapping (UC-21).

@@ -33,6 +33,7 @@ public class DevController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> ResetData()
     {
+        _context.MerchantOrders.RemoveRange(_context.MerchantOrders);
         _context.MerchantOrderLines.RemoveRange(_context.MerchantOrderLines);
         _context.MerchantOrderDrafts.RemoveRange(_context.MerchantOrderDrafts);
         _context.ParticipantPayments.RemoveRange(_context.ParticipantPayments);

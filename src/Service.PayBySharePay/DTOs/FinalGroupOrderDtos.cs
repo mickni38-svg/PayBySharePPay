@@ -8,13 +8,21 @@ public sealed class PayNSyncFinalGroupOrderDto
 {
     public string EventType { get; init; } = "GroupOrderPaid";
     public int PaynsyncOrderId { get; init; }
-    public int? MerchantId { get; init; }
+    public string PaynsyncOrderNumber { get; init; } = string.Empty;
+    public int MerchantId { get; init; }
     public string Status { get; init; } = "Paid";
     public string Currency { get; init; } = "DKK";
     public decimal TotalAmount { get; init; }
     public DateTime PaidAtUtc { get; init; }
-    public PayNSyncDeliveryAddressDto? DeliveryAddress { get; set; }
-    public List<PayNSyncFinalParticipantOrderDto> Participants { get; init; } = [];
+    public PayNSyncHostDto Host { get; init; } = new();
+    public PayNSyncDeliveryAddressDto? DeliveryAddress { get; init; }
+    public List<PayNSyncFinalOrderLineDto> Lines { get; init; } = [];
+}
+
+public sealed class PayNSyncHostDto
+{
+    public string Name { get; init; } = string.Empty;
+    public string? Phone { get; init; }
 }
 
 public sealed class PayNSyncDeliveryAddressDto
@@ -23,18 +31,6 @@ public sealed class PayNSyncDeliveryAddressDto
     public string? PostalCode { get; init; }
     public string? City { get; init; }
     public string? Country { get; init; }
-}
-
-public sealed class PayNSyncFinalParticipantOrderDto
-{
-    public int ParticipantId { get; init; }
-    public string DisplayName { get; init; } = string.Empty;
-    /// <summary>Beløb i kr (decimal), ikke øre.</summary>
-    public decimal Amount { get; init; }
-    public string PaymentStatus { get; init; } = string.Empty;
-    public string? ProviderPaymentId { get; init; }
-    public string? MerchantDraftId { get; init; }
-    public List<PayNSyncFinalOrderLineDto> Lines { get; init; } = [];
 }
 
 public sealed class PayNSyncFinalOrderLineDto

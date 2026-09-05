@@ -82,6 +82,45 @@ public class EndToEndFlowTests
         }
     }
 
+    private sealed class TestMerchantOrderFinalizationService : IMerchantOrderFinalizationService
+    {
+        public Task ValidateAsync(
+            Order order,
+            IReadOnlyCollection<ParticipantPayment> payments,
+            CancellationToken cancellationToken = default)
+            => Task.CompletedTask;
+
+        public Task<PayNSyncFinalGroupOrderDto> EnsureFinalizedAsync(
+            Order order,
+            IReadOnlyCollection<ParticipantPayment> payments,
+            DateTime paidAtUtc,
+            CancellationToken cancellationToken = default)
+        {
+            var capturedPayments = payments
+                .Where(payment => payment.Status == ParticipantPaymentStatus.Captured)
+                .ToList();
+
+            return Task.FromResult(new PayNSyncFinalGroupOrderDto
+            {
+                PaynsyncOrderId = order.Id,
+                PaynsyncOrderNumber = $"PNS-{order.Id:D8}",
+                MerchantId = order.MerchantParticipantId ?? 0,
+                TotalAmount = capturedPayments.Sum(payment => payment.AmountMinorUnits) / 100m,
+                Currency = capturedPayments.FirstOrDefault()?.Currency ?? "DKK",
+                PaidAtUtc = paidAtUtc,
+                Host = new PayNSyncHostDto { Name = "Host" },
+                Lines = capturedPayments.Select((payment, index) => new PayNSyncFinalOrderLineDto
+                {
+                    Sku = $"line-{index + 1}",
+                    Name = $"Vare {index + 1}",
+                    Quantity = 1,
+                    UnitPrice = payment.AmountMinorUnits / 100m,
+                    LineTotal = payment.AmountMinorUnits / 100m
+                }).ToList()
+            });
+        }
+    }
+
     // ─── Setup ────────────────────────────────────────────────────────────
 
     private FakeParticipantPaymentRepository _paymentRepo = new();
@@ -112,6 +151,7 @@ public class EndToEndFlowTests
         var orchestration = new GroupPaymentOrchestrationService(
             provider ?? new FakePaymentProvider(NullLogger<FakePaymentProvider>.Instance),
             stateService, _paymentRepo, _orderRepo, _participantRepo,
+            new TestMerchantOrderFinalizationService(),
             callbackService ?? new TrackingCallbackService(),
             NullLogger<GroupPaymentOrchestrationService>.Instance);
 
@@ -198,7 +238,7 @@ public class EndToEndFlowTests
         // 6. Final GroupOrderPaid payload sendt
         tracker.CallCount.Should().Be(1);
         tracker.LastPayload!.EventType.Should().Be("GroupOrderPaid");
-        tracker.LastPayload.Participants.Should().HaveCount(2);
+        tracker.LastPayload.Lines.Should().HaveCount(2);
         tracker.LastPayload.TotalAmount.Should().Be(210m, "(12000 + 9000) øre = 210 kr");
     }
 
@@ -269,6 +309,7 @@ public class EndToEndFlowTests
             successProvider,
             new ParticipantPaymentStateService(_paymentRepo, new FakePaymentEventLogRepository(), NullLogger<ParticipantPaymentStateService>.Instance),
             _paymentRepo, _orderRepo, _participantRepo,
+            new TestMerchantOrderFinalizationService(),
             new TrackingCallbackService(),
             NullLogger<GroupPaymentOrchestrationService>.Instance);
 

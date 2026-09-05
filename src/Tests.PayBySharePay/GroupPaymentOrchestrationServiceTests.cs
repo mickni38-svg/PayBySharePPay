@@ -137,13 +137,72 @@ public class GroupPaymentOrchestrationServiceTests
         }
     }
 
+    private sealed class TestMerchantOrderFinalizationService : IMerchantOrderFinalizationService
+    {
+        public int CallCount { get; private set; }
+
+        public Task ValidateAsync(
+            Order order,
+            IReadOnlyCollection<ParticipantPayment> payments,
+            CancellationToken cancellationToken = default)
+            => Task.CompletedTask;
+
+        public Task<PayNSyncFinalGroupOrderDto> EnsureFinalizedAsync(
+            Order order,
+            IReadOnlyCollection<ParticipantPayment> payments,
+            DateTime paidAtUtc,
+            CancellationToken cancellationToken = default)
+        {
+            CallCount++;
+            var capturedPayments = payments
+                .Where(payment => payment.Status == ParticipantPaymentStatus.Captured)
+                .ToList();
+
+            return Task.FromResult(new PayNSyncFinalGroupOrderDto
+            {
+                PaynsyncOrderId = order.Id,
+                PaynsyncOrderNumber = $"PNS-{order.Id:D8}",
+                MerchantId = order.MerchantParticipantId ?? 0,
+                TotalAmount = capturedPayments.Sum(payment => payment.AmountMinorUnits) / 100m,
+                Currency = capturedPayments.FirstOrDefault()?.Currency ?? "DKK",
+                PaidAtUtc = paidAtUtc,
+                Host = new PayNSyncHostDto { Name = "Host" },
+                Lines = capturedPayments.Select((payment, index) => new PayNSyncFinalOrderLineDto
+                {
+                    Sku = $"line-{index + 1}",
+                    Name = $"Vare {index + 1}",
+                    Quantity = 1,
+                    UnitPrice = payment.AmountMinorUnits / 100m,
+                    LineTotal = payment.AmountMinorUnits / 100m
+                }).ToList()
+            });
+        }
+    }
+
+    private sealed class RejectingMerchantOrderFinalizationService : IMerchantOrderFinalizationService
+    {
+        public Task ValidateAsync(
+            Order order,
+            IReadOnlyCollection<ParticipantPayment> payments,
+            CancellationToken cancellationToken = default)
+            => throw new InvalidOperationException("Ordrelinjer og betalingsbeløb stemmer ikke.");
+
+        public Task<PayNSyncFinalGroupOrderDto> EnsureFinalizedAsync(
+            Order order,
+            IReadOnlyCollection<ParticipantPayment> payments,
+            DateTime paidAtUtc,
+            CancellationToken cancellationToken = default)
+            => throw new InvalidOperationException("Finalisering må ikke kaldes.");
+    }
+
     private FakeParticipantPaymentRepository _paymentRepo = new();
     private FakePaymentEventLogRepository _logRepo = new();
     private FakeOrderRepository _orderRepo = new();
     private FakeParticipantRepository _participantRepo = new();
 
     private GroupPaymentOrchestrationService CreateSut(IPaymentProvider? provider = null,
-        IMerchantCallbackService? callbackService = null)
+        IMerchantCallbackService? callbackService = null,
+        IMerchantOrderFinalizationService? finalizationService = null)
     {
         _paymentRepo = new FakeParticipantPaymentRepository();
         _logRepo = new FakePaymentEventLogRepository();
@@ -161,6 +220,7 @@ public class GroupPaymentOrchestrationServiceTests
             _paymentRepo,
             _orderRepo,
             _participantRepo,
+            finalizationService ?? new TestMerchantOrderFinalizationService(),
             callbackService ?? new NoOpMerchantCallbackService(),
             NullLogger<GroupPaymentOrchestrationService>.Instance);
     }
@@ -322,16 +382,27 @@ public class GroupPaymentOrchestrationServiceTests
     [Fact]
     public async Task ApproveAndCaptureAll_Is_Idempotent_When_Already_Paid()
     {
-        var sut = CreateSut();
+        var finalizer = new TestMerchantOrderFinalizationService();
+        var sut = CreateSut(finalizationService: finalizer);
         var hostId = 1;
         var order = MakeOrder(10, hostId, status: "Paid");
         _orderRepo.Add(order);
+        await _paymentRepo.AddAsync(new ParticipantPayment
+        {
+            OrderId = 10,
+            ParticipantId = hostId,
+            AmountMinorUnits = 10000,
+            Currency = "DKK",
+            Status = ParticipantPaymentStatus.Captured,
+            CapturedAtUtc = DateTime.UtcNow
+        });
 
         var result = await sut.ApproveAndCaptureAllAsync(10, hostId);
 
         result.AllCaptured.Should().BeTrue();
         result.OrderStatus.Should().Be("Paid");
         result.Results.Should().BeEmpty();
+        finalizer.CallCount.Should().Be(1, "en manglende permanent merchant-ordre skal kunne genskabes idempotent");
     }
 
     [Fact]
@@ -672,11 +743,12 @@ public class GroupPaymentOrchestrationServiceTests
     public async Task Merchant_Callback_Is_Not_Sent_On_Partial_Failure()
     {
         var tracker = new TrackingMerchantCallbackService();
+        var finalizer = new TestMerchantOrderFinalizationService();
         var failProvider = new FakePaymentProvider(
             NullLogger<FakePaymentProvider>.Instance,
             new FakePaymentProviderOptions { SimulateCaptureFailed = true });
 
-        var sut = CreateSut(failProvider, tracker);
+        var sut = CreateSut(failProvider, tracker, finalizer);
         var hostId = 1;
         var order = MakeOrder(10, hostId);
         _orderRepo.Add(order);
@@ -687,6 +759,7 @@ public class GroupPaymentOrchestrationServiceTests
 
         result.AllCaptured.Should().BeFalse();
         result.OrderStatus.Should().Be("PartiallyFailed");
+        finalizer.CallCount.Should().Be(0, "merchant-ordren må ikke oprettes ved partial failure");
         tracker.CallCount.Should().Be(0, "merchant callback må ikke sendes ved partial failure");
     }
 
@@ -742,6 +815,27 @@ public class GroupPaymentOrchestrationServiceTests
         capturedRequests[0].AmountMinorUnits.Should().Be(10000);
     }
 
+    [Fact]
+    public async Task Approve_Does_Not_Capture_When_MerchantOrder_Validation_Fails()
+    {
+        var capturedRequests = new List<CapturePaymentRequest>();
+        var provider = new SpyCaptureProvider(capturedRequests);
+        var sut = CreateSut(
+            provider,
+            finalizationService: new RejectingMerchantOrderFinalizationService());
+        var order = MakeOrder(10, hostId: 1);
+        _orderRepo.Add(order);
+        await sut.ReserveParticipantPaymentAsync(10, 1, "m", 10000, "DKK", "https://r", "https://c");
+
+        var act = () => sut.ApproveAndCaptureAllAsync(10, 1);
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*stemmer ikke*");
+        capturedRequests.Should().BeEmpty("validering skal ske før provider-capture");
+        _paymentRepo.All.Single().Status.Should().Be(ParticipantPaymentStatus.Reserved);
+        order.Status.Should().Be("ReadyToPay");
+    }
+
     // ── Prompt 06 tests ──────────────────────────────────────────────────────
 
     [Fact]
@@ -764,7 +858,7 @@ public class GroupPaymentOrchestrationServiceTests
     }
 
     [Fact]
-    public async Task GroupOrderPaid_Payload_Contains_Participants_With_PaymentStatus_Captured()
+    public async Task GroupOrderPaid_Payload_Contains_One_Flat_Line_Per_Captured_Payment()
     {
         var tracker = new TrackingMerchantCallbackService();
         var sut = CreateSut(callbackService: tracker);
@@ -779,9 +873,7 @@ public class GroupPaymentOrchestrationServiceTests
         await sut.ReserveParticipantPaymentAsync(10, 2, "m", 8000, "DKK", "https://r", "https://c");
         await sut.ApproveAndCaptureAllAsync(10, hostId);
 
-        tracker.LastPayload!.Participants.Should().HaveCount(2);
-        tracker.LastPayload.Participants.Should().AllSatisfy(p =>
-            p.PaymentStatus.Should().Be("Captured"));
+        tracker.LastPayload!.Lines.Should().HaveCount(2);
         tracker.LastPayload.TotalAmount.Should().Be(180m, "10000 + 8000 øre = 180 kr");
     }
 
@@ -825,8 +917,8 @@ public class GroupPaymentOrchestrationServiceTests
 
         result.AllCaptured.Should().BeTrue();
         tracker.CallCount.Should().Be(1, "callback sendes præcist én gang efter fuld capture");
-        tracker.LastPayload!.Participants.Should().HaveCount(1);
-        tracker.LastPayload.Participants[0].Amount.Should().Be(50m);
+        tracker.LastPayload!.Lines.Should().HaveCount(1);
+        tracker.LastPayload.Lines[0].LineTotal.Should().Be(50m);
     }
 }
 

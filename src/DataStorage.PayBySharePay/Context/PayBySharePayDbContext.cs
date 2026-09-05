@@ -15,6 +15,8 @@ public class PayBySharePayDbContext : DbContext
     public DbSet<Message> Messages => Set<Message>();
     public DbSet<MerchantOrderDraft> MerchantOrderDrafts => Set<MerchantOrderDraft>();
     public DbSet<MerchantOrderLine> MerchantOrderLines => Set<MerchantOrderLine>();
+    public DbSet<MerchantOrder> MerchantOrders => Set<MerchantOrder>();
+    public DbSet<MerchantOrderItem> MerchantOrderItems => Set<MerchantOrderItem>();
     public DbSet<ParticipantPayment> ParticipantPayments => Set<ParticipantPayment>();
     public DbSet<PaymentEventLog> PaymentEventLogs => Set<PaymentEventLog>();
     public DbSet<ParticipantExternalLogin> ParticipantExternalLogins => Set<ParticipantExternalLogin>();
@@ -164,6 +166,39 @@ public class PayBySharePayDbContext : DbContext
                 .HasForeignKey(l => l.ParticipantId)
                 .OnDelete(DeleteBehavior.Restrict)
                 .IsRequired(false);
+        });
+
+        modelBuilder.Entity<MerchantOrder>(entity =>
+        {
+            entity.Property(order => order.PayNSyncOrderNumber).HasMaxLength(50);
+            entity.Property(order => order.Currency).HasMaxLength(3);
+            entity.Property(order => order.PaymentStatus).HasMaxLength(30);
+            entity.Property(order => order.TotalAmount).HasPrecision(18, 2);
+
+            entity.HasIndex(order => order.SourceOrderId).IsUnique();
+            entity.HasIndex(order => order.PayNSyncOrderNumber).IsUnique();
+            entity.HasIndex(order => order.MerchantParticipantId);
+
+            entity.HasOne(order => order.SourceOrder)
+                .WithMany()
+                .HasForeignKey(order => order.SourceOrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(order => order.MerchantParticipant)
+                .WithMany()
+                .HasForeignKey(order => order.MerchantParticipantId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<MerchantOrderItem>(entity =>
+        {
+            entity.Property(item => item.UnitPrice).HasPrecision(18, 2);
+            entity.Property(item => item.LineTotal).HasPrecision(18, 2);
+
+            entity.HasOne(item => item.MerchantOrder)
+                .WithMany(order => order.Items)
+                .HasForeignKey(item => item.MerchantOrderId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<ParticipantExternalLogin>(entity =>

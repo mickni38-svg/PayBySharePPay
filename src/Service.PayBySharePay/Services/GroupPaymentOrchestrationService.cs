@@ -16,6 +16,7 @@ public sealed class GroupPaymentOrchestrationService(
     IParticipantPaymentRepository paymentRepository,
     IOrderRepository orderRepository,
     IParticipantRepository participantRepository,
+    IMerchantOrderFinalizationService merchantOrderFinalizationService,
     IMerchantCallbackService merchantCallbackService,
     ILogger<GroupPaymentOrchestrationService> logger) : IGroupPaymentOrchestrationService
 {
@@ -187,9 +188,19 @@ public sealed class GroupPaymentOrchestrationService(
         if (order.CreatedByParticipantId != requestingParticipantId)
             throw new UnauthorizedAccessException("Kun ordrevært (host) kan godkende og capture.");
 
+        var payments = (await paymentRepository.GetByOrderIdAsync(orderId)).ToList();
+
         if (order.Status == "Paid")
         {
             logger.LogInformation("[Orchestration] Idempotent: Order {OrderId} already Paid", orderId);
+
+            await merchantOrderFinalizationService.EnsureFinalizedAsync(
+                order,
+                payments,
+                payments.Where(payment => payment.Status == ParticipantPaymentStatus.Captured)
+                    .Max(payment => payment.CapturedAtUtc) ?? DateTime.UtcNow,
+                cancellationToken);
+
             return new ApproveAndCaptureResult
             {
                 AllCaptured = true,
@@ -202,8 +213,6 @@ public sealed class GroupPaymentOrchestrationService(
         if (order.Status is not ("ReadyToPay" or "HostApproved" or "Capturing" or "PartiallyFailed"))
             throw new InvalidOperationException($"Ordren kan ikke godkendes i status '{order.Status}'. Alle deltagere skal have indsendt bestilling.");
 
-        var payments = (await paymentRepository.GetByOrderIdAsync(orderId)).ToList();
-
         // Doc 05: inkludér CaptureFailed i retry-puljen
         var reservedPayments = payments
             .Where(p => p.Status == ParticipantPaymentStatus.Reserved
@@ -212,6 +221,9 @@ public sealed class GroupPaymentOrchestrationService(
 
         if (reservedPayments.Count == 0)
             throw new InvalidOperationException("Ingen reserverede betalinger fundet. Alle deltagere skal have reserveret betaling.");
+
+        // UC-19: kontrollér ordrelinjer, beløb og valuta før penge captures.
+        await merchantOrderFinalizationService.ValidateAsync(order, payments, cancellationToken);
 
         // Doc 05: Sæt HostApproved på ordren inden capture-loop
         order.Status = "HostApproved";
@@ -339,9 +351,19 @@ public sealed class GroupPaymentOrchestrationService(
 
             logger.LogInformation("[Orchestration] All payments captured. Order {OrderId} → Paid", orderId);
 
+            var paidAtUtc = DateTime.UtcNow;
+            var finalMerchantOrder = await merchantOrderFinalizationService.EnsureFinalizedAsync(
+                order,
+                payments,
+                paidAtUtc,
+                cancellationToken);
+
             try
             {
-                await SendMerchantCallbackAsync(order, captureResults, payments, cancellationToken);
+                await merchantCallbackService.SendGroupOrderPaidAsync(
+                    finalMerchantOrder,
+                    order.MerchantParticipant?.GroupOrderUrl,
+                    cancellationToken);
             }
             catch (Exception ex)
             {
@@ -480,72 +502,5 @@ public sealed class GroupPaymentOrchestrationService(
             OrderStatus = order.Status,
             Payments = paymentStatuses
         };
-    }
-
-    // ─── Private helpers ─────────────────────────────────────────────────────
-
-    private async Task SendMerchantCallbackAsync(
-        DataStorage.PayBySharePay.Entities.Order order,
-        List<ParticipantCaptureResult> captureResults,
-        List<DataStorage.PayBySharePay.Entities.ParticipantPayment> allPayments,
-        CancellationToken cancellationToken)
-    {
-        var callbackUrl = order.MerchantParticipant?.GroupOrderUrl;
-
-        // Byg deltager-sektion: ét element pr. captured deltager
-        var participants = captureResults
-            .Where(r => r.Success)
-            .Select(r =>
-            {
-                var payment = allPayments.FirstOrDefault(p => p.ParticipantId == r.ParticipantId);
-
-                // Find drafts og lines for denne deltager
-                var draft = order.MerchantOrderDrafts
-                    .FirstOrDefault(d => d.ParticipantId == r.ParticipantId);
-
-                var lines = (draft?.Lines ?? Enumerable.Empty<DataStorage.PayBySharePay.Entities.MerchantOrderLine>())
-                    .Select(l => new PayNSyncFinalOrderLineDto
-                    {
-                        Sku = l.LineId,
-                        Name = l.Name,
-                        Quantity = l.Quantity,
-                        UnitPrice = l.UnitPrice,
-                        LineTotal = l.LineTotal
-                    }).ToList();
-
-                var participantName = order.OrderParticipants
-                    .FirstOrDefault(op => op.ParticipantId == r.ParticipantId)
-                    ?.Participant.Name ?? r.ParticipantName;
-
-                return new PayNSyncFinalParticipantOrderDto
-                {
-                    ParticipantId = r.ParticipantId,
-                    DisplayName = participantName,
-                    Amount = payment != null ? payment.AmountMinorUnits / 100m : 0m,
-                    PaymentStatus = "Captured",
-                    ProviderPaymentId = payment?.ProviderPaymentId,
-                    MerchantDraftId = draft?.MerchantDraftReference,
-                    Lines = lines
-                };
-            }).ToList();
-
-        var totalAmount = participants.Sum(p => p.Amount);
-
-        var payload = new PayNSyncFinalGroupOrderDto
-        {
-            EventType = "GroupOrderPaid",
-            PaynsyncOrderId = order.Id,
-            MerchantId = order.MerchantParticipantId,
-            Status = "Paid",
-            Currency = allPayments.FirstOrDefault()?.Currency ?? "DKK",
-            TotalAmount = totalAmount,
-            PaidAtUtc = DateTime.UtcNow,
-            Participants = participants
-        };
-
-        await merchantCallbackService.SendGroupOrderPaidAsync(
-            payload: payload,
-            callbackUrl: callbackUrl,
-            cancellationToken: cancellationToken);
     }
 }
