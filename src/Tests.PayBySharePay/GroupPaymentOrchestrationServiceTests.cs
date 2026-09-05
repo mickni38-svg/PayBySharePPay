@@ -81,7 +81,7 @@ public class GroupPaymentOrchestrationServiceTests
         public Task SaveChangesAsync()
         {
             Saved = _store.LastOrDefault();
-            return Task.FromResult(new MerchantOrderDeliveryResultDto(true, $"SIM-{payload.PaynsyncOrderNumber}", "{}"));
+            return Task.CompletedTask;
         }
     }
 
@@ -120,7 +120,7 @@ public class GroupPaymentOrchestrationServiceTests
     {
         public Task<MerchantOrderDeliveryResultDto> SendGroupOrderPaidAsync(PayNSyncFinalGroupOrderDto payload, string? callbackUrl,
             CancellationToken cancellationToken = default)
-            => Task.CompletedTask;
+            => Task.FromResult(new MerchantOrderDeliveryResultDto(true, $"SIM-{payload.PaynsyncOrderNumber}", "{}"));
     }
 
     private sealed class TrackingMerchantCallbackService : IMerchantCallbackService
