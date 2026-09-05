@@ -9,12 +9,12 @@ namespace Service.PayBySharePay.Interfaces;
 public interface IMerchantCallbackService
 {
     /// <summary>
-    /// Sender den endelige group order til merchantens GroupOrderUrl.
+    /// Sender den endelige group order til merchantens MerchantOrderUrl.
     /// Kaldes kun når Order.Status = Paid og alle betalinger er Captured.
     /// </summary>
-    Task SendGroupOrderPaidAsync(
+    Task<MerchantOrderDeliveryResultDto> SendGroupOrderPaidAsync(
         PayNSyncFinalGroupOrderDto payload,
-        string? callbackUrl,
+        string? merchantOrderUrl,
         CancellationToken cancellationToken = default);
 }
 
