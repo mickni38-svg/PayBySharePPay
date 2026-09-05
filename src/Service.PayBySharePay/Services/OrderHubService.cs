@@ -29,6 +29,7 @@ public sealed class OrderHubService(
         var merchant = await RequireMerchantAsync(participantId);
         merchant.OrderHubEnabled = enabled;
         await participantRepository.UpdateAsync(merchant);
+        await participantRepository.SaveChangesAsync();
         return new OrderHubSettingsDto { Enabled = merchant.OrderHubEnabled };
     }
 
