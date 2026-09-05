@@ -24,10 +24,8 @@ public sealed class DevelopmentOnlyControllerFeatureProvider
         if (_isDevelopment)
             return;
 
-        var devController = feature.Controllers
-            .FirstOrDefault(controller => controller.AsType() == typeof(DevController));
-
-        if (devController is not null)
-            feature.Controllers.Remove(devController);
+        feature.Controllers.RemoveAll(controller =>
+            controller.AsType() == typeof(DevController)
+            || controller.AsType() == typeof(SimulatedMerchantOrdersController));
     }
 }
