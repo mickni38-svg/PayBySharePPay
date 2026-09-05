@@ -62,6 +62,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent)
   },
   {
+    path: 'order-hub',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/order-hub/order-hub.component').then(m => m.OrderHubComponent)
+  },
+  {
     path: 'pending-participants',
     canActivate: [authGuard],
     loadComponent: () => import('./features/pending-participants/pending-participants.component').then(m => m.PendingParticipantsComponent)
