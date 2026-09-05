@@ -18,6 +18,18 @@ public sealed class MerchantOrderFinalizationServiceTests
             CancellationToken cancellationToken = default)
             => Task.FromResult(_orders.SingleOrDefault(order => order.SourceOrderId == sourceOrderId));
 
+        public Task<MerchantOrder?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+            => Task.FromResult(_orders.SingleOrDefault(order => order.Id == id));
+
+        public Task<IReadOnlyList<MerchantOrder>> GetByMerchantAsync(
+            int merchantParticipantId,
+            bool completed,
+            CancellationToken cancellationToken = default)
+            => Task.FromResult<IReadOnlyList<MerchantOrder>>(
+                _orders.Where(order => order.MerchantParticipantId == merchantParticipantId)
+                    .Where(order => completed ? order.OrderHubStatus == "Completed" : order.OrderHubStatus != "Completed")
+                    .ToList());
+
         public Task<MerchantOrder> AddAsync(
             MerchantOrder merchantOrder,
             CancellationToken cancellationToken = default)
