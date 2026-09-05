@@ -92,7 +92,8 @@
 .notif__merchant-logo {
   display: block;
   object-fit: contain;
-  padding: 3px;
+  padding: 4px;
+  background: #fff;
 }
 
 .notif__fallback-icon {
@@ -168,11 +169,22 @@
 .notif__read-label {
   align-self: start;
   margin-top: 5px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .notif__read-label--unread {
-  color: var(--color-primary);
-  font-weight: 700;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-bg);
+  font-weight: 800;
+  font-size: 13px;
+  padding: 4px 10px;
 }
 
 .notif__chevron {
