@@ -1,91 +1,61 @@
-# Implementation plan — UC-19
+# Implementation plan — UC-20
 
 ## Task
 
-- Use case: `docs/usecases/UC-19-samlet-merchant-ordrekontrakt.md`
-- Primary task type: `NEW_USE_CASE`
-- Goal: Opret én permanent, samlet og betalt merchant-ordre efter fuld capture som grundlag for PayNSync Order Hub.
-- Approval: Product Owner har bestemt, at UC-19 har forrang ved konflikt med eksisterende regler og kontrakter.
+- Use case: `docs/usecases/UC-20-realistisk-merchant-takeaway-demo.md`
+- Type: `NEW_USE_CASE`
+- Goal: Erstat den simple Pizzeria Roma-side med en realistisk takeaway-demo, som sender deltagerens draft til det eksisterende PayNSync-reservationsflow.
+- Approval: Product Owner har efter gennemlæsning bedt om implementering af UC-20.
 
 ## Current state
 
-- `GroupPaymentOrchestrationService` sætter allerede gruppeordren til `Paid` efter alle captures og bygger derefter en flygtig `PayNSyncFinalGroupOrderDto` til HTTP-callback.
-- Den eksisterende callback-payload grupperer ordrelinjer pr. deltager og indeholder deltagernavne, participant-id'er og provider-betalingsreferencer.
-- UC-19 kræver en kanonisk merchant-ordre uden deltageridentitet og betalingsreferencer.
-- `Order` indeholder allerede snapshot af leveringsadressen. Hostens navn og telefon findes via `CreatedByParticipantId`/`OrderParticipants`.
-- Der findes ingen permanent final `MerchantOrder`; kun deltagerens `MerchantOrderDraft` og tilhørende draft-linjer.
+- Merchant Demo er én statisk `index.html` med otte checkbox-produkter og inline CSS/JavaScript.
+- Siden kalder allerede `POST /api/merchant-orders` og følger `paymentRedirectUrl` til MobilePay/Vipps.
+- API-kontrakten understøtter normaliserede linjer og `RawMerchantPayloadJson`.
+- Der findes ingen produktmængder, tilvalg, rigtig kurv eller stabile katalog-id'er.
 
-## Constraints
+## Scope and decisions
 
-- Architecture: Orkestreringen kalder en service, som ejer opbygningen, mens et entity-specifikt repository ejer persistence.
-- Business rules: Final merchant-ordre oprettes kun, når alle relevante betalinger er `Captured`; én gruppeordre giver højst én merchant-ordre.
-- Security/privacy: Den permanente ordre og callbacken må ikke indeholde deltageridentitet, participant tokens, provider-referencer eller credentials.
-- Compatibility: UC-19 har Product Owner-godkendt forrang. Den eksisterende callback-kontrakt ændres derfor til UC-19-formatet, selv om det er en breaking contract change.
+- Behold Merchant Demo som en selvstændig statisk webapp; ingen ny Angular/.NET solution og ingen dependencies.
+- Tilføj et lokalt Pizzeria Roma-katalog med stabile kategori-, produkt- og tilvalgs-id'er.
+- Tilføj produktdialog, mængder, valgfrie tilvalg, særskilte kurvlinjer og summering.
+- Send produktets stabile ID som `lineId`; læsbare tilvalg medtages i linjenavnet, og strukturerede produkt-/tilvalgs-id'er gemmes i `rawMerchantPayloadJson`.
+- Bevar separate kurvlinjer ved forskellige tilvalg.
+- Generér én stabil merchant draft-reference pr. browsersession og gruppeordre, så retry ikke opfinder en ny reference.
+- PayNSync API er eneste integrationsgrænse. Demoen må ikke kalde Vipps/MobilePay eller en merchant-ordrekø.
 
-## Impact
+## Affected files
 
-### Backend
-
-- Ny `MerchantOrder`-entitet med PayNSync-ordrenummer, source order-id, merchant-id, host-snapshot, leveringssnapshot, total, valuta, betalingsstatus og tidsstempler.
-- Ny `MerchantOrderItem`-entitet. Draft-linjer kopieres én-til-én uden deltagerrelation, så særskilte linjer ikke slås sammen.
-- Nyt `IMerchantOrderRepository`/`MerchantOrderRepository`.
-- Nyt `IMerchantOrderFinalizationService`/`MerchantOrderFinalizationService` med validering og idempotent oprettelse.
-- `GroupPaymentOrchestrationService` finaliserer efter fuld capture og sender derefter den persistente standardordre som callback.
-- Gentaget `/approve` på en allerede `Paid` ordre sikrer idempotent, at merchant-ordren findes uden nyt capture.
-
-### DTO/API
-
-- `PayNSyncFinalGroupOrderDto` ændres fra participant-gruppering til én flad samlet ordre med host, levering og linjer.
-- Deltager-id, deltagernavn, payment status pr. deltager og provider payment-id fjernes fra callback-kontrakten.
-- Ingen nye endpoints i UC-19.
-
-### Frontend
-
-- Ingen ændringer. Order Hub-visning tilhører UC-22.
-
-### Database
-
-- Nye tabeller `MerchantOrders` og `MerchantOrderItems`.
-- Unikt index på `MerchantOrders.SourceOrderId` garanterer højst én permanent merchant-ordre pr. gruppeordre.
-- Decimalfelter bruger precision `(18,2)`.
-- Relationer bruger restriktiv delete-adfærd, så en betalt merchant-ordre ikke slettes med source order eller merchant.
-- Ny EF Core-migration og opdateret model snapshot; ingen backfill.
-
-### Payment/integration
-
-- Ingen ændring af providerkald eller payment state machine.
-- Finalisering kræver captured betaling for alle ordrepersoner, én valuta og overensstemmelse mellem kopierede linjer og captured beløb.
-- Dataintegritetsfejl opretter ikke merchant-ordre og ruller ikke captured betalinger tilbage.
-- HTTP callback sendes først efter vellykket persistent finalisering.
-
-### Deployment
-
-- Produktionsdatabasen skal migreres før den nye backend tages i brug.
-- Ingen nye dependencies, secrets eller konfigurationsnøgler.
-
-## Steps
-
-1. Tilføj final merchant-order entities, relationer, constraints og migration.
-2. Tilføj repository og finalization service med idempotent oprettelse og privacy-sikker mapping.
-3. Integrér finalization service i successful capture og allerede-Paid retry-flowet.
-4. Opdatér callback-kontrakten til UC-19-formatet.
-5. Tilføj tests for timing, mapping, snapshots, total/valuta, idempotens og partial failure.
-6. Kør .NET build/tests, gennemgå migration/snapshot og foretag separat review.
-7. Opdatér UC-19 og relevante dokumentationsfiler efter grøn verification.
+- `src/Frontend.MerchantDemo/index.html`
+- `src/Frontend.MerchantDemo/styles.css`
+- `src/Frontend.MerchantDemo/order-model.js`
+- `src/Frontend.MerchantDemo/app.js`
+- `src/Frontend.MerchantDemo/app.test.js`
+- `src/Frontend.MerchantDemo/package.json`
+- `src/Frontend.MerchantDemo/package-lock.json`
+- UC-20/current-state dokumentation efter verification.
 
 ## Risks
 
-| Risk | Impact | Mitigation |
-|---|---|---|
-| Callback-kontrakten ændres | Eksisterende merchant-modtager skal forstå det nye format | UC-19 har forrang; kontrakten dokumenteres og testes eksplicit |
-| Capture lykkes, men permanent ordre kan ikke gemmes | Betalt ordre mangler i Order Hub | Idempotent finalisering ved completion og gentaget `/approve`; robust automatisk retry tilhører UC-24 |
-| Samtidige finaliseringsforsøg | Dubletordre | Unikt database-index og idempotent lookup |
-| Draft-linjer og captured beløb er inkonsistente | Forkert ordretotal | Valider summer/valuta og afvis finalisering uden at ændre betalingsstatus |
-| Host ændrer profil efter finalisering | Historisk ordre ændrer kontaktdata | Kopiér navn, telefon og adresse til merchant-ordren som snapshot |
+| Risk | Mitigation |
+|---|---|
+| Tilvalg mistes i den nuværende API-linjemodel | Medtag dem læsbart i linjenavnet og struktureret i `rawMerchantPayloadJson` |
+| Dubletlinjer slås sammen | Hver konfiguration får sit eget line-instance-id og bevares separat |
+| Forkert total sendes til betaling | Brug én delt, testet beregningsfunktion til kurv og payload |
+| Reload/retry giver ny draft-reference | Gem reference i `sessionStorage` pr. order/token |
+| Demo frigiver ordre for tidligt | Ingen order-hub/callback-kald; kun eksisterende draft-endpoint |
+
+## Verification
+
+1. Kør Node unit tests uden eksterne services.
+2. Kør statisk syntax-check af browser-JavaScript.
+3. Gennemgå request-payload, redirect og fejlhåndtering.
+4. Gennemgå mobil/responsivt layout og accessibility-semantik.
+5. Opdatér UC-20 og berørt current-state efter grøn verification.
 
 ## Out of scope
 
-- Order Hub Angular-app, ordrekø og merchant-statusflow (UC-22).
-- Automatisk retry/outbox og manuel genudsendelse (UC-24).
-- Merchant-specifik mapping/API (UC-21).
-- E-mail og andre leveringskanaler (UC-23).
+- CMS eller databasebaseret produktkatalog.
+- Almindelig kortbetaling.
+- PayNSync Order Hub UI og merchant-statusflow.
+- Merchant-specifik adapter eller produktionsklart POS-format.

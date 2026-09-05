@@ -1,8 +1,11 @@
 {
   "name": "frontend-merchant-demo",
   "version": "1.0.0",
-  "description": "Pizzeria Roma – statisk merchant demo",
+  "description": "Pizzeria Roma – realistisk PayNSync merchant demo",
+  "type": "module",
   "scripts": {
-    "start": "npx http-server . -p 8081 --cors -c-1"
+    "start": "npx http-server . -p 8081 --cors -c-1",
+    "test": "node --test app.test.js",
+    "check": "node --check app.js && node --check order-model.js"
   }
 }

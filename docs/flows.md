@@ -83,19 +83,21 @@ Participant opens message in app
 
 Merchant Demo (Frontend.MerchantDemo/index.html):
   1. Reads orderId, merchantId, participantToken from URL query params
-  2. Shows restaurant menu (Pizzeria Roma hardcoded items)
-  3. User ticks items, total is computed client-side
-  4. Clicks "Gruppebetaling" button
+  2. Shows the static Pizzeria Roma catalog with stable product and modifier IDs
+  3. User selects products, quantities and modifiers; each configuration becomes a separate cart line
+  4. Cart total is computed by the shared order model
+  5. User clicks "Fortsæt med PayNSync"
 
   submitOrder():
 	POST {API_BASE}/api/merchant-orders
 	body: {
 	  orderId, merchantParticipantId, participantToken,
-	  merchantDraftReference: "ROMA-{timestamp}",
+	  merchantDraftReference: "ROMA-{orderId}-{session-id}",
 	  subtotalAmount, totalAmount, currency: "DKK",
-	  paymentMode: "GroupPay",
+	  paymentMode: "AuthorizeThenCapture",
 	  expiresAtUtc: now + 24h,
-	  lines: [{ lineId, name, quantity, unitPrice, lineTotal }]
+	  lines: [{ lineId: productId, name, quantity, unitPrice, lineTotal }],
+	  rawMerchantPayloadJson: "JSON med productId, modifierIds, lineInstanceId, ..."
 	}
 
 API: MerchantOrdersController.InitOrder() → MerchantOrderService.InitOrderAsync()

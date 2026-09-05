@@ -55,7 +55,7 @@ Statusoversigt over PayNSync pr. seneste kodegennemgang.
 
 | Feature | Status | Noter |
 |---------|--------|-------|
-| Merchant Demo — Pizzeria Roma (statisk HTML) | ✅ | Læser `orderId`, `merchantId`, `participantToken` fra URL |
+| Merchant Demo — Pizzeria Roma (statisk HTML/JS) | ✅ | Realistisk mobilmenu med kategorier, antal, tilvalg og kurv; læser `orderId`, `merchantId`, `participantToken` fra URL |
 | Indsend bestilling fra merchant-side | ✅ | `POST /api/merchant-orders` (anonymous) |
 | Valider `ParticipantToken` mod database | ✅ | `MerchantOrderService.InitOrderAsync()` |
 | Én draft pr. deltager pr. ordre — gen-indsendelse erstatter | ✅ | Forrige draft slettes |
@@ -65,7 +65,8 @@ Statusoversigt over PayNSync pr. seneste kodegennemgang.
 | Merchant modtager callback ved `Paid` | ✅ | `MerchantCallbackService` sender HTTP POST med `PayNSyncFinalGroupOrderDto` |
 | `FinalGroupOrderDtos` (PayNSyncFinalGroupOrderDto m.fl.) | ✅ | Implementeret — standard GroupOrderPaid-payload til merchant-callback — *(NYT)* |
 | `RawMerchantPayloadJson` på `MerchantOrderDraft` | ✅ | Gemmer merchantens originale JSON til audit/debugging (nullable) — *(NYT)* |
-| Hardcodet Pizzeria Roma-menu i demo | ⚠️ | Kun én fast menu — ikke konfigurerbar |
+| Stabile produkt- og tilvalgs-id'er i Merchant Demo | ✅ | Produkt-id sendes som `lineId`; strukturerede konfigurationer gemmes i `RawMerchantPayloadJson` |
+| Statisk Pizzeria Roma-katalog | ⚠️ | Realistisk demo-katalog, men endnu ikke konfigurerbart per merchant |
 | Kun én merchant per ordre | ⚠️ | Arkitekturen understøtter ikke flere merchants pr. ordre |
 
 ---
@@ -227,7 +228,7 @@ Se `docs/usecases/00-IMPLEMENTATION-ORDER.md` for anbefalet rækkefølge og mode
 | Begrænsning | Beskrivelse |
 |-------------|-------------|
 | Én merchant pr. ordre | Arkitekturen tillader kun ét `MerchantParticipantId` pr. `Order` |
-| Hardcodet merchant-menu | Pizzeria Roma-menuen er statisk HTML — ikke konfigurerbar per merchant |
+| Statisk merchant-menu | Pizzeria Roma-kataloget ligger i `order-model.js` — ikke konfigurerbart per merchant |
 | Ingen post-oprettelse deltager-tilføjelse | Deltagere kan kun tilføjes ved ordreoprettelse |
 | Hardcodet CORS-liste | Nye frontend-URL'er kræver kodeændring i `Program.cs` |
 | Capture stopper ved første fejl | `PartiallyFailed` sættes og loop afbrydes — de øvrige deltageres betalinger fanges ikke |

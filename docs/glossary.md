@@ -348,9 +348,9 @@ Konvertering i koden: `amountMinorUnits = (long)(draft.TotalAmount * 100)`.
 ---
 
 ### Merchant Demo (Pizzeria Roma)
-Statisk HTML-side (`Frontend.MerchantDemo/index.html`) der simulerer en rigtig merchants bestillingsside.
+Statisk HTML/CSS/JavaScript-app (`Frontend.MerchantDemo`) der simulerer en rigtig merchants bestillingsside.
 
-Bruges til at demonstrere og teste deltager-bestillingsflowet. Læser `orderId`, `merchantId` og `participantToken` fra URL-query-parametre og poster til `/api/merchant-orders`.
+Bruges til at demonstrere og teste deltager-bestillingsflowet. Den har et fast katalog med stabile produkt- og tilvalgs-id'er, mængder og kurv. Appen læser `orderId`, `merchantId` og `participantToken` fra URL-query-parametre og poster kun draft-ordren til `/api/merchant-orders`.
 
 Kører på port 8081 i development og Local-miljø (startes automatisk af `MerchantDemoHostedService`).
 

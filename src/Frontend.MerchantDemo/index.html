@@ -1,332 +1,130 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="da">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pizzeria Roma – Menubestilling</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f5f5f0;
-      color: #222;
-      min-height: 100vh;
-    }
-
-    header {
-      background: #c0392b;
-      color: white;
-      padding: 20px 24px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-    header .logo { font-size: 2rem; }
-    header h1 { font-size: 1.4rem; font-weight: 700; }
-    header p { font-size: 0.85rem; opacity: 0.85; }
-
-    .badge {
-      display: inline-block;
-      background: #27ae60;
-      color: white;
-      font-size: 0.7rem;
-      padding: 2px 8px;
-      border-radius: 20px;
-      margin-top: 4px;
-    }
-
-    main { max-width: 520px; margin: 24px auto; padding: 0 16px 80px; }
-
-    .info-box {
-      background: #fff8e1;
-      border-left: 4px solid #f39c12;
-      padding: 12px 16px;
-      border-radius: 6px;
-      margin-bottom: 20px;
-      font-size: 0.9rem;
-    }
-    .info-box strong { display: block; margin-bottom: 4px; }
-
-    h2 { font-size: 1.1rem; margin: 20px 0 10px; color: #c0392b; }
-
-    .menu-item {
-      background: white;
-      border-radius: 10px;
-      padding: 14px 16px;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-      cursor: pointer;
-      transition: box-shadow 0.15s;
-    }
-    .menu-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.14); }
-    .menu-item input[type=checkbox] {
-      width: 20px; height: 20px;
-      accent-color: #c0392b;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-    .menu-item .emoji { font-size: 1.6rem; flex-shrink: 0; }
-    .menu-item .desc { flex: 1; }
-    .menu-item .desc strong { display: block; font-size: 0.95rem; }
-    .menu-item .desc span { font-size: 0.8rem; color: #777; }
-    .menu-item .price { font-weight: 700; font-size: 1rem; color: #c0392b; white-space: nowrap; }
-
-    .total-bar {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      background: white;
-      border-top: 1px solid #ddd;
-      padding: 14px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      max-width: 520px;
-      margin: 0 auto;
-    }
-    .total-bar .total-label { font-size: 0.85rem; color: #666; }
-    .total-bar .total-amount { font-size: 1.2rem; font-weight: 700; color: #222; }
-
-    button#payBtn {
-      background: #27ae60;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 12px 22px;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-    button#payBtn:hover { background: #1e8449; }
-    button#payBtn:disabled { background: #aaa; cursor: default; }
-
-    #result {
-      display: none;
-      background: #eafaf1;
-      border: 2px solid #27ae60;
-      border-radius: 10px;
-      padding: 20px;
-      text-align: center;
-      margin: 24px 0;
-    }
-    #result .check { font-size: 2.5rem; }
-    #result h3 { margin: 8px 0 4px; font-size: 1.1rem; }
-    #result p { font-size: 0.85rem; color: #555; }
-
-    #errorMsg {
-      display: none;
-      background: #fdecea;
-      border: 2px solid #e74c3c;
-      border-radius: 10px;
-      padding: 16px;
-      color: #c0392b;
-      font-size: 0.9rem;
-      margin: 12px 0;
-    }
-  </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#af3027">
+  <meta name="description" content="Bestil takeaway hos Pizzeria Roma og reservér din del med PayNSync.">
+  <title>Pizzeria Roma · Bestil med PayNSync</title>
+  <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
+  <header class="site-header">
+    <div class="topbar">
+      <div class="brand" aria-label="Pizzeria Roma">
+        <span class="brand__mark" aria-hidden="true">R</span>
+        <span>Pizzeria Roma</span>
+      </div>
+      <span class="topbar__status">Åben · Levering 25–40 min.</span>
+    </div>
 
-<header>
-  <div class="logo">🍕</div>
-  <div>
-    <h1>Pizzeria Roma</h1>
-    <p>Vælg dine retter og send til gruppen</p>
-    <span class="badge">Gruppebetaling aktiveret</span>
+    <div class="merchant-hero">
+      <div class="merchant-logo" aria-hidden="true">
+        <img id="merchantLogo" alt="" hidden>
+        <span id="merchantLogoFallback">R</span>
+      </div>
+      <div class="merchant-copy">
+        <p class="merchant-copy__eyebrow">Italiensk takeaway</p>
+        <h1>Pizzeria Roma</h1>
+        <p>Italienske klassikere lavet med enkle råvarer, sprød bund og god tid i køkkenet.</p>
+        <ul class="merchant-meta" aria-label="Restaurantoplysninger">
+          <li>★ 4,7</li>
+          <li>Minimum 75 kr.</li>
+          <li>Levering 29 kr.</li>
+        </ul>
+      </div>
+    </div>
+  </header>
+
+  <section class="group-context" aria-labelledby="groupTitle">
+    <div class="group-context__icon" aria-hidden="true">P</div>
+    <div>
+      <strong id="groupTitle">PayNSync-gruppebetaling</strong>
+      <span id="groupLabel">Henter gruppeordre…</span>
+    </div>
+  </section>
+
+  <p class="configuration-error" id="configError" role="alert" hidden></p>
+  <p class="error-message" id="errorMessage" role="alert" hidden></p>
+
+  <div class="category-strip">
+    <nav class="category-nav" id="categoryNav" aria-label="Menukategorier"></nav>
   </div>
-</header>
 
-<main>
-  <div class="info-box" id="groupInfo">
-    <strong>📦 Gruppebetaling</strong>
-    <span id="groupLabel">Henter ordre-info...</span>
-  </div>
+  <main class="shop-layout" id="shopLayout">
+    <div id="menuContent"></div>
 
-  <div id="errorMsg"></div>
-  <div id="result">
-    <div class="check">⏳</div>
-    <h3>Reservation registreret</h3>
-    <p>Din bestilling er modtaget.<br>Beløbet reserveres, når alle har bestilt og værten godkender.</p>
-  </div>
+    <aside class="cart-panel" id="cartPanel" tabindex="-1" aria-labelledby="cartHeading">
+      <div class="cart-panel__header">
+        <h2 id="cartHeading">Din kurv</h2>
+        <span id="cartCount">0 varer</span>
+      </div>
 
-  <div id="menuSection">
-    <h2>🍕 Pizzaer</h2>
-    <div class="menu-item" onclick="toggle(this)">
-      <input type="checkbox" data-name="Margherita" data-price="89" />
-      <div class="emoji">🍕</div>
-      <div class="desc"><strong>Margherita</strong><span>Tomatsauce, mozzarella, basilikum</span></div>
-      <div class="price">89 kr</div>
-    </div>
-    <div class="menu-item" onclick="toggle(this)">
-      <input type="checkbox" data-name="Pepperoni" data-price="99" />
-      <div class="emoji">🍕</div>
-      <div class="desc"><strong>Pepperoni</strong><span>Tomatsauce, mozzarella, pepperoni</span></div>
-      <div class="price">99 kr</div>
-    </div>
-    <div class="menu-item" onclick="toggle(this)">
-      <input type="checkbox" data-name="Vegetariana" data-price="95" />
-      <div class="emoji">🥦</div>
-      <div class="desc"><strong>Vegetariana</strong><span>Grøntsager, pesto, mozzarella</span></div>
-      <div class="price">95 kr</div>
-    </div>
-    <div class="menu-item" onclick="toggle(this)">
-      <input type="checkbox" data-name="Quattro Stagioni" data-price="105" />
-      <div class="emoji">🍄</div>
-      <div class="desc"><strong>Quattro Stagioni</strong><span>Skinke, svampe, artiskok, oliven</span></div>
-      <div class="price">105 kr</div>
-    </div>
+      <div class="cart-empty" id="cartEmpty">
+        <span aria-hidden="true">🛍️</span>
+        <strong>Kurven er tom</strong>
+        <p>Vælg noget fra menuen for at komme i gang.</p>
+      </div>
+      <div class="cart-items" id="cartItems"></div>
 
-    <h2>🥤 Drikkevarer</h2>
-    <div class="menu-item" onclick="toggle(this)">
-      <input type="checkbox" data-name="Cola" data-price="25" />
-      <div class="emoji">🥤</div>
-      <div class="desc"><strong>Cola (50 cl)</strong><span>Iskold cola</span></div>
-      <div class="price">25 kr</div>
-    </div>
-    <div class="menu-item" onclick="toggle(this)">
-      <input type="checkbox" data-name="Vand" data-price="15" />
-      <div class="emoji">💧</div>
-      <div class="desc"><strong>Vand (50 cl)</strong><span>Stille eller brusende</span></div>
-      <div class="price">15 kr</div>
-    </div>
-    <div class="menu-item" onclick="toggle(this)">
-      <input type="checkbox" data-name="Øl" data-price="35" />
-      <div class="emoji">🍺</div>
-      <div class="desc"><strong>Øl (33 cl)</strong><span>Fadøl på flaske</span></div>
-      <div class="price">35 kr</div>
-    </div>
+      <div class="cart-summary">
+        <div class="cart-summary__total">
+          <span>I alt</span>
+          <strong id="cartTotal">0 kr.</strong>
+        </div>
+        <button class="paynsync-button" id="checkoutButton" type="button" disabled>
+          Fortsæt med PayNSync
+        </button>
+        <p class="payment-note">
+          Du sendes til MobilePay for at godkende reservationen. Beløbet trækkes først, når alle har bestilt, og værten godkender.
+        </p>
+      </div>
+    </aside>
+  </main>
 
-    <h2>🍰 Dessert</h2>
-    <div class="menu-item" onclick="toggle(this)">
-      <input type="checkbox" data-name="Tiramisu" data-price="55" />
-      <div class="emoji">🍰</div>
-      <div class="desc"><strong>Tiramisu</strong><span>Klassisk italiensk dessert</span></div>
-      <div class="price">55 kr</div>
-    </div>
-  </div>
-</main>
+  <section class="success-panel" id="successPanel" aria-live="polite" hidden>
+    <div class="success-panel__icon" aria-hidden="true">✓</div>
+    <h2>Din bestilling er registreret</h2>
+    <p>Ordren er gemt. PayNSync venter på resten af gruppen og værtens endelige godkendelse.</p>
+  </section>
 
-<div class="total-bar">
-  <div>
-    <div class="total-label">Valgt i alt</div>
-    <div class="total-amount" id="totalDisplay">0 kr</div>
-  </div>
-  <button id="payBtn" disabled onclick="submitOrder()">Bekræft ordre og reservér betaling</button>
-</div>
+  <button class="mobile-cart-button" id="mobileCartButton" type="button" hidden>
+    <span id="mobileCartCount">0</span>
+    <strong>Se kurv</strong>
+    <span id="mobileCartTotal">0 kr.</span>
+  </button>
 
-<div id="paymentExplanation" style="max-width:520px;margin:0 auto;padding:8px 16px 80px;font-size:0.82rem;color:#555;text-align:center;">
-  Du bliver sendt til MobilePay for at godkende en reservation.<br>
-  Beløbet trækkes først, når alle i gruppen har bestilt, og værten godkender den samlede ordre.
-</div>
+  <dialog class="product-dialog" id="productDialog" aria-labelledby="productTitle">
+    <form class="dialog-form" id="productForm">
+      <div class="dialog-hero">
+        <button class="dialog-close" type="button" data-close-dialog aria-label="Luk">×</button>
+        <span class="dialog-hero__emoji" id="productEmoji" aria-hidden="true"></span>
+        <div>
+          <h2 id="productTitle"></h2>
+          <p id="productDescription"></p>
+          <b id="productBasePrice"></b>
+        </div>
+      </div>
 
-<script>
-  // Læs query params: ?orderId=1&merchantId=7&participantToken=abc123&testPhoneNumber=63550321
-  const params = new URLSearchParams(window.location.search);
-  const orderId = parseInt(params.get('orderId')) || null;
-  const merchantId = parseInt(params.get('merchantId')) || null;
-  const participantToken = params.get('participantToken') || null;
+      <div class="dialog-content">
+        <h3>Tilpas din bestilling</h3>
+        <p>Tilvalg gemmes på denne ordrelinje.</p>
+        <div class="modifier-list" id="modifierList"></div>
+      </div>
 
-  // API base URL – vælg automatisk baseret på hostname
-  const hostname = window.location.hostname;
-  const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
-  const API_BASE = isLocal
-    ? 'https://localhost:7007'
-    : 'https://api.paynsync.dk';
+      <div class="dialog-actions">
+        <div class="quantity-control" aria-label="Antal">
+          <button type="button" data-modal-action="decrease" aria-label="Fjern én">−</button>
+          <span id="modalQuantity">1</span>
+          <button type="button" data-modal-action="increase" aria-label="Tilføj én">+</button>
+        </div>
+        <button class="add-button" id="addButton" type="submit">Tilføj</button>
+      </div>
+    </form>
+  </dialog>
 
-  document.getElementById('groupLabel').textContent =
-    orderId ? `Ordre #${orderId}` : 'Mangler orderId i URL (brug ?orderId=X&merchantId=Y&participantToken=Z)';
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  function toggle(row) {
-    const cb = row.querySelector('input[type=checkbox]');
-    if (event.target === cb) return; // lad checkboxen selv håndtere det
-    cb.checked = !cb.checked;
-    updateTotal();
-  }
-
-  document.querySelectorAll('input[type=checkbox]').forEach(cb => {
-    cb.addEventListener('change', updateTotal);
-  });
-
-  function updateTotal() {
-    let sum = 0;
-    document.querySelectorAll('input[type=checkbox]:checked').forEach(cb => {
-      sum += parseFloat(cb.dataset.price);
-    });
-    document.getElementById('totalDisplay').textContent = sum + ' kr';
-    document.getElementById('payBtn').disabled = sum === 0 || !orderId || !participantToken;
-  }
-
-  async function submitOrder() {
-    const selected = [];
-    document.querySelectorAll('input[type=checkbox]:checked').forEach((cb, i) => {
-      selected.push({
-        lineId: 'line-' + (i + 1),
-        name: cb.dataset.name,
-        quantity: 1,
-        unitPrice: parseFloat(cb.dataset.price),
-        lineTotal: parseFloat(cb.dataset.price)
-      });
-    });
-
-    const total = selected.reduce((s, l) => s + l.lineTotal, 0);
-    const testPhoneNumber = params.get('testPhoneNumber') || null;
-
-    const body = {
-      orderId: orderId,
-      merchantParticipantId: merchantId,
-      participantToken: participantToken || '',
-      merchantDraftReference: 'ROMA-' + Date.now(),
-      subtotalAmount: total,
-      totalAmount: total,
-      currency: 'DKK',
-      paymentMode: 'AuthorizeThenCapture',
-      expiresAtUtc: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-      lines: selected
-    };
-
-    if (testPhoneNumber) body.testPhoneNumber = testPhoneNumber;
-
-    document.getElementById('payBtn').disabled = true;
-    document.getElementById('payBtn').textContent = 'Sender...';
-    document.getElementById('errorMsg').style.display = 'none';
-
-    try {
-      const res = await fetch(`${API_BASE}/api/merchant-orders`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-
-      if (!res.ok) {
-        const err = await res.text();
-        throw new Error(err || res.statusText);
-      }
-
-      const result = await res.json();
-
-      if (result.paymentRedirectUrl) {
-        window.location.href = result.paymentRedirectUrl;
-        return;
-      }
-
-      // Ingen redirectUrl (fx Fake provider) — vis bekræftelse
-      document.getElementById('menuSection').style.display = 'none';
-      document.getElementById('result').style.display = 'block';
-      document.querySelector('.total-bar').style.display = 'none';
-      const expEl = document.getElementById('paymentExplanation');
-      if (expEl) expEl.style.display = 'none';
-    } catch (e) {
-      document.getElementById('errorMsg').textContent = '⚠️ Fejl: ' + e.message;
-      document.getElementById('errorMsg').style.display = 'block';
-      document.getElementById('payBtn').disabled = false;
-      document.getElementById('payBtn').textContent = 'Bekræft ordre og reservér betaling';
-    }
-  }
-</script>
-
+  <script type="module" src="./app.js"></script>
 </body>
 </html>

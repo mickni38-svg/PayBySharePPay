@@ -560,9 +560,11 @@ Hvis `Merchant.GroupOrderUrl` er null/tom, springes callback over. Det bør kun 
 
 ### Merchant Demo (Simply.com — `merchant.paynsync.dk`)
 
-- Enkelt `index.html` deployet som statisk site via FTP til `merchant.paynsync.dk`
+- Statisk HTML/CSS/JavaScript-app deployet via FTP til `merchant.paynsync.dk`.
+- `order-model.js` ejer det faste demo-katalog, prisberegning og draft-mapping; `app.js` ejer DOM, kurv og API-kald.
+- Produktets stabile ID sendes som `lineId`. Valgte tilvalg gemmes læsbart i linjenavnet og struktureret i `RawMerchantPayloadJson`.
 - Auto-detekterer API base URL fra `window.location.hostname`:
-  - `localhost` / `127.0.0.1` → `http://localhost:5071`
+  - `localhost` / `127.0.0.1` → `https://localhost:7007`
   - Andre → `https://api.paynsync.dk`
 
 ### CI/CD *(OPDATERET)*
