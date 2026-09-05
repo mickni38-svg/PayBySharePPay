@@ -1,61 +1,33 @@
-# Implementation plan — UC-20
+# Implementation Plan — UC-21 Merchant-adapter og ordre-API
 
-## Task
+## Scope
+Implementér én isoleret Square-inspireret merchant-adapter oven på UC-19's permanente final group order.
 
-- Use case: `docs/usecases/UC-20-realistisk-merchant-takeaway-demo.md`
-- Type: `NEW_USE_CASE`
-- Goal: Erstat den simple Pizzeria Roma-side med en realistisk takeaway-demo, som sender deltagerens draft til det eksisterende PayNSync-reservationsflow.
-- Approval: Product Owner har efter gennemlæsning bedt om implementering af UC-20.
+## Design
+1. Bevar `GroupOrderUrl` som menu-/bestillings-URL.
+2. Tilføj `MerchantOrderUrl` som separat destination for færdige merchant-ordrer.
+3. Bevar UC-19's permanente `MerchantOrder` som idempotent source of truth.
+4. Bevar strukturerede modifiers fra `RawMerchantPayloadJson` i den permanente merchant-ordre.
+5. Map `PayNSyncFinalGroupOrderDto` til ét Square-inspireret request-format.
+6. Send request via eksisterende merchant callback-boundary, men til `MerchantOrderUrl`.
+7. Gem merchantens rå svar og eksterne ordrenummer på `MerchantOrder`.
+8. Tilføj et Development-only simuleret merchant ordre-API med deterministisk idempotens.
+9. Opdater dokumentation og UC-status efter verificering.
 
-## Current state
+## Database impact
+Ny migration med nullable felter:
+- `Participant.MerchantOrderUrl`
+- `MerchantOrder.ExternalOrderNumber`
+- `MerchantOrder.ExternalResponseJson`
+- `MerchantOrderItem.ModifiersJson`
 
-- Merchant Demo er én statisk `index.html` med otte checkbox-produkter og inline CSS/JavaScript.
-- Siden kalder allerede `POST /api/merchant-orders` og følger `paymentRedirectUrl` til MobilePay/Vipps.
-- API-kontrakten understøtter normaliserede linjer og `RawMerchantPayloadJson`.
-- Der findes ingen produktmængder, tilvalg, rigtig kurv eller stabile katalog-id'er.
+Nullable felter bevarer bagudkompatibilitet for eksisterende rækker.
 
-## Scope and decisions
-
-- Behold Merchant Demo som en selvstændig statisk webapp; ingen ny Angular/.NET solution og ingen dependencies.
-- Tilføj et lokalt Pizzeria Roma-katalog med stabile kategori-, produkt- og tilvalgs-id'er.
-- Tilføj produktdialog, mængder, valgfrie tilvalg, særskilte kurvlinjer og summering.
-- Send produktets stabile ID som `lineId`; læsbare tilvalg medtages i linjenavnet, og strukturerede produkt-/tilvalgs-id'er gemmes i `rawMerchantPayloadJson`.
-- Bevar separate kurvlinjer ved forskellige tilvalg.
-- Generér én stabil merchant draft-reference pr. browsersession og gruppeordre, så retry ikke opfinder en ny reference.
-- PayNSync API er eneste integrationsgrænse. Demoen må ikke kalde Vipps/MobilePay eller en merchant-ordrekø.
-
-## Affected files
-
-- `src/Frontend.MerchantDemo/index.html`
-- `src/Frontend.MerchantDemo/styles.css`
-- `src/Frontend.MerchantDemo/order-model.js`
-- `src/Frontend.MerchantDemo/app.js`
-- `src/Frontend.MerchantDemo/app.test.js`
-- `src/Frontend.MerchantDemo/package.json`
-- `src/Frontend.MerchantDemo/package-lock.json`
-- UC-20/current-state dokumentation efter verification.
-
-## Risks
-
-| Risk | Mitigation |
-|---|---|
-| Tilvalg mistes i den nuværende API-linjemodel | Medtag dem læsbart i linjenavnet og struktureret i `rawMerchantPayloadJson` |
-| Dubletlinjer slås sammen | Hver konfiguration får sit eget line-instance-id og bevares separat |
-| Forkert total sendes til betaling | Brug én delt, testet beregningsfunktion til kurv og payload |
-| Reload/retry giver ny draft-reference | Gem reference i `sessionStorage` pr. order/token |
-| Demo frigiver ordre for tidligt | Ingen order-hub/callback-kald; kun eksisterende draft-endpoint |
-
-## Verification
-
-1. Kør Node unit tests uden eksterne services.
-2. Kør statisk syntax-check af browser-JavaScript.
-3. Gennemgå request-payload, redirect og fejlhåndtering.
-4. Gennemgå mobil/responsivt layout og accessibility-semantik.
-5. Opdatér UC-20 og berørt current-state efter grøn verification.
+## Security
+Det simulerede merchant API må kun registreres i Development. Ingen secrets eller betalingsreferencer sendes i adapter-payloaden.
 
 ## Out of scope
-
-- CMS eller databasebaseret produktkatalog.
-- Almindelig kortbetaling.
-- PayNSync Order Hub UI og merchant-statusflow.
-- Merchant-specifik adapter eller produktionsklart POS-format.
+- Produktionsintegration til Square/OrderYOYO/andre konkrete POS-systemer.
+- Flere adaptertyper.
+- Order Hub UI.
+- Retry/SLA ud over idempotens i denne use case.
