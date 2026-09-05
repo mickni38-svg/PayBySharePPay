@@ -78,6 +78,8 @@ namespace DataStorage.PayBySharePay.Migrations
                     b.Property<string>("DeliveryCity").HasColumnType("nvarchar(max)");
                     b.Property<string>("DeliveryCountry").HasColumnType("nvarchar(max)");
                     b.Property<string>("DeliveryPostalCode").HasColumnType("nvarchar(max)");
+                    b.Property<string>("ExternalOrderNumber").HasMaxLength(100).HasColumnType("nvarchar(100)");
+                    b.Property<string>("ExternalResponseJson").HasColumnType("nvarchar(max)");
                     b.Property<string>("HostName").IsRequired().HasColumnType("nvarchar(max)");
                     b.Property<string>("HostPhone").HasColumnType("nvarchar(max)");
                     b.Property<int>("MerchantParticipantId").HasColumnType("int");
@@ -99,6 +101,7 @@ namespace DataStorage.PayBySharePay.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
                     b.Property<decimal>("LineTotal").HasPrecision(18, 2).HasColumnType("decimal(18,2)");
                     b.Property<int>("MerchantOrderId").HasColumnType("int");
+                    b.Property<string>("ModifiersJson").HasColumnType("nvarchar(max)");
                     b.Property<string>("Name").IsRequired().HasColumnType("nvarchar(max)");
                     b.Property<int>("Quantity").HasColumnType("int");
                     b.Property<string>("Sku").HasColumnType("nvarchar(max)");
