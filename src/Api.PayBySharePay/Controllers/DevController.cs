@@ -58,7 +58,7 @@ public class DevController : ControllerBase
         merchantOrderUrl ??= $"{apiBaseUrl.TrimEnd('/')}/api/simulated-merchant/orders";
 
         var merchants = await _context.Participants
-            .Where(p => p.Type == ParticipantType.Merchant && (force || p.GroupOrderUrl == null))
+            .Where(p => p.Type == ParticipantType.Merchant && (force || p.GroupOrderUrl == null || p.MerchantOrderUrl == null))
             .ToListAsync();
 
         foreach (var m in merchants)
