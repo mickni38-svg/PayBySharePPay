@@ -51,19 +51,24 @@ public class DevController : ControllerBase
     /// </summary>
     [HttpPost("seed-merchant-urls")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> SeedMerchantUrls([FromQuery] string? merchantDemoUrl = null, [FromQuery] bool force = false)
+    public async Task<IActionResult> SeedMerchantUrls([FromQuery] string? merchantDemoUrl = null, [FromQuery] string? merchantOrderUrl = null, [FromQuery] bool force = false)
     {
         merchantDemoUrl ??= _configuration["AppSettings:MerchantDemoUrl"] ?? "https://merchant.paynsync.dk/";
+        var apiBaseUrl = _configuration["AppSettings:ApiBaseUrl"] ?? "https://localhost:7007";
+        merchantOrderUrl ??= $"{apiBaseUrl.TrimEnd('/')}/api/simulated-merchant/orders";
 
         var merchants = await _context.Participants
             .Where(p => p.Type == ParticipantType.Merchant && (force || p.GroupOrderUrl == null))
             .ToListAsync();
 
         foreach (var m in merchants)
+        {
             m.GroupOrderUrl = merchantDemoUrl;
+            m.MerchantOrderUrl = merchantOrderUrl;
+        }
 
         await _context.SaveChangesAsync();
-        return Ok(new { updated = merchants.Count, url = merchantDemoUrl });
+        return Ok(new { updated = merchants.Count, menuUrl = merchantDemoUrl, orderUrl = merchantOrderUrl });
     }
 
     /// <summary>
