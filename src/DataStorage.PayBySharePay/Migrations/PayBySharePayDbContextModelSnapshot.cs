@@ -78,8 +78,12 @@ namespace DataStorage.PayBySharePay.Migrations
                     b.Property<string>("DeliveryCity").HasColumnType("nvarchar(max)");
                     b.Property<string>("DeliveryCountry").HasColumnType("nvarchar(max)");
                     b.Property<string>("DeliveryPostalCode").HasColumnType("nvarchar(max)");
+                    b.Property<string>("ExternalOrderNumber").HasMaxLength(100).HasColumnType("nvarchar(100)");
+                    b.Property<string>("ExternalResponseJson").HasColumnType("nvarchar(max)");
                     b.Property<string>("HostName").IsRequired().HasColumnType("nvarchar(max)");
                     b.Property<string>("HostPhone").HasColumnType("nvarchar(max)");
+                    b.Property<string>("ExternalOrderNumber").HasMaxLength(100).HasColumnType("nvarchar(100)");
+                    b.Property<string>("ExternalResponseJson").HasColumnType("nvarchar(max)");
                     b.Property<int>("MerchantParticipantId").HasColumnType("int");
                     b.Property<DateTime>("PaidAtUtc").HasColumnType("datetime2");
                     b.Property<string>("PaymentStatus").IsRequired().HasMaxLength(30).HasColumnType("nvarchar(30)");
@@ -98,7 +102,9 @@ namespace DataStorage.PayBySharePay.Migrations
                     b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int");
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
                     b.Property<decimal>("LineTotal").HasPrecision(18, 2).HasColumnType("decimal(18,2)");
+                    b.Property<string>("ModifiersJson").HasColumnType("nvarchar(max)");
                     b.Property<int>("MerchantOrderId").HasColumnType("int");
+                    b.Property<string>("ModifiersJson").HasColumnType("nvarchar(max)");
                     b.Property<string>("Name").IsRequired().HasColumnType("nvarchar(max)");
                     b.Property<int>("Quantity").HasColumnType("int");
                     b.Property<string>("Sku").HasColumnType("nvarchar(max)");
@@ -192,10 +198,12 @@ namespace DataStorage.PayBySharePay.Migrations
                     b.Property<string>("CvrNumber").HasColumnType("nvarchar(max)");
                     b.Property<string>("Email").HasColumnType("nvarchar(max)");
                     b.Property<string>("GroupOrderUrl").HasColumnType("nvarchar(max)");
+                    b.Property<string>("MerchantOrderUrl").HasColumnType("nvarchar(max)");
                     b.Property<string>("LogoContentType").HasColumnType("nvarchar(max)");
                     b.Property<string>("LogoFileName").HasColumnType("nvarchar(max)");
                     b.Property<byte[]>("LogoImageData").HasColumnType("varbinary(max)");
                     b.Property<DateTime?>("LogoUpdatedAtUtc").HasColumnType("datetime2");
+                    b.Property<string>("MerchantOrderUrl").HasColumnType("nvarchar(max)");
                     b.Property<string>("Name").IsRequired().HasColumnType("nvarchar(max)");
                     b.Property<string>("PasswordHash").HasColumnType("nvarchar(max)");
                     b.Property<string>("PaymentProvider").HasColumnType("nvarchar(max)");

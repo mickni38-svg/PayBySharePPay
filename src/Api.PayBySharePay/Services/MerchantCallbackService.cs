@@ -12,9 +12,10 @@ namespace Api.PayBySharePay.Services;
 public sealed class MerchantCallbackService(
     IHttpClientFactory httpClientFactory,
     ILastMerchantCallbackStore callbackStore,
+    ISquareInspiredMerchantOrderAdapter adapter,
     ILogger<MerchantCallbackService> logger) : IMerchantCallbackService
 {
-    public async Task SendGroupOrderPaidAsync(
+    public async Task<MerchantOrderDeliveryResultDto> SendGroupOrderPaidAsync(
         PayNSyncFinalGroupOrderDto payload,
         string? callbackUrl,
         CancellationToken cancellationToken = default)
@@ -27,28 +28,36 @@ public sealed class MerchantCallbackService(
             logger.LogInformation(
                 "[MerchantCallback] No callback URL for Order {OrderId} — payload stored for dev inspection, skipping HTTP POST",
                 payload.PaynsyncOrderId);
-            return;
+            return new MerchantOrderDeliveryResultDto(false, null, null, "MerchantOrderUrl er ikke konfigureret.");
         }
 
         try
         {
+            var request = adapter.Map(payload);
             var client = httpClientFactory.CreateClient("MerchantCallback");
-            var response = await client.PostAsJsonAsync(callbackUrl, payload, cancellationToken);
+            var response = await client.PostAsJsonAsync(callbackUrl, request, cancellationToken);
+            var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+            SquareInspiredMerchantOrderResponse? merchantResponse = null;
+            try
+            {
+                merchantResponse = System.Text.Json.JsonSerializer.Deserialize<SquareInspiredMerchantOrderResponse>(responseBody,
+                    new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            }
+            catch (System.Text.Json.JsonException) { }
 
             if (response.IsSuccessStatusCode)
-                logger.LogInformation(
-                    "[MerchantCallback] GroupOrderPaid sent OK for Order {OrderId} → {Url}",
-                    payload.PaynsyncOrderId, callbackUrl);
-            else
-                logger.LogWarning(
-                    "[MerchantCallback] Non-2xx {Status} for Order {OrderId} → {Url}",
-                    (int)response.StatusCode, payload.PaynsyncOrderId, callbackUrl);
+            {
+                logger.LogInformation("[MerchantCallback] Merchant order sent OK for Order {OrderId} → {Url}", payload.PaynsyncOrderId, callbackUrl);
+                return new MerchantOrderDeliveryResultDto(true, merchantResponse?.OrderId, responseBody);
+            }
+
+            logger.LogWarning("[MerchantCallback] Non-2xx {Status} for Order {OrderId} → {Url}", (int)response.StatusCode, payload.PaynsyncOrderId, callbackUrl);
+            return new MerchantOrderDeliveryResultDto(false, null, responseBody, $"HTTP {(int)response.StatusCode}");
         }
         catch (Exception ex)
         {
-            logger.LogError(ex,
-                "[MerchantCallback] Exception sending GroupOrderPaid for Order {OrderId} → {Url}",
-                payload.PaynsyncOrderId, callbackUrl);
+            logger.LogError(ex, "[MerchantCallback] Exception sending merchant order for Order {OrderId} → {Url}", payload.PaynsyncOrderId, callbackUrl);
+            return new MerchantOrderDeliveryResultDto(false, null, null, ex.Message);
         }
     }
 }

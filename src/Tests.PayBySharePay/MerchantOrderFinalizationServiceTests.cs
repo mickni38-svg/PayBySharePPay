@@ -59,6 +59,9 @@ public sealed class MerchantOrderFinalizationServiceTests
         saved.Items.Should().HaveCount(3);
 
         result.Lines.Should().HaveCount(3);
+        result.Lines[0].Modifiers.Should().ContainSingle();
+        result.Lines[0].Modifiers[0].Id.Should().Be("extra-cheese");
+        result.Lines[0].Modifiers[0].Name.Should().Be("Ekstra ost");
         result.TotalAmount.Should().Be(210m);
         result.Host.Name.Should().Be("Michael");
         result.Host.Phone.Should().Be("20112233");
@@ -202,6 +205,66 @@ public sealed class MerchantOrderFinalizationServiceTests
             .Should().Equal("pizza-extra-cheese", "pizza-no-cheese");
     }
 
+
+    [Fact]
+    public async Task EnsureFinalized_Preserves_Structured_Modifiers_From_Raw_Merchant_Payload()
+    {
+        var repository = new FakeMerchantOrderRepository();
+        var sut = new MerchantOrderFinalizationService(repository);
+        var (order, payments) = CreatePaidOrder();
+        var draft = order.MerchantOrderDrafts.First();
+        draft.RawMerchantPayloadJson = """
+        {"items":[
+          {"productId":"pizza","quantity":1,"unitPrice":90,"lineTotal":90,
+           "modifiers":[{"id":"extra-cheese","name":"Ekstra ost","price":15}]},
+          {"productId":"cola","quantity":1,"unitPrice":30,"lineTotal":30,"modifiers":[]}
+        ]}
+        """;
+
+        var result = await sut.EnsureFinalizedAsync(order, payments, DateTime.UtcNow);
+
+        result.Lines[0].Modifiers.Should().ContainSingle();
+        result.Lines[0].Modifiers[0].Id.Should().Be("extra-cheese");
+        result.Lines[0].Modifiers[0].Name.Should().Be("Ekstra ost");
+        repository.Orders.Single().Items.First().ModifiersJson.Should().Contain("extra-cheese");
+    }
+
+    [Fact]
+    public async Task RecordExternalDelivery_Persists_Result_And_Does_Not_Overwrite_External_Order()
+    {
+        var repository = new FakeMerchantOrderRepository();
+        var sut = new MerchantOrderFinalizationService(repository);
+        var (order, payments) = CreatePaidOrder();
+        await sut.EnsureFinalizedAsync(order, payments, DateTime.UtcNow);
+
+        await sut.RecordExternalDeliveryAsync(42,
+            new Service.PayBySharePay.DTOs.MerchantOrderDeliveryResultDto(true, "EXT-1", "{\"orderId\":\"EXT-1\"}"));
+        await sut.RecordExternalDeliveryAsync(42,
+            new Service.PayBySharePay.DTOs.MerchantOrderDeliveryResultDto(true, "EXT-2", "{\"orderId\":\"EXT-2\"}"));
+
+        var saved = repository.Orders.Single();
+        saved.ExternalOrderNumber.Should().Be("EXT-1");
+        saved.ExternalResponseJson.Should().Contain("EXT-1");
+    }
+
+    [Fact]
+    public async Task RecordExternalDelivery_Persists_Response_And_External_Order_Number_Idempotently()
+    {
+        var repository = new FakeMerchantOrderRepository();
+        var sut = new MerchantOrderFinalizationService(repository);
+        var (order, payments) = CreatePaidOrder();
+        await sut.EnsureFinalizedAsync(order, payments, DateTime.UtcNow);
+
+        await sut.RecordExternalDeliveryAsync(order.Id,
+            new Service.PayBySharePay.DTOs.MerchantOrderDeliveryResultDto(true, "EXT-123", "{\"orderId\":\"EXT-123\"}"));
+        await sut.RecordExternalDeliveryAsync(order.Id,
+            new Service.PayBySharePay.DTOs.MerchantOrderDeliveryResultDto(true, "EXT-999", "{\"orderId\":\"EXT-999\"}"));
+
+        var saved = repository.Orders.Single();
+        saved.ExternalOrderNumber.Should().Be("EXT-123");
+        saved.ExternalResponseJson.Should().Be("{\"orderId\":\"EXT-123\"}");
+    }
+
     private static (Order Order, List<ParticipantPayment> Payments) CreatePaidOrder()
     {
         var host = new Participant
@@ -249,6 +312,12 @@ public sealed class MerchantOrderFinalizationServiceTests
                     MerchantParticipantId = merchant.Id,
                     TotalAmount = 120m,
                     Currency = "DKK",
+                    RawMerchantPayloadJson = """
+                    {"items":[
+                      {"productId":"pizza","quantity":1,"unitPrice":90,"lineTotal":90,"modifiers":[{"id":"extra-cheese","name":"Ekstra ost","price":15}]},
+                      {"productId":"cola","quantity":1,"unitPrice":30,"lineTotal":30,"modifiers":[]}
+                    ]}
+                    """,
                     Lines =
                     [
                         new MerchantOrderLine { LineId = "pizza", Name = "Pizza", Quantity = 1, UnitPrice = 90m, LineTotal = 90m },

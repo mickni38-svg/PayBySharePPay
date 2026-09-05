@@ -118,9 +118,9 @@ public class GroupPaymentOrchestrationServiceTests
 
     private sealed class NoOpMerchantCallbackService : IMerchantCallbackService
     {
-        public Task SendGroupOrderPaidAsync(PayNSyncFinalGroupOrderDto payload, string? callbackUrl,
+        public Task<MerchantOrderDeliveryResultDto> SendGroupOrderPaidAsync(PayNSyncFinalGroupOrderDto payload, string? callbackUrl,
             CancellationToken cancellationToken = default)
-            => Task.CompletedTask;
+            => Task.FromResult(new MerchantOrderDeliveryResultDto(true, $"SIM-{payload.PaynsyncOrderNumber}", "{}"));
     }
 
     private sealed class TrackingMerchantCallbackService : IMerchantCallbackService
@@ -128,12 +128,12 @@ public class GroupPaymentOrchestrationServiceTests
         public int CallCount { get; private set; }
         public PayNSyncFinalGroupOrderDto? LastPayload { get; private set; }
 
-        public Task SendGroupOrderPaidAsync(PayNSyncFinalGroupOrderDto payload, string? callbackUrl,
+        public Task<MerchantOrderDeliveryResultDto> SendGroupOrderPaidAsync(PayNSyncFinalGroupOrderDto payload, string? callbackUrl,
             CancellationToken cancellationToken = default)
         {
             CallCount++;
             LastPayload = payload;
-            return Task.CompletedTask;
+            return Task.FromResult(new MerchantOrderDeliveryResultDto(true, $"SIM-{payload.PaynsyncOrderNumber}", "{}"));
         }
     }
 
@@ -177,6 +177,9 @@ public class GroupPaymentOrchestrationServiceTests
                 }).ToList()
             });
         }
+
+        public Task RecordExternalDeliveryAsync(int sourceOrderId, MerchantOrderDeliveryResultDto result,
+            CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
     private sealed class RejectingMerchantOrderFinalizationService : IMerchantOrderFinalizationService
@@ -193,6 +196,9 @@ public class GroupPaymentOrchestrationServiceTests
             DateTime paidAtUtc,
             CancellationToken cancellationToken = default)
             => throw new InvalidOperationException("Finalisering må ikke kaldes.");
+
+        public Task RecordExternalDeliveryAsync(int sourceOrderId, MerchantOrderDeliveryResultDto result,
+            CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
     private FakeParticipantPaymentRepository _paymentRepo = new();

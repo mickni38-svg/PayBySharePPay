@@ -15,4 +15,9 @@ public interface IMerchantOrderFinalizationService
         IReadOnlyCollection<ParticipantPayment> payments,
         DateTime paidAtUtc,
         CancellationToken cancellationToken = default);
+
+    Task RecordExternalDeliveryAsync(
+        int sourceOrderId,
+        MerchantOrderDeliveryResultDto result,
+        CancellationToken cancellationToken = default);
 }

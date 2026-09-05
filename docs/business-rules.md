@@ -127,6 +127,8 @@ Merchant-knappen bør derfor ikke hedde `Betal`. Den bør hedde fx `Bekræft min
 - Hvis merchant er tilknyttet, genereres et personligt bestillingslink til **alle** `OrderParticipants` (inkl. host):  
   `{merchant.GroupOrderUrl ?? MerchantDemoUrl}?orderId={id}&merchantId={mid}&participantToken={token}`
 - Disse links sendes som `Message`-records til hver deltager.
+- `GroupOrderUrl` er kun den kundevendte menu-/bestillingsadresse. Den må ikke genbruges som final ordreleverings-endpoint.
+- Færdige merchant-ordrer leveres til `MerchantOrderUrl` gennem den valgte merchant-adapter/destination.
 - Hvis ingen merchant er valgt, sendes en generel invitationstekst kun til **inviterede** (ikke host).
 
 ### Ordre-statusmaskine

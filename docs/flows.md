@@ -288,7 +288,9 @@ Response: { success, orderStatus, cancelledCount, skippedCount, errors[] }
 					└─► POST /api/orders/{id}/approve
 						  │
 						  ├─► Captures all reserved payments
-						  └─► Sends merchant callback (paid notification)
+						  ├─► Finalizes one permanent privacy-safe MerchantOrder
+						  ├─► Maps it through the configured merchant adapter
+						  └─► POSTs final order to merchant.MerchantOrderUrl and stores external order id/response
 ```
 
 ---

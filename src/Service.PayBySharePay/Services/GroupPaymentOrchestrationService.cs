@@ -194,12 +194,19 @@ public sealed class GroupPaymentOrchestrationService(
         {
             logger.LogInformation("[Orchestration] Idempotent: Order {OrderId} already Paid", orderId);
 
-            await merchantOrderFinalizationService.EnsureFinalizedAsync(
+            var finalized = await merchantOrderFinalizationService.EnsureFinalizedAsync(
                 order,
                 payments,
                 payments.Where(payment => payment.Status == ParticipantPaymentStatus.Captured)
                     .Max(payment => payment.CapturedAtUtc) ?? DateTime.UtcNow,
                 cancellationToken);
+
+            if (string.IsNullOrWhiteSpace(finalized.ExternalOrderNumber))
+            {
+                var delivery = await merchantCallbackService.SendGroupOrderPaidAsync(
+                    finalized, order.MerchantParticipant?.MerchantOrderUrl, cancellationToken);
+                await merchantOrderFinalizationService.RecordExternalDeliveryAsync(orderId, delivery, cancellationToken);
+            }
 
             return new ApproveAndCaptureResult
             {
@@ -360,10 +367,11 @@ public sealed class GroupPaymentOrchestrationService(
 
             try
             {
-                await merchantCallbackService.SendGroupOrderPaidAsync(
+                var delivery = await merchantCallbackService.SendGroupOrderPaidAsync(
                     finalMerchantOrder,
-                    order.MerchantParticipant?.GroupOrderUrl,
+                    order.MerchantParticipant?.MerchantOrderUrl,
                     cancellationToken);
+                await merchantOrderFinalizationService.RecordExternalDeliveryAsync(orderId, delivery, cancellationToken);
             }
             catch (Exception ex)
             {

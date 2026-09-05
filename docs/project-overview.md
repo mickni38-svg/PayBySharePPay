@@ -39,8 +39,9 @@ Koden afspejler to primære aktørtyper:
 
 **Merchants (Merchant)**
 - Restauranter og spisestedet der ønsker at tilbyde gruppebetaling
-- Registreres i systemet med CVR, firmanavn, betalingsreference og en `GroupOrderUrl` (link til egen bestillingsside)
-- Modtager en HTTP callback når alle betalinger er gennemført
+- Registreres i systemet med CVR, firmanavn, betalingsreference og en `GroupOrderUrl` (kundevendt bestillingsside)
+- Kan have en separat `MerchantOrderUrl` til modtagelse af den færdige ordre
+- PayNSync kan mappe final group order gennem en merchant-adapter før levering til merchantens eksisterende system
 
 Der er desuden en demo-merchant (Pizzeria Roma) indbygget i løsningen til test og demonstration.
 
