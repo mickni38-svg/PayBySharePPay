@@ -351,7 +351,7 @@ Konfigurationsnøgle: `Google:ClientId` — skal sættes i `appsettings.json` / 
 Opretter `Payment`-record og sender host-notifikation. Bruges af det gamle manuelle betalingsflow.
 
 **`MerchantCallbackService`** (implementeret i Api-laget)  
-Sender HTTP POST til merchant's `GroupOrderUrl` når alle betalinger er captured. Fejl stopper ikke flowet.
+Efter full capture mapper `SquareInspiredMerchantOrderAdapter` den permanente final group order til merchant-format og sender HTTP POST til merchantens separate `MerchantOrderUrl`. `GroupOrderUrl` forbliver kundens menu-/bestillings-URL. Merchantens svar og eksterne ordrenummer gemmes på `MerchantOrder`. Leveringsfejl ruller ikke betalingerne tilbage.
 
 ---
 
@@ -420,6 +420,7 @@ Hvert entity har sit eget `IXxxRepository`-interface og en `XxxRepository`-imple
 | `AddMerchantVippsCredentials` | 2026-06-28 | `Participant.VippsClientId/ClientSecret/SubscriptionKey` — *(NYT)* |
 | `AddParticipantExternalLogin` | 2026-07-03 | Ny tabel `ParticipantExternalLogins` til OAuth-logins (Google) — *(NYT)* |
 | `AddVippsTestUserId` | 2026-07-03 | `Participant.VippsTestUserId` (self-ref FK til sandbox test-user) — *(NYT)* |
+| `AddMerchantAdapterDelivery` | 2026-09-05 | `Participant.MerchantOrderUrl`, ekstern ordre-reference/svar og strukturerede modifiers på final merchant order |
 
 ---
 
@@ -550,116 +551,31 @@ Telefonnummeret må kun bruges ved oprettelse/start af payment i testflowet. Cap
 
 ### PayNSync Merchant Integration Contract v1
 
-PayNSync v1 bruger én standardiseret **Group Order Contract** til merchant-integration. PayNSync forsøger ikke i v1 at tilpasse callback-payloads til hver merchants interne ordre-/POS-format.
+PayNSync har en privacy-safe, standardiseret final order (`PayNSyncFinalGroupOrderDto`) som intern kontrakt mellem Group Payment og downstream order destinations.
 
-Arkitekturprincip:
+UC-21 implementerer den første konkrete adapter:
 
-```
-Merchant draft JSON
-  → MerchantOrderService validerer ParticipantToken
-  → PayNSync gemmer normaliserede MerchantOrderDraft + MerchantOrderLine
-  → PayNSync gemmer evt. RawMerchantPayloadJson til audit/debug/fremtidige adapters
-  → PayNSync reserverer deltagerbetaling hos Vipps/MobilePay
-  → Når alle betalinger er Captured
-  → PayNSync bygger PayNSyncFinalGroupOrderDto
-  → GenericMerchantWebhookSender sender standard JSON til Merchant.GroupOrderUrl
-```
-
-V1-regel:
-
-> **Merchant mapper PayNSyncs standard JSON til sit eget ordre-/POS-system. Merchant-specific adapters er ikke en del af v1.**
-
-Foreslåede komponenter/DTOs:
-
-| Komponent | Ansvar |
-|-----------|--------|
-| `PayNSyncFinalGroupOrderDto` | Standardiseret final group order payload |
-| `PayNSyncFinalParticipantOrderDto` | Deltagergrupperet ordre med beløb, status og linjer |
-| `PayNSyncFinalOrderLineDto` | Normaliseret ordrelinje med sku/navn/quantity/pris |
-| `IMerchantOrderSender` | Interface for afsendelse af final group order |
-| `GenericMerchantWebhookSender` | V1-implementering der sender PayNSync-standard JSON til `Merchant.GroupOrderUrl` |
-| `RawMerchantPayloadJson` | Valgfrit felt på draft til at gemme merchantens originale JSON |
-
-Senere kan der tilføjes adapters uden at ændre kerneflowet:
-
-```
+```text
 PayNSyncFinalGroupOrderDto
-  → SticksSushiMerchantAdapter
-  → GasolineGrillMerchantAdapter
-  → RestaurantPosAdapter
+  → SquareInspiredMerchantOrderAdapter
+  → SquareInspiredMerchantOrderRequest
+  → POST Merchant.MerchantOrderUrl
+  → merchant response
+  → MerchantOrder.ExternalOrderNumber + ExternalResponseJson
 ```
 
-### Merchant callback / final group order (udgående)
+URL-ansvar er adskilt:
 
-Efter alle deltagerbetalinger er captured sender `MerchantCallbackService` / `IMerchantOrderSender` én HTTP POST til `Merchant.GroupOrderUrl`.
+- `Merchant.GroupOrderUrl` = kundevendt menu-/bestillingsside, som deltagerens personlige GroupOrder-link peger på.
+- `Merchant.MerchantOrderUrl` = backend-endpoint til den færdige merchant-ordre efter successful capture.
 
-Callbacken er **ikke** en almindelig statusbesked. Den er merchantens endelige ordreaccept og indeholder den samlede gruppeordre. Merchant må først lave/frigive ordren efter denne payload er modtaget med `status: "Paid"`.
+Adapteren mapper produkter, priser, strukturerede tilvalg, host-contact snapshot og levering. Beløb sendes som minor units. Participant-identitet og betalingsprovider-referencer må ikke sendes til merchantens ordresystem.
 
-Eksempel på v1-standardpayload:
+Den simulerede endpoint `POST /api/simulated-merchant/orders` findes kun i Development og returnerer deterministisk samme eksterne ordre for samme idempotency key. Det er et test-/proof-of-integration endpoint, ikke en produktionsintegration til Square.
 
-```json
-{
-  "eventType": "GroupOrderPaid",
-  "paynsyncOrderId": 123,
-  "merchantId": 45,
-  "status": "Paid",
-  "currency": "DKK",
-  "totalAmount": 481.00,
-  "paidAtUtc": "2026-06-28T12:45:00Z",
-  "participants": [
-    {
-      "participantId": 7,
-      "displayName": "Michael",
-      "amount": 168.00,
-      "paymentStatus": "Captured",
-      "merchantDraftId": "draft-789",
-      "lines": [
-        {
-          "sku": "burger-01",
-          "name": "Burger",
-          "quantity": 1,
-          "unitPrice": 139.00,
-          "lineTotal": 139.00
-        },
-        {
-          "sku": "cola-01",
-          "name": "Cola",
-          "quantity": 1,
-          "unitPrice": 29.00,
-          "lineTotal": 29.00
-        }
-      ]
-    },
-    {
-      "participantId": 8,
-      "displayName": "Anna",
-      "amount": 224.00,
-      "paymentStatus": "Captured",
-      "merchantDraftId": "draft-790",
-      "lines": [
-        {
-          "sku": "pizza-01",
-          "name": "Pizza",
-          "quantity": 1,
-          "unitPrice": 189.00,
-          "lineTotal": 189.00
-        },
-        {
-          "sku": "water-01",
-          "name": "Danskvand",
-          "quantity": 1,
-          "unitPrice": 35.00,
-          "lineTotal": 35.00
-        }
-      ]
-    }
-  ]
-}
-```
+Eksisterende `MerchantOrder.SourceOrderId` er unik, og et allerede gemt `ExternalOrderNumber` overskrives ikke. Samme PayNSync-ordre må derfor ikke skabe flere eksterne merchant-ordrer via normal retry.
 
-Fejl i merchant-callback stopper ikke capture-flowet, fordi betalingerne allerede er gennemført. Fejl skal dog logges tydeligt og kunne vises i drift/support, da merchant ellers ikke får ordren automatisk.
-
-Hvis `Merchant.GroupOrderUrl` er null/tom, springes callback over. Det bør kun være tilladt i dev/test eller for merchants uden aktiv integration.
+Senere adapters (fx OrderYOYO/POS) skal implementeres ved denne boundary uden ændringer i Group Payment-kernen.
 
 ---
 
