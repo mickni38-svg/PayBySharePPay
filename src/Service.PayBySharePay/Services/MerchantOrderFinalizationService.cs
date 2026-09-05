@@ -215,16 +215,28 @@ public sealed class MerchantOrderFinalizationService(
     private static IEnumerable<SourceLineSnapshot> BuildSourceLineSnapshots(MerchantOrderDraft draft)
     {
         var rawItems = ParseRawItems(draft.RawMerchantPayloadJson);
-        var lines = draft.Lines.ToList();
 
-        for (var index = 0; index < lines.Count; index++)
+        foreach (var line in draft.Lines)
         {
-            var modifiers = index < rawItems.Count ? rawItems[index] : [];
-            yield return new SourceLineSnapshot(lines[index], modifiers);
+            var matchIndex = rawItems.FindIndex(item =>
+                string.Equals(item.ProductId, line.LineId, StringComparison.Ordinal)
+                && item.Quantity == line.Quantity
+                && item.UnitPrice == line.UnitPrice
+                && item.LineTotal == line.LineTotal);
+
+            if (matchIndex < 0)
+            {
+                yield return new SourceLineSnapshot(line, []);
+                continue;
+            }
+
+            var match = rawItems[matchIndex];
+            rawItems.RemoveAt(matchIndex);
+            yield return new SourceLineSnapshot(line, match.Modifiers);
         }
     }
 
-    private static List<List<PayNSyncFinalModifierDto>> ParseRawItems(string? rawJson)
+    private static List<RawItemSnapshot> ParseRawItems(string? rawJson)
     {
         if (string.IsNullOrWhiteSpace(rawJson))
             return [];
@@ -237,15 +249,22 @@ public sealed class MerchantOrderFinalizationService(
 
             return items.EnumerateArray().Select(item =>
             {
-                if (!item.TryGetProperty("modifiers", out var modifiers) || modifiers.ValueKind != JsonValueKind.Array)
-                    return new List<PayNSyncFinalModifierDto>();
+                var modifiers = item.TryGetProperty("modifiers", out var modifierArray)
+                    && modifierArray.ValueKind == JsonValueKind.Array
+                    ? modifierArray.EnumerateArray().Select(modifier => new PayNSyncFinalModifierDto
+                    {
+                        Id = modifier.TryGetProperty("id", out var id) ? id.GetString() : null,
+                        Name = modifier.TryGetProperty("name", out var name) ? name.GetString() ?? string.Empty : string.Empty,
+                        Price = modifier.TryGetProperty("price", out var price) && price.TryGetDecimal(out var value) ? value : 0m
+                    }).ToList()
+                    : [];
 
-                return modifiers.EnumerateArray().Select(modifier => new PayNSyncFinalModifierDto
-                {
-                    Id = modifier.TryGetProperty("id", out var id) ? id.GetString() : null,
-                    Name = modifier.TryGetProperty("name", out var name) ? name.GetString() ?? string.Empty : string.Empty,
-                    Price = modifier.TryGetProperty("price", out var price) && price.TryGetDecimal(out var value) ? value : 0m
-                }).ToList();
+                return new RawItemSnapshot(
+                    item.TryGetProperty("productId", out var productId) ? productId.GetString() : null,
+                    item.TryGetProperty("quantity", out var quantity) && quantity.TryGetInt32(out var q) ? q : 0,
+                    item.TryGetProperty("unitPrice", out var unitPrice) && unitPrice.TryGetDecimal(out var up) ? up : 0m,
+                    item.TryGetProperty("lineTotal", out var lineTotal) && lineTotal.TryGetDecimal(out var lt) ? lt : 0m,
+                    modifiers);
             }).ToList();
         }
         catch (JsonException)
@@ -283,5 +302,12 @@ public sealed class MerchantOrderFinalizationService(
 
     private sealed record SourceLineSnapshot(
         MerchantOrderLine Line,
+        List<PayNSyncFinalModifierDto> Modifiers);
+
+    private sealed record RawItemSnapshot(
+        string? ProductId,
+        int Quantity,
+        decimal UnitPrice,
+        decimal LineTotal,
         List<PayNSyncFinalModifierDto> Modifiers);
 }
