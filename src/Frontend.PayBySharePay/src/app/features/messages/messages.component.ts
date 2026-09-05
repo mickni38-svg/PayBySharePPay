@@ -9,6 +9,8 @@ import { OrderService } from '../../core/services/order.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Message } from '../../core/models/message.model';
 import { OrderOverviewApiDto } from '../../core/models/order.model';
+import { getStaticMerchantLogoUrlByDisplayName } from '../../core/utils/merchant-logo';
+import { environment } from '../../../environments/environment';
 
 export type MessageFilter = 'alle' | 'bestillinger' | 'beskeder';
 
@@ -89,23 +91,36 @@ export class MessagesComponent implements OnInit, OnDestroy {
   }
 
   onCardClick(msg: Message): void {
-    if (!msg.isRead) {
-      this.messageService.markRead(msg.id).subscribe({
-        next: () => {
-          this.messages.update(list =>
-            list.map(m => m.id === msg.id ? { ...m, isRead: true } : m)
-          );
-          const current = this.messageService.unreadCount();
-          if (current > 0) this.messageService.unreadCount.set(current - 1);
-        }
-      });
+    const navigate = () => {
+      const merchantUrl = this.merchantOrderUrl(msg);
+      if (merchantUrl) {
+        window.location.assign(merchantUrl);
+        return;
+      }
+
+      const url = this.extractUrl(msg.content);
+      const path = url ? this.internalPath(url) : null;
+      if (path) {
+        void this.router.navigateByUrl(path);
+      }
+    };
+
+    if (msg.isRead) {
+      navigate();
+      return;
     }
 
-    const url = this.extractUrl(msg.content);
-    const path = url ? this.internalPath(url) : null;
-    if (path) {
-      void this.router.navigateByUrl(path);
-    }
+    this.messageService.markRead(msg.id).subscribe({
+      next: () => {
+        this.messages.update(list =>
+          list.map(m => m.id === msg.id ? { ...m, isRead: true } : m)
+        );
+        const current = this.messageService.unreadCount();
+        if (current > 0) this.messageService.unreadCount.set(current - 1);
+        navigate();
+      },
+      error: navigate
+    });
   }
 
   extractUrl(content: string): string | null {
@@ -134,7 +149,17 @@ export class MessagesComponent implements OnInit, OnDestroy {
   }
 
   merchantLogoUrl(msg: Message): string | null {
-    return this.orderDetails()[msg.orderId]?.merchantLogoUrl ?? null;
+    const detail = this.orderDetails()[msg.orderId];
+    if (!detail) return null;
+
+    const staticLogo = getStaticMerchantLogoUrlByDisplayName(detail.merchantName);
+    if (staticLogo) return staticLogo;
+
+    const apiLogo = detail.merchantLogoUrl;
+    if (!apiLogo) return null;
+    if (/^https?:\/\//i.test(apiLogo)) return apiLogo;
+
+    return `${environment.apiUrl}${apiLogo.startsWith('/') ? '' : '/'}${apiLogo}`;
   }
 
   merchantName(msg: Message): string | null {
@@ -144,7 +169,13 @@ export class MessagesComponent implements OnInit, OnDestroy {
   messageTitle(msg: Message): string | null {
     const detail = this.orderDetails()[msg.orderId];
     if (!detail || this.getCategory(msg.content) !== 'bestilling') return null;
-    return `Gruppebestilling: ${detail.title}`;
+    return detail.title?.trim() || detail.category?.trim() || null;
+  }
+
+  orderMessage(msg: Message): string | null {
+    const detail = this.orderDetails()[msg.orderId];
+    if (!detail || this.getCategory(msg.content) !== 'bestilling') return null;
+    return detail.message?.trim() || null;
   }
 
   textWithoutUrl(content: string): string {
