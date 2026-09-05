@@ -26,7 +26,10 @@ public class Participant
     public string? PaymentReference { get; set; }
     public string? PayoutAccountInfo { get; set; }
     public string? PaymentProvider { get; set; }
+    /// <summary>Merchantens kundevendte menu-/bestillings-URL til GroupOrder-links.</summary>
     public string? GroupOrderUrl { get; set; }
+    /// <summary>Separat API-endpoint til levering af den færdige merchant-ordre.</summary>
+    public string? MerchantOrderUrl { get; set; }
 
     /// <summary>
     /// Vipps MobilePay Merchant Serial Number (MSN) for dette salgssted.
