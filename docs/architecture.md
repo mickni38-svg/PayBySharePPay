@@ -37,6 +37,130 @@
 
 ---
 
+## Produktarkitektur: modulær PayNSync-platform
+
+PayNSync skal arkitektonisk behandles som en **modulær platform**. Gruppebetaling er en selvstændig capability/plugin-feature og må ikke være teknisk afhængig af PayNSync Order Hub, Merchant Website eller en bestemt merchant-klient.
+
+Der skelnes mellem følgende produktområder:
+
+| Produktområde | Rolle | Obligatorisk for GroupOrder? |
+|---|---|---|
+| **PayNSync GroupOrder / Group Payment** | Kerne-capability der orkestrerer gruppeordre, deltagere, individuelle ordrekladder, reservationer, capture og opbygning af én færdig merchant-ordre | Ja — dette er kerneproduktet |
+| **PayNSync Order Hub** | Merchant-side ordreplatform/backend, der kan modtage, persistére og styre færdige merchant-ordrer | Nej |
+| **Merchant Order App** | Tablet-/webklient, fx PWA på iPad, der viser og behandler ordrer fra Order Hub | Nej |
+| **Merchant Website** | Kundevendt menu/webshop, som kan starte almindelige ordrer eller PayNSync GroupOrder-flow | Nej |
+| **Ekstern merchant-integration** | Adapter til et eksisterende ordresystem/POS/platform, fx en fremtidig OrderYOYO-integration | Nej |
+
+### To primære merchant-scenarier
+
+**Merchant med eksisterende ordresystem**
+
+```text
+Merchant Website / eksisterende platform
+        |
+        +--> Normal bestilling ------------------> eksisterende ordresystem
+        |
+        +--> "Bestil sammen" / PayNSync GroupOrder
+                         |
+                         v
+                 PayNSync Group Payment
+                         |
+                  final merchant order
+                         |
+                         v
+                 Merchant adapter
+                         |
+                         v
+              eksisterende ordresystem/POS
+```
+
+Her skal merchant som udgangspunkt kun bruge PayNSyncs GroupOrder/Group Payment-feature. PayNSync Order Hub er ikke en dependency.
+
+**Merchant uden eget ordresystem**
+
+```text
+Merchant Website eller PayNSync entry point
+        |
+        v
+PayNSync GroupOrder / almindelig ordre
+        |
+        v
+PayNSync Order Hub
+        |
+        +--> Merchant Order App / iPad PWA
+        +--> Merchant Web UI
+        +--> senere andre interne klienter
+```
+
+Her kan PayNSync tilbyde den komplette merchant-løsning: ordre-backend, ordrekø og merchant-klient.
+
+### Order Hub betyder backend/service — ikke kun iPad-UI
+
+Begrebet **PayNSync Order Hub** refererer arkitektonisk til merchantens ordreplatform/backend-capability. En iPad/PWA er en klient ovenpå Order Hub og må ikke være selve definitionen af Order Hub.
+
+Order Hub har som target-ansvar at:
+
+- modtage én færdig merchant-ordre efter successful group-payment capture
+- persistére merchant-ordren permanent og idempotent
+- eje merchantens ordrestatus og ordrekø
+- eksponere API'er til merchant-klienter
+- understøtte genindlæsning/recovery efter forbindelsestab
+- kunne modtage ordrer fra flere PayNSync-kilder, ikke kun GroupOrder
+
+Order Hub må **ikke** eje:
+
+- deltagerinvitationer
+- participant payment state
+- Vipps/MobilePay reservation/capture
+- GroupOrder-orkestrering
+- logikken der afgør hvornår alle deltagere er klar til capture
+
+Disse ansvar forbliver i GroupOrder/Group Payment-domænet.
+
+### Order destination / adapter boundary
+
+Når PayNSync har opbygget en færdig merchant-ordre, skal downstream-levering behandles som en separat integrationsgrænse.
+
+Konceptuelt target:
+
+```text
+GroupOrder / Group Payment
+        |
+        v
+PayNSyncFinalGroupOrder
+        |
+        v
+Order Destination boundary
+        |
+        +--> PayNSync Order Hub
+        +--> Generic merchant webhook
+        +--> ekstern POS-/platform-adapter
+        +--> e-mail/fallback
+        +--> fremtidige destinationer
+```
+
+Eksisterende `IMerchantOrderSender`/merchant-callback-mønster er den nuværende begyndelse på denne grænse. Fremtidige use cases må udvide den uden at gøre GroupOrder afhængig af Order Hub.
+
+En konkret adapter til fx OrderYOYO er **ikke implementeret** og må ikke dokumenteres som eksisterende integration. Arkitekturreglen er alene, at en sådan integration skal kunne tilføjes som destination/adapter uden at ændre Group Payment-kernen.
+
+### Ikke en microservice-krav
+
+Den logiske produktgrænse betyder **ikke**, at Order Hub straks skal være en separat .NET solution, database eller deployment.
+
+I første version må Group Payment og Order Hub godt leve i den eksisterende PayBySharePay solution og samme deployede API, hvis de holdes adskilt gennem klare services, contracts og dependencies.
+
+En senere fysisk opsplitning til selvstændig service er en deployment-/skaleringsbeslutning og må ikke være nødvendig for at opnå den logiske modulgrænse.
+
+### Arkitekturregler for nye use cases
+
+1. GroupOrder/Group Payment må ikke kræve Order Hub, medmindre use casen eksplicit handler om Order Hub.
+2. Merchant Order App og Merchant Website må ikke indeholde Group Payment-forretningslogik.
+3. Eksterne merchant-systemer skal integreres gennem en adapter/destination boundary frem for speciallogik inde i Group Payment.
+4. Order Hub må konsumere den standardiserede færdige merchant-ordre på samme princip som en ekstern destination.
+5. En merchant skal kunne vælge mellem eksisterende ordresystem og PayNSync Order Hub uden at ændre selve Group Payment-flowet.
+6. Færdig ordre må fortsat først frigives downstream efter de gældende capture- og betalingsregler.
+7. Target-arkitektur og implementeret current state skal dokumenteres separat; planlagte adapters eller Order Hub-funktioner må ikke beskrives som implementerede.
+
 ## Afhængighedsregler
 
 | Fra | Til | Hvordan |
