@@ -131,6 +131,18 @@ Merchant-knappen bør derfor ikke hedde `Betal`. Den bør hedde fx `Bekræft min
 - Færdige merchant-ordrer leveres til `MerchantOrderUrl` gennem den valgte merchant-adapter/destination.
 - Hvis ingen merchant er valgt, sendes en generel invitationstekst kun til **inviterede** (ikke host).
 
+### Order Hub-regler
+
+- Order Hub er kun tilgængelig for autentificerede `Merchant`-konti.
+- `Participant.OrderHubEnabled` skal være `true`, før merchant kan læse eller ændre Order Hub-ordrer.
+- En merchant må kun læse og opdatere `MerchantOrder`-records hvor `MerchantParticipantId` matcher den autentificerede participant-id.
+- Order Hub genbruger den permanente `MerchantOrder`; der oprettes ikke en separat hub-ordre.
+- Order Hub-status følger kun: `New → Accepted → Preparing → Ready → Completed`.
+- Status må kun flyttes ét trin frem; spring og tilbageførsel afvises.
+- `Completed` vises i historik og ikke i aktiv kø.
+- Et manglende eksternt `MerchantOrderUrl` er gyldigt for en Order Hub-merchant; intern Order Hub-læsning afhænger ikke af et eksternt callback.
+- Alarmlyd er en klientindstilling i Merchant Order App og påvirker ikke backend-ordrens tilstand.
+
 ### Ordre-statusmaskine
 
 ```
