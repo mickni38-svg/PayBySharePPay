@@ -2,7 +2,7 @@
 
 Statusoversigt over PayNSync pr. seneste kodegennemgang.
 
-**Senest opdateret:** 2. september 2026 — UC-15 profil- og kontocenter er implementeret og verificeret på `main`.
+**Senest opdateret:** 5. september 2026 — UC-21 merchant-adapter og separat ordreleverings-URL er implementeret og CI-verificeret på feature branch.
 
 **Symboler:**  
 ✅ Implementeret og fungerende  
@@ -62,8 +62,12 @@ Statusoversigt over PayNSync pr. seneste kodegennemgang.
 | Alle ordrelinjer tildeles `ParticipantId` | ✅ | Fra den validerede `OrderParticipant` |
 | Betalingsreservation startes automatisk ved draft-indsendelse | ✅ | `MerchantOrderService` kalder `ReserveParticipantPaymentAsync()` |
 | Hent draft for en ordre | ✅ | `GET /api/merchant-orders/by-order/{orderId}` |
-| Merchant modtager callback ved `Paid` | ✅ | `MerchantCallbackService` sender HTTP POST med `PayNSyncFinalGroupOrderDto` |
-| `FinalGroupOrderDtos` (PayNSyncFinalGroupOrderDto m.fl.) | ✅ | Implementeret — standard GroupOrderPaid-payload til merchant-callback — *(NYT)* |
+| Separat menu- og ordreleverings-URL | ✅ | `GroupOrderUrl` bruges til kundens bestillingsside; `MerchantOrderUrl` bruges til final merchant order |
+| Square-inspireret merchant-adapter | ✅ | `SquareInspiredMerchantOrderAdapter` mapper final PayNSync-ordre til merchant-format |
+| Simuleret merchant ordre-API | ✅ | `POST /api/simulated-merchant/orders` i Development; idempotent via `IdempotencyKey` |
+| Merchant modtager final ordre ved `Paid` | ✅ | `MerchantCallbackService` sender adapter-mappet ordre til `MerchantOrderUrl` efter full capture |
+| Eksternt ordrenummer og svar gemmes | ✅ | `MerchantOrder.ExternalOrderNumber` + `ExternalResponseJson` |
+| `FinalGroupOrderDtos` (PayNSyncFinalGroupOrderDto m.fl.) | ✅ | Privacy-safe final merchant order; strukturerede modifiers bevares |
 | `RawMerchantPayloadJson` på `MerchantOrderDraft` | ✅ | Gemmer merchantens originale JSON til audit/debugging (nullable) — *(NYT)* |
 | Stabile produkt- og tilvalgs-id'er i Merchant Demo | ✅ | Produkt-id sendes som `lineId`; strukturerede konfigurationer gemmes i `RawMerchantPayloadJson` |
 | Statisk Pizzeria Roma-katalog | ⚠️ | Realistisk demo-katalog, men endnu ikke konfigurerbart per merchant |
