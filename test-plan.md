@@ -1,36 +1,20 @@
-# Test plan — UC-20
+# Test Plan — UC-21 Merchant-adapter og ordre-API
 
-## Automated tests
+## Automated
+- Adapter mapper reference, produkter, priser, modifiers, host og levering korrekt.
+- Adapter bruger minor units og samme currency.
+- Merchant finalization bevarer strukturerede modifiers fra merchant draft.
+- Eksternt ordrenummer og merchant response gemmes.
+- Et allerede gemt eksternt ordrenummer må ikke overskrives af en ny levering.
+- Simuleret merchant API returnerer samme eksterne ordre for samme idempotency key.
+- Eksisterende payment/capture tests skal fortsat bestå.
 
-| Scenario | Expected result |
-|---|---|
-| Katalog-id'er | Kategori-, produkt- og tilvalgs-id'er er udfyldte og unikke |
-| Produkt uden tilvalg | Linjetotal er grundpris × antal |
-| Produkt med tilvalg | Tilvalgspris indgår pr. produkt og multipliceres med antal |
-| Forskellige tilvalg på samme produkt | To separate kurvlinjer bevares |
-| Ændring af mængde | Kurvtotal og payload-total opdateres ens |
-| Draft-payload | Indeholder stabile line-id'er, total, currency og struktureret raw payload |
-| Tom kurv | Checkout kan ikke oprette en draft-payload |
-
-## Static verification
-
-- `node --test app.test.js`
-- `node --check app.js`
-- `node --check order-model.js`
-- Ingen nye dependencies eller eksterne kald i tests.
-
-## Manual verification
-
-1. Åbn demoen med `orderId`, `merchantId` og `participantToken` i querystring.
-2. Tilføj samme pizza med to forskellige tilvalg og kontrollér separate kurvlinjer.
-3. Ændr mængder og kontrollér totalen.
-4. Klik PayNSync-checkout og verificér ét `POST /api/merchant-orders`.
-5. Verificér redirect ved `paymentRedirectUrl` og kvittering uden redirect.
-6. Verificér at ugyldige/manglende query-parametre deaktiverer checkout med en forståelig besked.
+## Build
+- `dotnet build PayBySharePay.sln`
+- `dotnet test src/Tests.PayBySharePay/Tests.PayBySharePay.csproj`
 
 ## Regression boundaries
-
-- Ingen direkte Vipps/MobilePay-kald.
-- Ingen callback eller Order Hub-kald.
-- Ingen secrets, participant-token eller provider-reference vises i brugerfladen.
-- Eksisterende API-feltnavne bevares.
+- Ingen ændring i Vipps reserve/capture-semantik.
+- Ingen participant identity eller provider payment references i merchant payload.
+- `GroupOrderUrl` bruges fortsat til deltagerens menu-link.
+- Final merchant delivery sker først efter full capture.
