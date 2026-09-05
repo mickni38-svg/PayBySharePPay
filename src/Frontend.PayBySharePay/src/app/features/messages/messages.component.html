@@ -44,9 +44,6 @@
               } @else {
                 <span class="notif__fallback-icon">{{ isGroupOrder ? '🍽️' : '💬' }}</span>
               }
-              @if (!msg.isRead) {
-                <span class="notif__unread-dot" aria-label="Ulæst besked"></span>
-              }
             </div>
 
             <div class="notif__content">
@@ -64,9 +61,6 @@
 
             <div class="notif__meta">
               <span class="notif__time">{{ msg.createdAt | date:'d. MMM HH:mm' }}</span>
-              <span class="notif__read-label" [class.notif__read-label--unread]="!msg.isRead">
-                {{ msg.isRead ? 'Læst' : 'Ny' }}
-              </span>
               @if (merchantUrl || path) {
                 <span class="notif__chevron" aria-hidden="true">›</span>
               }
