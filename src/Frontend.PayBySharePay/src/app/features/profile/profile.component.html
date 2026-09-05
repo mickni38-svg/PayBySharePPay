@@ -190,6 +190,9 @@
           }
         </section>
 
+        @if (effectiveParticipantType() === 'Merchant') {
+          <a routerLink="/order-hub" class="primary-btn">Åbn PayNSync Order Hub</a>
+        }
         <button type="button" class="danger-outline-btn" (click)="logout()">Log ud</button>
       }
 

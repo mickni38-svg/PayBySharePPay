@@ -2,7 +2,7 @@
 
 Statusoversigt over PayNSync pr. seneste kodegennemgang.
 
-**Senest opdateret:** 5. september 2026 — UC-21 merchant-adapter og separat ordreleverings-URL er implementeret og CI-verificeret på feature branch.
+**Senest opdateret:** 5. september 2026 — UC-22 Order Hub backend + Merchant Order App er implementeret og CI-verificeret på feature branch.
 
 **Symboler:**  
 ✅ Implementeret og fungerende  
@@ -72,6 +72,11 @@ Statusoversigt over PayNSync pr. seneste kodegennemgang.
 | Stabile produkt- og tilvalgs-id'er i Merchant Demo | ✅ | Produkt-id sendes som `lineId`; strukturerede konfigurationer gemmes i `RawMerchantPayloadJson` |
 | Statisk Pizzeria Roma-katalog | ⚠️ | Realistisk demo-katalog, men endnu ikke konfigurerbart per merchant |
 | Kun én merchant per ordre | ⚠️ | Arkitekturen understøtter ikke flere merchants pr. ordre |
+| PayNSync Order Hub backend | ✅ | `/api/order-hub` med merchant-isoleret kø, historik, settings og statusændringer |
+| Order Hub-adgang pr. merchant | ✅ | `Participant.OrderHubEnabled` kræves for at læse/ændre hub-ordrer |
+| Merchant Order App | ✅ | Angular-route `/order-hub`, tabletvenlig aktiv kø, historik, statusknapper og alarmlyd |
+| Order Hub-statusflow | ✅ | `New → Accepted → Preparing → Ready → Completed`; ugyldige spring afvises |
+| PWA-installation af Merchant Order App | ✅ | Genbruger eksisterende manifest + Angular service worker; ingen native iPad-app |
 
 ---
 

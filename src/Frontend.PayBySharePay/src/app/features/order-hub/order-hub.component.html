@@ -1,0 +1,110 @@
+<main class="hub">
+  <header class="hub__header">
+    <a routerLink="/profile" class="hub__back">‹</a>
+    <div>
+      <h1>Order Hub</h1>
+      <p>Merchant Order App</p>
+    </div>
+    <button type="button" class="hub__sound" (click)="toggleSound()">
+      {{ soundEnabled() ? '🔔 Lyd til' : '🔕 Lyd fra' }}
+    </button>
+  </header>
+
+  @if (loading()) {
+    <p class="hub__state">Henter Order Hub…</p>
+  } @else if (!enabled()) {
+    <section class="hub__empty">
+      <h2>Order Hub er ikke aktiveret</h2>
+      <p>Aktivér Order Hub på denne merchantkonto for at modtage PayNSync-ordrer her.</p>
+      <button type="button" (click)="enableHub()">Aktivér Order Hub</button>
+    </section>
+  } @else {
+    @if (error()) {
+      <p class="hub__error">{{ error() }}</p>
+    }
+
+    <div class="hub__toolbar">
+      <strong>Aktive ordrer · {{ activeOrders().length }}</strong>
+      <button type="button" (click)="toggleHistory()">
+        {{ showHistory() ? 'Skjul historik' : 'Vis historik' }}
+      </button>
+    </div>
+
+    @if (activeOrders().length === 0) {
+      <section class="hub__empty">
+        <h2>Ingen aktive ordrer</h2>
+        <p>Nye betalte ordrer vises automatisk her.</p>
+      </section>
+    }
+
+    <section class="hub__grid">
+      @for (order of activeOrders(); track order.id) {
+        <article class="hub-order" [class.hub-order--new]="order.status === 'New'">
+          <div class="hub-order__top">
+            <div>
+              <span class="hub-order__number">{{ order.payNSyncOrderNumber }}</span>
+              <h2>{{ order.hostName }}</h2>
+            </div>
+            <span class="hub-order__status">{{ statusLabel(order.status) }}</span>
+          </div>
+
+          @if (order.hostPhone) {
+            <p class="hub-order__meta">☎ {{ order.hostPhone }}</p>
+          }
+
+          @if (order.deliveryAddress) {
+            <p class="hub-order__meta">
+              📍 {{ order.deliveryAddress.address }}
+              {{ order.deliveryAddress.postalCode }} {{ order.deliveryAddress.city }}
+            </p>
+          }
+
+          @if (order.note) {
+            <p class="hub-order__note">{{ order.note }}</p>
+          }
+
+          <div class="hub-order__items">
+            @for (item of order.items; track $index) {
+              <div class="hub-line">
+                <span>{{ item.quantity }}×</span>
+                <div>
+                  <strong>{{ item.name }}</strong>
+                  @for (modifier of modifiers(item); track $index) {
+                    <small>+ {{ modifier.name }}</small>
+                  }
+                </div>
+                <span>{{ item.lineTotal | number:'1.2-2' }} {{ order.currency }}</span>
+              </div>
+            }
+          </div>
+
+          <div class="hub-order__total">
+            <span>{{ order.paymentStatus === 'Paid' ? 'Betalt' : order.paymentStatus }}</span>
+            <strong>{{ order.totalAmount | number:'1.2-2' }} {{ order.currency }}</strong>
+          </div>
+
+          <button type="button" class="hub-order__action"
+            [disabled]="updatingId() === order.id"
+            (click)="advance(order)">
+            {{ updatingId() === order.id ? 'Opdaterer…' : actionLabel(order.status) }}
+          </button>
+        </article>
+      }
+    </section>
+
+    @if (showHistory()) {
+      <section class="hub__history">
+        <h2>Historik</h2>
+        @if (history().length === 0) {
+          <p>Ingen afsluttede ordrer endnu.</p>
+        }
+        @for (order of history(); track order.id) {
+          <div class="history-row">
+            <div><strong>{{ order.payNSyncOrderNumber }}</strong><span>{{ order.hostName }}</span></div>
+            <span>{{ order.totalAmount | number:'1.2-2' }} {{ order.currency }}</span>
+          </div>
+        }
+      </section>
+    }
+  }
+</main>

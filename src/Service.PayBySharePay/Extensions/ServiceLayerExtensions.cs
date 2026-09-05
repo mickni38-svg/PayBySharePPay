@@ -16,6 +16,7 @@ public static class ServiceLayerExtensions
         services.AddScoped<IMerchantOrderService, MerchantOrderService>();
         services.AddScoped<IMerchantOrderFinalizationService, MerchantOrderFinalizationService>();
         services.AddScoped<ISquareInspiredMerchantOrderAdapter, SquareInspiredMerchantOrderAdapter>();
+        services.AddScoped<IOrderHubService, OrderHubService>();
         services.AddScoped<IExternalPaymentService, ExternalPaymentService>();
         services.AddScoped<IParticipantPaymentStateService, ParticipantPaymentStateService>();
         services.AddScoped<IGroupPaymentOrchestrationService, GroupPaymentOrchestrationService>();

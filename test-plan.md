@@ -1,20 +1,23 @@
-# Test Plan — UC-21 Merchant-adapter og ordre-API
+# Test Plan — UC-22 Order Hub
 
-## Automated
-- Adapter mapper reference, produkter, priser, modifiers, host og levering korrekt.
-- Adapter bruger minor units og samme currency.
-- Merchant finalization bevarer strukturerede modifiers fra merchant draft.
-- Eksternt ordrenummer og merchant response gemmes.
-- Et allerede gemt eksternt ordrenummer må ikke overskrives af en ny levering.
-- Simuleret merchant API returnerer samme eksterne ordre for samme idempotency key.
-- Eksisterende payment/capture tests skal fortsat bestå.
+## Backend
+- Kun merchant kan bruge Order Hub.
+- OrderHubEnabled kræves.
+- Kø filtrerer på autentificeret MerchantParticipantId.
+- Aktive og Completed adskilles korrekt.
+- Gyldige statusovergange accepteres.
+- Ugyldige statusovergange afvises.
+- Merchant kan ikke opdatere en anden merchants ordre.
+- Aktivering/deaktivering persisteres.
 
-## Build
-- `dotnet build PayBySharePay.sln`
-- `dotnet test src/Tests.PayBySharePay/Tests.PayBySharePay.csproj`
+## Frontend
+- Merchant route loader komponenten.
+- Aktive ordrer og historik vises fra API.
+- Statusændring opdaterer listen.
+- Alarm-toggle persisteres lokalt.
+- Ny ordre under polling udløser lyd kun når alarm er slået til.
 
-## Regression boundaries
-- Ingen ændring i Vipps reserve/capture-semantik.
-- Ingen participant identity eller provider payment references i merchant payload.
-- `GroupOrderUrl` bruges fortsat til deltagerens menu-link.
-- Final merchant delivery sker først efter full capture.
+## Verification
+- dotnet build + tests
+- Angular test + Simply build
+- migration/snapshot review
