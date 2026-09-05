@@ -24,54 +24,51 @@
       <ul class="notif__list">
         @for (msg of filteredMessages(); track msg.id) {
           @let merchantUrl = merchantOrderUrl(msg);
+          @let rawUrl = extractUrl(msg.content);
+          @let path = rawUrl ? internalPath(rawUrl) : null;
           @let logoUrl = merchantLogoUrl(msg);
           @let title = messageTitle(msg);
+          @let body = orderMessage(msg);
           @let merchant = merchantName(msg);
+          @let isGroupOrder = !!title;
 
           <li
             class="notif__item"
             [class.notif__item--unread]="!msg.isRead"
+            [class.notif__item--clickable]="!!merchantUrl || !!path"
             (click)="onCardClick(msg)"
           >
-            <div class="notif__visual" aria-hidden="true">
-              @if (logoUrl) {
+            <div class="notif__visual">
+              @if (isGroupOrder && logoUrl) {
                 <img class="notif__merchant-logo" [src]="logoUrl" [alt]="merchant || 'Merchant logo'" />
               } @else {
-                <span class="notif__fallback-icon">{{ getCategory(msg.content) === 'bestilling' ? '🍽️' : '💬' }}</span>
+                <span class="notif__fallback-icon">{{ isGroupOrder ? '🍽️' : '💬' }}</span>
               }
               @if (!msg.isRead) {
-                <span class="notif__unread-dot"></span>
+                <span class="notif__unread-dot" aria-label="Ulæst besked"></span>
               }
             </div>
 
             <div class="notif__content">
               @if (title) {
                 <p class="notif__title" [class.notif__title--unread]="!msg.isRead">{{ title }}</p>
-              }
-              <p class="notif__text" [class.notif__text--unread]="!msg.isRead">
-                {{ textWithoutUrl(msg.content) }}
-              </p>
-
-              @if (merchantUrl) {
-                <a
-                  class="notif__order-link"
-                  [href]="merchantUrl"
-                  target="_blank"
-                  rel="noopener"
-                  (click)="onCardClick(msg)"
-                >
-                  Bestil her
-                  <span aria-hidden="true">→</span>
-                </a>
+                @if (body) {
+                  <p class="notif__text" [class.notif__text--unread]="!msg.isRead">{{ body }}</p>
+                }
+              } @else {
+                <p class="notif__text" [class.notif__text--unread]="!msg.isRead">
+                  {{ textWithoutUrl(msg.content) }}
+                </p>
               }
             </div>
 
             <div class="notif__meta">
               <span class="notif__time">{{ msg.createdAt | date:'d. MMM HH:mm' }}</span>
-              @if (msg.isRead) {
-                <span class="notif__read-label">Læst</span>
-              } @else {
-                <span class="notif__read-label notif__read-label--unread">Ny</span>
+              <span class="notif__read-label" [class.notif__read-label--unread]="!msg.isRead">
+                {{ msg.isRead ? 'Læst' : 'Ny' }}
+              </span>
+              @if (merchantUrl || path) {
+                <span class="notif__chevron" aria-hidden="true">›</span>
               }
             </div>
           </li>
