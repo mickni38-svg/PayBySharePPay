@@ -27,7 +27,10 @@ public sealed class MerchantOrder
     public decimal TotalAmount { get; set; }
     public string Currency { get; set; } = "DKK";
     public string PaymentStatus { get; set; } = "Paid";
+    public string OrderHubStatus { get; set; } = "New";
+    public string? Note { get; set; }
     public DateTime PaidAtUtc { get; set; }
+    public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
 
     /// <summary>Ordrenummer returneret af merchantens eksterne ordresystem.</summary>
     public string? ExternalOrderNumber { get; set; }
