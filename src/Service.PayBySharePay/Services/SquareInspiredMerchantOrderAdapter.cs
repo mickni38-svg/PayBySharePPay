@@ -30,19 +30,25 @@ public sealed class SquareInspiredMerchantOrderAdapter : ISquareInspiredMerchant
                 }
             },
             TotalMoney = Money(order.TotalAmount, order.Currency),
-            LineItems = order.Lines.Select(line => new SquareInspiredLineItemDto
+            LineItems = order.Lines.Select(line =>
             {
-                CatalogObjectId = line.Sku,
-                Name = line.Name,
-                Quantity = line.Quantity,
-                BasePriceMoney = Money(line.UnitPrice, order.Currency),
-                TotalMoney = Money(line.LineTotal, order.Currency),
+                var modifierUnitTotal = line.Modifiers.Sum(modifier => modifier.Price);
+                var baseUnitPrice = line.UnitPrice - modifierUnitTotal;
+
+                return new SquareInspiredLineItemDto
+                {
+                    CatalogObjectId = line.Sku,
+                    Name = line.Name,
+                    Quantity = line.Quantity,
+                    BasePriceMoney = Money(baseUnitPrice, order.Currency),
+                    TotalMoney = Money(line.LineTotal, order.Currency),
                 Modifiers = line.Modifiers.Select(modifier => new SquareInspiredModifierDto
                 {
                     CatalogObjectId = modifier.Id,
                     Name = modifier.Name,
                     BasePriceMoney = Money(modifier.Price, order.Currency)
-                }).ToList()
+                    }).ToList()
+                };
             }).ToList()
         };
     }
