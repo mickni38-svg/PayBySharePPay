@@ -61,6 +61,7 @@ namespace DataStorage.PayBySharePay.Migrations
                     b.Property<string>("Status").IsRequired().HasColumnType("nvarchar(max)");
                     b.Property<decimal>("SubtotalAmount").HasPrecision(18, 2).HasColumnType("decimal(18,2)");
                     b.Property<decimal>("TotalAmount").HasPrecision(18, 2).HasColumnType("decimal(18,2)");
+                    b.Property<DateTime>("UpdatedAtUtc").HasColumnType("datetime2");
                     b.HasKey("Id");
                     b.HasIndex("MerchantParticipantId");
                     b.HasIndex("OrderId");
@@ -87,6 +88,8 @@ namespace DataStorage.PayBySharePay.Migrations
                     b.Property<int>("MerchantParticipantId").HasColumnType("int");
                     b.Property<DateTime>("PaidAtUtc").HasColumnType("datetime2");
                     b.Property<string>("PaymentStatus").IsRequired().HasMaxLength(30).HasColumnType("nvarchar(30)");
+                    b.Property<string>("OrderHubStatus").IsRequired().HasMaxLength(30).HasColumnType("nvarchar(30)");
+                    b.Property<string>("Note").HasColumnType("nvarchar(max)");
                     b.Property<string>("PayNSyncOrderNumber").IsRequired().HasMaxLength(50).HasColumnType("nvarchar(50)");
                     b.Property<int>("SourceOrderId").HasColumnType("int");
                     b.Property<decimal>("TotalAmount").HasPrecision(18, 2).HasColumnType("decimal(18,2)");
@@ -199,6 +202,7 @@ namespace DataStorage.PayBySharePay.Migrations
                     b.Property<string>("Email").HasColumnType("nvarchar(max)");
                     b.Property<string>("GroupOrderUrl").HasColumnType("nvarchar(max)");
                     b.Property<string>("MerchantOrderUrl").HasColumnType("nvarchar(max)");
+                    b.Property<bool>("OrderHubEnabled").HasColumnType("bit");
                     b.Property<string>("LogoContentType").HasColumnType("nvarchar(max)");
                     b.Property<string>("LogoFileName").HasColumnType("nvarchar(max)");
                     b.Property<byte[]>("LogoImageData").HasColumnType("varbinary(max)");
