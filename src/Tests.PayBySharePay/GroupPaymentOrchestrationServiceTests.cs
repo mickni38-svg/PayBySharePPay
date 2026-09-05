@@ -177,6 +177,9 @@ public class GroupPaymentOrchestrationServiceTests
                 }).ToList()
             });
         }
+
+        public Task RecordExternalDeliveryAsync(int sourceOrderId, MerchantOrderDeliveryResultDto result,
+            CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
     private sealed class RejectingMerchantOrderFinalizationService : IMerchantOrderFinalizationService
@@ -193,6 +196,9 @@ public class GroupPaymentOrchestrationServiceTests
             DateTime paidAtUtc,
             CancellationToken cancellationToken = default)
             => throw new InvalidOperationException("Finalisering må ikke kaldes.");
+
+        public Task RecordExternalDeliveryAsync(int sourceOrderId, MerchantOrderDeliveryResultDto result,
+            CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
     private FakeParticipantPaymentRepository _paymentRepo = new();
