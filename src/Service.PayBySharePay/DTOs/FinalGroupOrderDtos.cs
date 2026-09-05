@@ -17,6 +17,8 @@ public sealed class PayNSyncFinalGroupOrderDto
     public PayNSyncHostDto Host { get; init; } = new();
     public PayNSyncDeliveryAddressDto? DeliveryAddress { get; init; }
     public List<PayNSyncFinalOrderLineDto> Lines { get; init; } = [];
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string? ExternalOrderNumber { get; init; }
 }
 
 public sealed class PayNSyncHostDto
@@ -40,4 +42,12 @@ public sealed class PayNSyncFinalOrderLineDto
     public int Quantity { get; init; }
     public decimal UnitPrice { get; init; }
     public decimal LineTotal { get; init; }
+    public List<PayNSyncFinalModifierDto> Modifiers { get; init; } = [];
+}
+
+public sealed class PayNSyncFinalModifierDto
+{
+    public string? Id { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public decimal Price { get; init; }
 }
