@@ -173,6 +173,7 @@ public class PayBySharePayDbContext : DbContext
             entity.Property(order => order.PayNSyncOrderNumber).HasMaxLength(50);
             entity.Property(order => order.Currency).HasMaxLength(3);
             entity.Property(order => order.PaymentStatus).HasMaxLength(30);
+            entity.Property(order => order.ExternalOrderNumber).HasMaxLength(100);
             entity.Property(order => order.TotalAmount).HasPrecision(18, 2);
 
             entity.HasIndex(order => order.SourceOrderId).IsUnique();
