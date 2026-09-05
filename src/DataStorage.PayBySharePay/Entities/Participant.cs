@@ -30,6 +30,8 @@ public class Participant
     public string? GroupOrderUrl { get; set; }
     /// <summary>Separat API-endpoint til levering af den færdige merchant-ordre.</summary>
     public string? MerchantOrderUrl { get; set; }
+    /// <summary>Om merchant har adgang til PayNSync Order Hub.</summary>
+    public bool OrderHubEnabled { get; set; }
 
     /// <summary>
     /// Vipps MobilePay Merchant Serial Number (MSN) for dette salgssted.
