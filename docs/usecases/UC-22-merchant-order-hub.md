@@ -2,7 +2,7 @@
 
 ## Status
 
-Planlagt.
+Implementeret og CI-verificeret den 5. september 2026.
 
 ## Formål
 
