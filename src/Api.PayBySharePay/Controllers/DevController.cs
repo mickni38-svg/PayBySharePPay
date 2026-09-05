@@ -3,7 +3,9 @@ using DataStorage.PayBySharePay.Context;
 using DataStorage.PayBySharePay.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Service.PayBySharePay.DTOs;
 using Service.PayBySharePay.Interfaces;
+using System.Collections.Concurrent;
 
 namespace Api.PayBySharePay.Controllers;
 
@@ -11,6 +13,7 @@ namespace Api.PayBySharePay.Controllers;
 [Route("api/[controller]")]
 public class DevController : ControllerBase
 {
+    private static readonly ConcurrentDictionary<string, SquareInspiredMerchantOrderResponse> SimulatedMerchantOrders = new(StringComparer.Ordinal);
     private readonly PayBySharePayDbContext _context;
     private readonly ILastMerchantCallbackStore _callbackStore;
     private readonly IConfiguration _configuration;
