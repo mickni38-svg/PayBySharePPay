@@ -16,4 +16,6 @@ public sealed class MerchantOrderItem
     public int Quantity { get; set; }
     public decimal UnitPrice { get; set; }
     public decimal LineTotal { get; set; }
+    /// <summary>Strukturerede merchant-tilvalg som JSON snapshot.</summary>
+    public string? ModifiersJson { get; set; }
 }
