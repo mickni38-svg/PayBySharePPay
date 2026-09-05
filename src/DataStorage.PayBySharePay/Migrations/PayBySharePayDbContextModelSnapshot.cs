@@ -199,6 +199,7 @@ namespace DataStorage.PayBySharePay.Migrations
                     b.Property<string>("LogoFileName").HasColumnType("nvarchar(max)");
                     b.Property<byte[]>("LogoImageData").HasColumnType("varbinary(max)");
                     b.Property<DateTime?>("LogoUpdatedAtUtc").HasColumnType("datetime2");
+                    b.Property<string>("MerchantOrderUrl").HasColumnType("nvarchar(max)");
                     b.Property<string>("Name").IsRequired().HasColumnType("nvarchar(max)");
                     b.Property<string>("PasswordHash").HasColumnType("nvarchar(max)");
                     b.Property<string>("PaymentProvider").HasColumnType("nvarchar(max)");
