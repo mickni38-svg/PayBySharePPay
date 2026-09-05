@@ -51,7 +51,10 @@ public sealed class MerchantOrderFinalizationService(
             TotalAmount = data.TotalAmount,
             Currency = data.Currency,
             PaymentStatus = "Paid",
+            OrderHubStatus = "New",
+            Note = order.Message,
             PaidAtUtc = paidAtUtc,
+            UpdatedAtUtc = paidAtUtc,
             Items = data.SourceLines.Select(line => new MerchantOrderItem
             {
                 Sku = line.Line.LineId,
