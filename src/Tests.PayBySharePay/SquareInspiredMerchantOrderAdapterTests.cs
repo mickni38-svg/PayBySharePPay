@@ -55,7 +55,7 @@ public sealed class SquareInspiredMerchantOrderAdapterTests
         result.TotalMoney.Currency.Should().Be("DKK");
         result.LineItems.Should().ContainSingle();
         result.LineItems[0].CatalogObjectId.Should().Be("pizza-1");
-        result.LineItems[0].BasePriceMoney.Amount.Should().Be(12400);
+        result.LineItems[0].BasePriceMoney.Amount.Should().Be(10900, "line unit price already includes the 15 kr modifier");
         result.LineItems[0].Modifiers.Should().ContainSingle();
         result.LineItems[0].Modifiers[0].CatalogObjectId.Should().Be("extra-cheese");
         result.LineItems[0].Modifiers[0].BasePriceMoney.Amount.Should().Be(1500);
