@@ -28,6 +28,12 @@ public sealed class MerchantOrder
     public string Currency { get; set; } = "DKK";
     public string PaymentStatus { get; set; } = "Paid";
     public DateTime PaidAtUtc { get; set; }
+
+    /// <summary>Ordrenummer returneret af merchantens eksterne ordresystem.</summary>
+    public string? ExternalOrderNumber { get; set; }
+    /// <summary>Råt svar fra merchantens ordre-API til audit og fejlsøgning.</summary>
+    public string? ExternalResponseJson { get; set; }
+
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
     public ICollection<MerchantOrderItem> Items { get; set; } = new List<MerchantOrderItem>();
