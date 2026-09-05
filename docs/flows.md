@@ -379,3 +379,51 @@ en Vipps MobilePay-reservation for deltageren i sandbox.
 Note: VippsTestUserId-feltet er kun relevant i sandbox.
 Feltet bruges ikke i produktionsflowet.
 ```
+
+
+---
+
+## 13. PayNSync Order Hub / Merchant Order App
+
+**Actor:** Merchant uden eget ordresystem  
+**Entry point:** `/order-hub` + `/api/order-hub`
+
+```
+[Group Payment full capture]
+  → permanent MerchantOrder oprettes med OrderHubStatus = New
+  → ingen ekstern MerchantOrderUrl er nødvendig
+
+[Merchant logger ind]
+  → åbner /order-hub
+  → GET /api/order-hub/settings
+  → OrderHubEnabled skal være true
+
+[Merchant Order App]
+  → GET /api/order-hub/orders
+  → backend filtrerer på JWT participant-id == MerchantOrder.MerchantParticipantId
+  → viser kun ikke-Completed ordrer
+  → poller periodisk for nye ordrer
+  → valgfri lokal alarmlyd ved ny ordre
+
+[Merchant behandler ordre]
+  New
+    → Accepted
+    → Preparing
+    → Ready
+    → Completed
+
+  PUT /api/order-hub/orders/{merchantOrderId}/status
+  → OrderHubService validerer merchant-ejerskab
+  → kun næste status accepteres
+  → Completed flyttes ud af aktiv kø
+
+[Historik]
+  → GET /api/order-hub/history
+  → returnerer kun Completed-ordrer for samme merchant
+
+[Reload / forbindelsestab]
+  → Merchant Order App henter aktiv kø igen fra SQL
+  → browserens tidligere state er ikke source of truth
+```
+
+Merchant Order App genbruger den eksisterende Angular PWA/service-worker og kan derfor installeres på iPad som webapp.
