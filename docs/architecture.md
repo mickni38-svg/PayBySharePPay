@@ -143,6 +143,33 @@ Eksisterende `IMerchantOrderSender`/merchant-callback-mønster er den nuværende
 
 En konkret adapter til fx OrderYOYO er **ikke implementeret** og må ikke dokumenteres som eksisterende integration. Arkitekturreglen er alene, at en sådan integration skal kunne tilføjes som destination/adapter uden at ændre Group Payment-kernen.
 
+### Implementeret Order Hub boundary (UC-22)
+
+UC-22 implementerer Order Hub som en logisk backend-capability i den eksisterende solution:
+
+```text
+MerchantOrder (permanent, Paid)
+        |
+        v
+OrderHubService
+  - merchant isolation
+  - OrderHubEnabled
+  - status state machine
+        |
+        v
+OrderHubController /api/order-hub
+        |
+        v
+Merchant Order App /order-hub
+  - Angular/PWA
+  - polling
+  - local alarm sound
+```
+
+`MerchantOrder` er source of truth. Group Payment opretter fortsat den permanente ordre efter full capture; Order Hub læser denne direkte og kræver derfor ikke et eksternt merchant-callback. UC-21's `MerchantOrderUrl`-adapterflow eksisterer fortsat parallelt for merchants med eksternt ordresystem.
+
+Order Hub-status er separat fra payment-status og må kun følge `New → Accepted → Preparing → Ready → Completed`.
+
 ### Ikke en microservice-krav
 
 Den logiske produktgrænse betyder **ikke**, at Order Hub straks skal være en separat .NET solution, database eller deployment.
