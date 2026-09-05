@@ -202,6 +202,48 @@ public sealed class MerchantOrderFinalizationServiceTests
             .Should().Equal("pizza-extra-cheese", "pizza-no-cheese");
     }
 
+
+    [Fact]
+    public async Task EnsureFinalized_Preserves_Structured_Modifiers_From_Raw_Merchant_Payload()
+    {
+        var repository = new FakeMerchantOrderRepository();
+        var sut = new MerchantOrderFinalizationService(repository);
+        var (order, payments) = CreatePaidOrder();
+        var draft = order.MerchantOrderDrafts.First();
+        draft.RawMerchantPayloadJson = """
+        {"items":[
+          {"productId":"pizza","quantity":1,"unitPrice":90,"lineTotal":90,
+           "modifiers":[{"id":"extra-cheese","name":"Ekstra ost","price":15}]},
+          {"productId":"cola","quantity":1,"unitPrice":30,"lineTotal":30,"modifiers":[]}
+        ]}
+        """;
+
+        var result = await sut.EnsureFinalizedAsync(order, payments, DateTime.UtcNow);
+
+        result.Lines[0].Modifiers.Should().ContainSingle();
+        result.Lines[0].Modifiers[0].Id.Should().Be("extra-cheese");
+        result.Lines[0].Modifiers[0].Name.Should().Be("Ekstra ost");
+        repository.Orders.Single().Items.First().ModifiersJson.Should().Contain("extra-cheese");
+    }
+
+    [Fact]
+    public async Task RecordExternalDelivery_Persists_Result_And_Does_Not_Overwrite_External_Order()
+    {
+        var repository = new FakeMerchantOrderRepository();
+        var sut = new MerchantOrderFinalizationService(repository);
+        var (order, payments) = CreatePaidOrder();
+        await sut.EnsureFinalizedAsync(order, payments, DateTime.UtcNow);
+
+        await sut.RecordExternalDeliveryAsync(42,
+            new Service.PayBySharePay.DTOs.MerchantOrderDeliveryResultDto(true, "EXT-1", "{\"orderId\":\"EXT-1\"}"));
+        await sut.RecordExternalDeliveryAsync(42,
+            new Service.PayBySharePay.DTOs.MerchantOrderDeliveryResultDto(true, "EXT-2", "{\"orderId\":\"EXT-2\"}"));
+
+        var saved = repository.Orders.Single();
+        saved.ExternalOrderNumber.Should().Be("EXT-1");
+        saved.ExternalResponseJson.Should().Contain("EXT-1");
+    }
+
     private static (Order Order, List<ParticipantPayment> Payments) CreatePaidOrder()
     {
         var host = new Participant
